@@ -84,6 +84,20 @@ export const THEME_SWITCH_CLASSES: Record<string, string>;
 export const DEMO_CLASSES: Record<string, string>;
 export const THEMES: Theme[];
 export const DEFAULT_THEME: Theme;
+/** id of the chapter-nav panel (the toggle's `aria-controls`). */
+export const CHAPTER_NAV_PANEL_ID: string;
+/** Where sections live, and what counts as one (one `<h2>` each = one chapter). */
+export const SECTION_CONTAINER_SELECTOR: string;
+export const SECTION_SELECTOR: string;
+/** Heading children left out of a chapter label (badges, the copy-link button). */
+export const HEADING_CHIP_SELECTOR: string;
+export const VERSION_BADGE_SELECTOR: string;
+export const DEFAULT_INDEX_HREF: string;
+/** `data-<THEME_ATTRIBUTE>` on `<html>`, and the localStorage key of the saved choice. */
+export const THEME_ATTRIBUTE: string;
+export const THEME_STORAGE_KEY: string;
+export const ACTIVE_CHAPTER_OFFSET_PX: number;
+export const COPY_FEEDBACK_DURATION_MS: number;
 
 declare global {
   interface Window {

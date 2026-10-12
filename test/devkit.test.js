@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { mapKmwcConfig, getRegistry, getNextPortBlock, getPortRange, getPortsForBlock, DEVKIT_ROOT, PORT_BLOCK_SIZE, PACKAGE_FILES_EXCLUSIONS } from '../src/config.js';
 import {
   getSyncPlan,
@@ -181,6 +182,20 @@ test('doctor: packed dev-only files are leaks; the scaffold excludes AI guidance
   const scaffoldFiles = generatePackageJson({ componentId: 'web-sample', packageName: '@keenmate/web-sample', tag: 'web-sample', prefix: 'ws', title: 'Web Sample', devPort: 12900 }).files;
   for (const exclusion of PACKAGE_FILES_EXCLUSIONS) assert.ok(scaffoldFiles.includes(exclusion), `scaffold "files" lacks ${exclusion}`);
   for (const exclusion of PACKAGE_FILES_EXCLUSIONS) assert.ok(JSON.parse(readFileSync(join(PLAYGROUND_ROOT, 'package.json'), 'utf8')).files.includes(exclusion));
+});
+
+test('package: every runtime export of a public entry is declared in its hand-written .d.ts', async () => {
+  const packageExports = JSON.parse(readFileSync(join(DEVKIT_ROOT, 'package.json'), 'utf8')).exports;
+  const typedEntries = Object.entries(packageExports).filter(([, target]) => typeof target === 'object' && target.types);
+  assert.ok(typedEntries.length >= 4);
+  for (const [entryName, target] of typedEntries) {
+    const runtimeModule = await import(pathToFileURL(join(DEVKIT_ROOT, target.import)).href);
+    const declarationText = readFileSync(join(DEVKIT_ROOT, target.types), 'utf8');
+    const undeclaredNames = Object.keys(runtimeModule).filter(
+      (exportName) => !new RegExp(`export\\s+(?:declare\\s+)?(?:const|function|class|let)\\s+${exportName}\\b`).test(declarationText)
+    );
+    assert.deepEqual(undeclaredNames, [], `${entryName}: exported at runtime but missing from ${target.types}`);
+  }
 });
 
 test('kit: every generated class is kmwc-prefixed BEM', () => {

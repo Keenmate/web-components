@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.0] - 2026-10-12
+## [1.0.0-rc01] - 2026-10-12 [PUBLISHED]
 
 First release of `@keenmate/web-components-devkit`, plus the component catalogue.
 
