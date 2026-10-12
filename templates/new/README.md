@@ -52,7 +52,7 @@ shipped.
 
 ## About
 
-Authored and maintained by [Keenmate](https://keenmate.com/).
+Authored and maintained by [Keenmate s.r.o.](https://keenmate.com/).
 The component ships standalone with sensible light/dark defaults;
 when mounted inside [Pure Admin](https://pureadmin.io/) — or any
 host that publishes the `--base-*` taxonomy via
