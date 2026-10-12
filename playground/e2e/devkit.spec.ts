@@ -1,4 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
+
+// The devkit repo's own version (the playground links it via file:..).
+const DEVKIT_VERSION = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
 
 // Exercises the devkit examples kit as a component consumes it. Runs against
 // both the dev server ("dev" project) and the built examples site ("built").
@@ -69,6 +73,10 @@ test.describe('examples kit', () => {
     await expect(page.locator('.kmwc-index__header h1')).toHaveText('Web Playground');
     await expect(page.locator('.kmwc-index__card')).toHaveCount(3);
     await expect(page.locator('.kmwc-index__version')).toHaveText(/^v0\.1\.0/);
+    // Footer: the devkit that built the page, next to the KeenMate / GitHub links.
+    const devkitLink = page.locator('.kmwc-index__footer .kmwc-index__devkit');
+    await expect(devkitLink).toHaveText(`web-components-devkit v${DEVKIT_VERSION}`);
+    await expect(devkitLink).toHaveAttribute('href', 'https://github.com/keenmate/web-components');
     await expect(page.locator('.kmwc-chapter-nav__item')).toHaveCount(3);
     await expect(page.locator('.kmwc-copy-link')).toHaveCount(0);
   });

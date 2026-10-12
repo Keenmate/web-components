@@ -24,7 +24,8 @@ First release of `@keenmate/web-components-devkit`, plus the component catalogue
   kit-generated DOM is `kmwc-` prefixed BEM. Chapter nav (bundled Floating UI,
   shared slug logic, last-chapter highlight at page bottom), copy-link, version
   badge with build stamp, build-only Plausible. Helpers:
-  `attachControlsPersistence`, `renderExamplesIndex`, `mountExamplesKit`.
+  `attachControlsPersistence`, `renderExamplesIndex` (its footer links the
+  devkit version that built the site), `mountExamplesKit`.
 - **Playwright preset** `definePlaywrightConfig()`.
 - **CLI** `kmwc`: `sync` (Dockerfile, nginx.conf with immutable `/assets/`
   caching, Makefile + `Makefile.local`, .dockerignore, CLAUDE.md block, scripts),

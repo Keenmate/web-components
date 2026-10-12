@@ -43,6 +43,7 @@ export const INDEX_PAGE_CLASSES = {
   cardDescription: 'kmwc-index__card-description',
   badge: 'kmwc-index__badge',
   footer: 'kmwc-index__footer',
+  devkit: 'kmwc-index__devkit',
 };
 
 /** <kmwc-demo> output (rendered at build time by page-composer.js) + the kit's copy button. */

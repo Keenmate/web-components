@@ -18,6 +18,8 @@ export function getPageConfig() {
     storagePrefix: injectedConfig.storagePrefix || injectedConfig.id || 'component',
     repository: injectedConfig.repository || '',
     homepage: injectedConfig.homepage || '',
+    devkitVersion: injectedConfig.devkitVersion || '',
+    devkitHomepage: injectedConfig.devkitHomepage || '',
   };
 }
 

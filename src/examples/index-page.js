@@ -65,7 +65,11 @@ export function renderExamplesIndex(indexConfig) {
     <footer class="${classes.footer}">
       <p>Created by <a href="https://github.com/keenmate" target="_blank" rel="noopener">KeenMate</a>${footerLinks
         .map((link) => ` | <a href="${mapToEscapedHtml(link.href)}" target="_blank" rel="noopener">${mapToEscapedHtml(link.label)}</a>`)
-        .join('')}</p>
+        .join('')}${
+        pageConfig.devkitVersion
+          ? ` | <a class="${classes.devkit}" href="${mapToEscapedHtml(pageConfig.devkitHomepage)}" target="_blank" rel="noopener">web-components-devkit v${mapToEscapedHtml(pageConfig.devkitVersion)}</a>`
+          : ''
+      }</p>
     </footer>`;
   containerEl.prepend(pageElement);
 

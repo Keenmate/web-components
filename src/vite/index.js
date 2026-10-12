@@ -18,7 +18,7 @@
  */
 import { readdirSync, existsSync, cpSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { getKmwcConfig, generateBuildDefines, loadPeerModule, DEVKIT_ROOT, NON_PAGE_HTML_FILES } from '../config.js';
+import { getKmwcConfig, getDevkitPackageJson, generateBuildDefines, loadPeerModule, DEVKIT_ROOT, NON_PAGE_HTML_FILES } from '../config.js';
 import { renderThemeBootstrapScript } from '../examples/theme-switch.js';
 import { composePage } from './page-composer.js';
 
@@ -64,6 +64,7 @@ export function createExamplesPlugin(pluginConfig = {}) {
   let mode = 'development';
   let outDir = config.examples.outDir;
   const buildTimestamp = process.env.BUILD_TIME || getBuildTimestamp();
+  const devkitPackageJson = getDevkitPackageJson();
 
   return {
     name: 'kmwc-examples',
@@ -116,6 +117,8 @@ export function createExamplesPlugin(pluginConfig = {}) {
           storagePrefix: config.examples.storagePrefix,
           repository: config.repository,
           homepage: config.homepage,
+          devkitVersion: devkitPackageJson.version,
+          devkitHomepage: devkitPackageJson.homepage,
         };
 
         let headHtml =

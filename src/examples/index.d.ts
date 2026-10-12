@@ -10,6 +10,9 @@ export interface KmwcPageConfig {
   storagePrefix: string;
   repository: string;
   homepage: string;
+  /** The @keenmate/web-components-devkit version that built the page (shown in the index footer). */
+  devkitVersion: string;
+  devkitHomepage: string;
 }
 
 /** One card on the examples index (plain data model). */
