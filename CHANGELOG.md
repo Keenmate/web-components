@@ -54,6 +54,11 @@ First release of `@keenmate/web-components-devkit`, plus the component catalogue
   partials, build/test output or local make config (`--no-pack` skips it).
   `kmwc new` ends `files` with `!**/CLAUDE.md` and `!**/.claude`.
 
+- **`/publish` command** (`.claude/commands/publish.md`) for the devkit itself, in
+  the rulebook's canonical shape (passes `publish-command.checks.sh`): gates are the
+  unit tests, the playground e2e (dev + built), the playground doctor, `sync --check`
+  and `readme:check`; "build" is an entry-point smoke test, since `src/` ships as-is.
+
 ### Fixed
 
 - **Flash of unstyled page on every reload in dev** (FOUC): the kit stylesheet was

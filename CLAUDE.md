@@ -102,3 +102,10 @@ Before finishing a change to the kit or a template: `npm test`, `npm run
 test:e2e` and the playground doctor must pass, and a new kit feature gets a
 spec in `playground/e2e/devkit.spec.ts`. `esbuild`'s postinstall may need
 `npm approve-scripts esbuild` after a fresh install.
+
+**Releasing:** `/publish rc|release|patch|minor|major` (`.claude/commands/publish.md`)
+prepares a release — version, CHANGELOG, gates, package check, commit — and
+never runs `npm publish` or pushes. It follows the rulebook's canonical
+`/publish` shape: keep its `[canonical]` blocks identical to
+`templates/new/.claude/commands/publish.md` and run
+`bash <rulebook>/publish-command.checks.sh .` after editing it.

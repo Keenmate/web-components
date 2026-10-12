@@ -401,3 +401,8 @@ linked to this checkout. It's the reference for "what a component looks like",
 the e2e target for every kit feature, and `npx kmwc doctor` inside it must
 report every rulebook suite green. When you change the kit or a template, add
 a spec there.
+
+Releases are prepared with the `/publish` Claude command
+(`.claude/commands/publish.md`, the rulebook's canonical `/publish` with devkit
+steps: unit + e2e + playground doctor + catalogue check, entry-point smoke
+test, `npm pack` review). It never publishes or pushes. That's yours.
