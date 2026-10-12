@@ -20,7 +20,7 @@
  * Custom Elements Manifest config, README + docs/, CHANGELOG, LICENSE,
  * `.claude/commands/publish.md`, examples, fixtures + e2e specs, then the
  * `kmwc sync` files. The port block (dev = block, image = +10) is the next free
- * one in the registry's single sequence (`--port` overrides).
+ * one in the component range (see PORT_RANGES in config.js; `--port` overrides).
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';

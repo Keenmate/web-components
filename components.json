@@ -1,5 +1,5 @@
 {
-  "$comment": "Registry of KeenMate web components — source for the README catalogue (`npm run readme`). `port` is the repo's block in ONE sequence (step 100, registry order): dev server = port, preview = port + 1, examples image = port + 10; `kmwc doctor` checks package.json#kmwc.ports against it and `kmwc new` takes the next block. `prefix` mirrors the reserved-prefix table in BlissFramework guidelines/web-components/base-variables.md (the authority).",
+  "$comment": "Registry of KeenMate web components — source for the README catalogue (`npm run readme`). `port` is the repo's block: dev server = port, preview = port + 1, examples image = port + 10. Each kind has its own range with headroom (components 12100–14900, libraries 15000–15900, showcases/docs 16000–16900, tests 17000–17900), numbered by 100 in registry order; `kmwc doctor` checks package.json#kmwc.ports against it and `kmwc new` takes the next block. `prefix` mirrors the reserved-prefix table in BlissFramework guidelines/web-components/base-variables.md (the authority).",
   "components": [
     {
       "id": "web-multiselect",
@@ -103,7 +103,7 @@
     {
       "id": "web-components-core",
       "kind": "library",
-      "port": 13100,
+      "port": 15000,
       "path": "../web-components-core",
       "npm": "@keenmate/web-components-core",
       "note": "Runtime foundation: BlissElement, reactive input table, converters, logging, positioning, CEM preset."
@@ -111,7 +111,7 @@
     {
       "id": "web-components",
       "kind": "library",
-      "port": 13200,
+      "port": 15100,
       "path": ".",
       "npm": "@keenmate/web-components-devkit",
       "repo": "https://github.com/keenmate/web-components",
@@ -120,28 +120,28 @@
     {
       "id": "web-multiselect-showcase",
       "kind": "showcase",
-      "port": 13300,
+      "port": 16000,
       "path": "../web-multiselect-showcase",
       "for": "web-multiselect"
     },
     {
       "id": "web-daterangepicker-showcase",
       "kind": "showcase",
-      "port": 13400,
+      "port": 16100,
       "path": "../web-daterangepicker-showcase",
       "for": "web-daterangepicker"
     },
     {
       "id": "web-treeview-showcase",
       "kind": "showcase",
-      "port": 13500,
+      "port": 16200,
       "path": "../web-treeview-showcase",
       "for": "web-treeview"
     },
     {
       "id": "web-grid-showcase",
       "kind": "showcase",
-      "port": 13600,
+      "port": 16300,
       "path": "../web-grid-showcase",
       "for": "web-grid",
       "url": "https://web-grid.keenmate.com"
@@ -149,7 +149,7 @@
     {
       "id": "web-multiselect-docs",
       "kind": "docs",
-      "port": 13700,
+      "port": 16400,
       "path": "../web-multiselect-docs",
       "for": "web-multiselect",
       "note": "Content-only docs (keendocs)."
@@ -157,14 +157,14 @@
     {
       "id": "web-component-framework-test",
       "kind": "test",
-      "port": 13800,
+      "port": 17000,
       "path": "../web-component-framework-test",
       "note": "Smoke + contrast tests inside CSS host frameworks (plain / Bootstrap / …)."
     },
     {
       "id": "web-multiselect-test",
       "kind": "test",
-      "port": 13900,
+      "port": 17100,
       "path": "../web-multiselect-test",
       "for": "web-multiselect",
       "note": "npm-install vs direct-file consumption checks before publishing."
@@ -172,7 +172,7 @@
     {
       "id": "web-multiselect-positioning-demo",
       "kind": "test",
-      "port": 14000,
+      "port": 17200,
       "path": "../web-multiselect-positioning-demo",
       "for": "web-multiselect",
       "note": "Single-page positioning repro."
@@ -180,7 +180,7 @@
     {
       "id": "web-playground",
       "kind": "test",
-      "port": 14100,
+      "port": 17300,
       "path": "playground",
       "for": "web-components",
       "note": "Devkit e2e test bed — a component scaffolded with `kmwc new`, linked to this repo."

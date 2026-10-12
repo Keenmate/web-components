@@ -41,24 +41,24 @@ them in the same shape: `@keenmate/web-components-devkit`.
 
 | Library | Package | Dev port | About |
 |---|---|---:|---|
-| **web-components-core** | `@keenmate/web-components-core` | 13100 | Runtime foundation: BlissElement, reactive input table, converters, logging, positioning, CEM preset. |
-| **web-components** | `@keenmate/web-components-devkit` | 13200 | This repo — dev/demo/build tooling (Vite preset, examples kit, kmwc CLI). |
+| **web-components-core** | `@keenmate/web-components-core` | 15000 | Runtime foundation: BlissElement, reactive input table, converters, logging, positioning, CEM preset. |
+| **web-components** | `@keenmate/web-components-devkit` | 15100 | This repo — dev/demo/build tooling (Vite preset, examples kit, kmwc CLI). |
 
 ### Showcases, docs & test harnesses
 
 | Repo | Kind | For | Dev port | About |
 |---|---|---|---:|---|
-| web-multiselect-showcase | showcase | web-multiselect | 13300 |  |
-| web-daterangepicker-showcase | showcase | web-daterangepicker | 13400 |  |
-| web-treeview-showcase | showcase | web-treeview | 13500 |  |
-| web-grid-showcase | showcase | web-grid | 13600 | [https://web-grid.keenmate.com](https://web-grid.keenmate.com) |
-| web-multiselect-docs | docs | web-multiselect | 13700 | Content-only docs (keendocs). |
-| web-component-framework-test | test | — | 13800 | Smoke + contrast tests inside CSS host frameworks (plain / Bootstrap / …). |
-| web-multiselect-test | test | web-multiselect | 13900 | npm-install vs direct-file consumption checks before publishing. |
-| web-multiselect-positioning-demo | test | web-multiselect | 14000 | Single-page positioning repro. |
-| web-playground | test | web-components | 14100 | Devkit e2e test bed — a component scaffolded with `kmwc new`, linked to this repo. |
+| web-multiselect-showcase | showcase | web-multiselect | 16000 |  |
+| web-daterangepicker-showcase | showcase | web-daterangepicker | 16100 |  |
+| web-treeview-showcase | showcase | web-treeview | 16200 |  |
+| web-grid-showcase | showcase | web-grid | 16300 | [https://web-grid.keenmate.com](https://web-grid.keenmate.com) |
+| web-multiselect-docs | docs | web-multiselect | 16400 | Content-only docs (keendocs). |
+| web-component-framework-test | test | — | 17000 | Smoke + contrast tests inside CSS host frameworks (plain / Bootstrap / …). |
+| web-multiselect-test | test | web-multiselect | 17100 | npm-install vs direct-file consumption checks before publishing. |
+| web-multiselect-positioning-demo | test | web-multiselect | 17200 | Single-page positioning repro. |
+| web-playground | test | web-components | 17300 | Devkit e2e test bed — a component scaffolded with `kmwc new`, linked to this repo. |
 
-**Ports** — one sequence, a block of 100 per repo in registry order: dev server = **Dev port**, preview = +1, examples image = +10. Run any number of repos side by side without collisions; `kmwc doctor` checks a repo against it and `kmwc new` takes the next free block.
+**Ports** — a block of 100 per repo: dev server = **Dev port**, preview = +1, examples image = +10. Each kind numbers its blocks by 100 inside its own range (component 12100–14900 · library 15000–15900 · showcase & docs 16000–16900 · test 17000–17900), so any number of repos run side by side without collisions and a new component lands next to the others. `kmwc doctor` checks a repo against its block; `kmwc new` takes the next free one.
 <!-- kmwc:catalogue:end -->
 
 To add or change a row, edit [`components.json`](components.json) and run

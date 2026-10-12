@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { mapKmwcConfig, getRegistry, getNextPortBlock, getPortsForBlock, DEVKIT_ROOT, FIRST_PORT_BLOCK, PORT_BLOCK_SIZE } from '../src/config.js';
+import { mapKmwcConfig, getRegistry, getNextPortBlock, getPortRange, getPortsForBlock, DEVKIT_ROOT, PORT_BLOCK_SIZE } from '../src/config.js';
 import {
   getSyncPlan,
   renderTemplate,
@@ -44,7 +44,7 @@ test('config: defaults derive from the package', () => {
   assert.equal(config.cssVariables.checkMode, 'declared');
 });
 
-test('registry: ids and prefixes unique; every repo owns the next port block in one sequence', () => {
+test('registry: ids and prefixes unique; each kind numbers its port blocks by 100 inside its range', () => {
   const { components } = getRegistry();
   const ids = components.map((entry) => entry.id);
   assert.equal(new Set(ids).size, ids.length, 'duplicate id');
@@ -52,12 +52,18 @@ test('registry: ids and prefixes unique; every repo owns the next port block in 
   const prefixes = components.map((entry) => entry.prefix).filter(Boolean);
   assert.equal(new Set(prefixes).size, prefixes.length, 'duplicate prefix');
 
-  // One sequence, step PORT_BLOCK_SIZE, in registry order, no gaps.
-  components.forEach((entry, entryIndex) => {
-    assert.equal(entry.port, FIRST_PORT_BLOCK + entryIndex * PORT_BLOCK_SIZE, `${entry.id} breaks the port sequence`);
+  // Per range: registry order, step PORT_BLOCK_SIZE from the range start, no gaps, within bounds.
+  const nextBlockByRange = new Map();
+  for (const entry of components) {
+    const portRange = getPortRange(entry.kind);
+    const expectedBlock = nextBlockByRange.get(portRange) ?? portRange.firstBlock;
+    assert.equal(entry.port, expectedBlock, `${entry.id} breaks the ${portRange.kinds.join('/')} port sequence`);
+    assert.ok(entry.port <= portRange.lastBlock, `${entry.id} overflows its port range`);
     assert.ok(!('ports' in entry) && !('status' in entry), `${entry.id} carries a retired field`);
-  });
-  assert.equal(getNextPortBlock(), FIRST_PORT_BLOCK + components.length * PORT_BLOCK_SIZE);
+    nextBlockByRange.set(portRange, expectedBlock + PORT_BLOCK_SIZE);
+  }
+  const componentCount = components.filter((entry) => entry.kind === 'component').length;
+  assert.equal(getNextPortBlock(), getPortRange('component').firstBlock + componentCount * PORT_BLOCK_SIZE, 'a new component lands next to the components');
   const blockPorts = getPortsForBlock(12100);
   assert.deepEqual(blockPorts, { dev: 12100, preview: 12101, image: 12110 });
   for (const entry of components) {

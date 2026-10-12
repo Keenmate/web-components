@@ -78,10 +78,11 @@ test/                    node:test unit tests
   `templates/new/.claude/commands/publish.md` mirrors the reference
   (`web-multiselect/.claude/commands/publish.md`) — `[canonical]` blocks stay
   byte-identical to it.
-- **Ports & prefixes:** every registry entry owns one `port` block in a single
-  sequence by 100, in registry order (dev = block, preview = +1, image = +10 —
-  `getPortsForBlock()`); a new repo is appended and takes the next block. The
-  unit tests reject gaps and collisions. No versions/status in the registry —
+- **Ports & prefixes:** every registry entry owns one `port` block (dev = block,
+  preview = +1, image = +10 — `getPortsForBlock()`), numbered by 100 in registry
+  order inside its kind's range (`PORT_RANGES` in config.js: components
+  12100–14900, libraries 15000–, showcases/docs 16000–, tests 17000–). Add a repo
+  at the end of its kind's group. The unit tests reject gaps, overflow and collisions. No versions/status in the registry —
   they go stale.
 - **Changing what a component must look like** (new standard script, new
   legacy file, new doctor check, scaffold change): update `doctor.js`, the

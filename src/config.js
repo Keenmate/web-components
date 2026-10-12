@@ -33,22 +33,40 @@ export const LEGACY_FILES = [
 ];
 
 /**
- * Port blocks: every repo owns one block of 100 in a single sequence
- * (components.json `port`): dev server = block, preview = +1, examples image = +10.
+ * Port blocks: every repo owns one block of 100 (components.json `port`):
+ * dev server = block, preview = +1, examples image = +10. Each registry kind
+ * has its own range with headroom, numbered by 100 in registry order, so a new
+ * component lands next to the other components.
  */
 export const PORT_BLOCK_SIZE = 100;
-export const FIRST_PORT_BLOCK = 12100;
 export const PREVIEW_PORT_OFFSET = 1;
 export const IMAGE_PORT_OFFSET = 10;
+export const PORT_RANGES = [
+  { kinds: ['component'], firstBlock: 12100, lastBlock: 14900 },
+  { kinds: ['library'], firstBlock: 15000, lastBlock: 15900 },
+  { kinds: ['showcase', 'docs'], firstBlock: 16000, lastBlock: 16900 },
+  { kinds: ['test'], firstBlock: 17000, lastBlock: 17900 },
+];
 
 export function getPortsForBlock(portBlock) {
   return { dev: portBlock, preview: portBlock + PREVIEW_PORT_OFFSET, image: portBlock + IMAGE_PORT_OFFSET };
 }
 
-/** The next free block after the highest one in the registry. */
-export function getNextPortBlock(registry = getRegistry()) {
-  const portBlocks = registry.components.map((entry) => entry.port).filter((port) => typeof port === 'number');
-  return portBlocks.length ? Math.max(...portBlocks) + PORT_BLOCK_SIZE : FIRST_PORT_BLOCK;
+export function getPortRange(kind) {
+  const portRange = PORT_RANGES.find((range) => range.kinds.includes(kind));
+  if (!portRange) throw new Error(`kmwc: no port range for registry kind "${kind}"`);
+  return portRange;
+}
+
+/** The next free block in the kind's range (after the highest block used by that range). */
+export function getNextPortBlock(registry = getRegistry(), kind = 'component') {
+  const portRange = getPortRange(kind);
+  const usedBlocks = registry.components
+    .filter((entry) => portRange.kinds.includes(entry.kind) && typeof entry.port === 'number')
+    .map((entry) => entry.port);
+  const nextBlock = usedBlocks.length ? Math.max(...usedBlocks) + PORT_BLOCK_SIZE : portRange.firstBlock;
+  if (nextBlock > portRange.lastBlock) throw new Error(`kmwc: the ${portRange.kinds.join('/')} port range ${portRange.firstBlock}–${portRange.lastBlock} is full`);
+  return nextBlock;
 }
 
 /** Root-level HTML files that are fragments, not pages (never built as entries). */
