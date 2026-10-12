@@ -1,7 +1,11 @@
 /**
  * Side-effect entry injected into every example page by the kmwc Vite plugin
- * (as `virtual:kmwc-examples`). Loads the shared styles and mounts the
- * page-level helpers.
+ * (as `virtual:kmwc-examples`). Mounts the page-level helpers. The shared
+ * styles are NOT imported here: the plugin loads them render-blocking (a
+ * <link> in <head> in dev, an extracted stylesheet in builds), because a CSS
+ * import in a module script only applies after the script runs — a flash of
+ * unstyled page on every reload. Using this entry without the plugin? Import
+ * `@keenmate/web-components-devkit/examples/style.css` yourself.
  *
  * Mounting is deferred one task past DOM-ready on purpose: in the production
  * build Vite hoists this import INTO the page's entry module, so it evaluates
@@ -10,7 +14,6 @@
  * `renderExamplesIndex`) finish first — in dev and build alike. Content
  * rendered later still (after a fetch) → call `mountExamplesKit()`.
  */
-import './css/style.css';
 import { attachDomReadyHandler } from './page-config.js';
 import { mountExamplesKit } from './kit.js';
 

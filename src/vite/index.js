@@ -24,6 +24,9 @@ import { composePage } from './page-composer.js';
 
 const AUTO_ENTRY_PATH = join(DEVKIT_ROOT, 'src', 'examples', 'auto.js');
 const VIRTUAL_AUTO_ID = 'virtual:kmwc-examples';
+const KIT_STYLESHEET_PATH = join(DEVKIT_ROOT, 'src', 'examples', 'css', 'style.css').replace(/\\/g, '/');
+// Vite's dev-server URL for a file outside the project root.
+const KIT_STYLESHEET_DEV_URL = `/@fs/${KIT_STYLESHEET_PATH.replace(/^\//, '')}`;
 const EXAMPLES_MODE = 'examples';
 
 /** Root-level HTML pages to build as the examples site. */
@@ -133,7 +136,13 @@ export function createExamplesPlugin(pluginConfig = {}) {
         const shouldInjectAnalytics = pluginConfig.shouldInjectAnalytics ?? isBuild;
         if (shouldInjectAnalytics && config.analytics.plausibleSiteId) headHtml = renderPlausibleSnippet(config) + headHtml;
 
-        const bodyHtml = `<script type="module">import '${VIRTUAL_AUTO_ID}';</script>\n`;
+        // The kit stylesheet must block first paint, or every reload flashes an
+        // unstyled page (FOUC). Dev: a real <link> in <head> — a CSS import in a
+        // module script only applies once the script has run. Build: a CSS
+        // import, which Vite extracts into a hashed <link> in <head>.
+        if (!isBuild) headHtml += `<link rel="stylesheet" href="${KIT_STYLESHEET_DEV_URL}">\n`;
+        const kitImports = isBuild ? `import '${KIT_STYLESHEET_PATH}'; import '${VIRTUAL_AUTO_ID}';` : `import '${VIRTUAL_AUTO_ID}';`;
+        const bodyHtml = `<script type="module">${kitImports}</script>\n`;
 
         html = /<head[^>]*>/i.test(html)
           ? html.replace(/<head[^>]*>/i, (headTag) => `${headTag}\n${headHtml}`)

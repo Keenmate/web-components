@@ -56,6 +56,11 @@ First release of `@keenmate/web-components-devkit`, plus the component catalogue
 
 ### Fixed
 
+- **Flash of unstyled page on every reload in dev** (FOUC): the kit stylesheet was
+  imported from the kit's module script, which Vite dev applies only after the script
+  runs. The plugin now loads it render-blocking: a `<link>` in `<head>` in dev, a CSS
+  import (extracted to a `<head>` `<link>`) in builds. `auto.js` no longer imports
+  it. An e2e spec loads a page with JavaScript off and checks it is styled.
 - **Fragment detection** (`checkIsFragment`): a page is a full document only when it
   *starts* with `<!DOCTYPE` / `<html>` (after a BOM, whitespace or comments). A fragment
   whose script or code sample mentions `<html>` was passed through without the layout

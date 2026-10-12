@@ -26,6 +26,17 @@ test.describe('examples kit', () => {
     await expect(navItems.first()).toHaveText('BU01 · Label & active state');
   });
 
+  test('no FOUC: the kit styles apply without any script running', async ({ browser, baseURL }) => {
+    // With JavaScript off, only render-blocking stylesheets can style the page —
+    // a script-injected stylesheet would leave it unstyled here (and flash on reload).
+    const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+    const page = await context.newPage();
+    await page.goto('/examples-basic.html');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(247, 250, 252)');
+    await expect(page.locator('.container > header')).not.toHaveCSS('background-image', 'none');
+    await context.close();
+  });
+
   test('chapter nav opens, positions and jumps', async ({ page }) => {
     await page.setViewportSize({ width: 1200, height: 500 });
     await page.goto('/examples-basic.html');

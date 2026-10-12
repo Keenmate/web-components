@@ -215,6 +215,14 @@ test('plugin: injects theme bootstrap, page config + kit into root pages only', 
   assert.match(transformedHtml, /--kmwc-accent-color:#059669/);
   assert.ok(!transformedHtml.includes('plausible'), 'no analytics in dev');
 
+  // No FOUC: the kit stylesheet is render-blocking — a <link> in <head> in dev, a
+  // CSS import (Vite extracts it to a <head> <link>) in builds; never a script-only load.
+  const headHtml = transformedHtml.slice(0, transformedHtml.indexOf('</head>'));
+  assert.match(headHtml, /<link rel="stylesheet" href="\/@fs\/[^"]*\/src\/examples\/css\/style\.css">/);
+  const builtHtml = getHtmlTransformer({ root: PLAYGROUND_ROOT }, { command: 'build', mode: 'examples' })(pageHtml);
+  assert.ok(!builtHtml.includes('/@fs/'), 'no dev URL in builds');
+  assert.match(builtHtml, /<script type="module">import '[^']*\/src\/examples\/css\/style\.css'; import 'virtual:kmwc-examples';<\/script>/);
+
   assert.equal(transformHtml(pageHtml, '/test/fixture.html'), pageHtml, 'nested pages untouched');
   const optedOutHtml = pageHtml.replace('<html>', '<html data-kmwc="off">');
   assert.equal(transformHtml(optedOutHtml), optedOutHtml, 'data-kmwc="off" opts out');
