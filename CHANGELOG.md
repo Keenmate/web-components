@@ -32,7 +32,8 @@ First release of `@keenmate/web-components-devkit`, plus the component catalogue
   `check-vars` (declared/consumed modes; replaces three script copies),
   `check-release` (dist-tag ⇔ version, not yet on npm — gates `make publish*`),
   `new` (rulebook-shaped scaffold with intake: npm availability, reserved-prefix
-  check), `readme`.
+  check, next free block in the component port range — a taken or misaligned
+  `--port` is refused), `readme`.
 - **Fragment pages**: a page without `<html>` gets the devkit layout (head, entry
   script, header, container) from `<meta name="kmwc:…">` tags; `<kmwc-include>` pulls
   shared partials (parameters, nesting, cycle detection); `<kmwc-demo>` renders live
@@ -43,3 +44,6 @@ First release of `@keenmate/web-components-devkit`, plus the component catalogue
   README + `docs/`, CHANGELOG, LICENSE, `.claude/commands/publish.md`, examples,
   smoke + dark-mode e2e specs — example pages are fragments. `--minimal` gives an
   empty skeleton instead of the sample toggle. A fresh scaffold passes every rulebook suite.
+- **Playground** (`playground/`): a component scaffolded with `kmwc new`, linked to
+  the devkit and registered in the catalogue (port 17300) — the e2e test bed for
+  the kit, the presets and the scaffold, in dev and in the built site.
