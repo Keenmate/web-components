@@ -279,6 +279,11 @@ test('composer: fragments get the layout, full documents pass through', () => {
   const fullDocument = '<!DOCTYPE html><html><head></head><body><p>legacy</p></body></html>';
   assert.equal(composePage(fullDocument, { config, pagePath: '/legacy.html' }), fullDocument);
   assert.ok(checkIsFragment('<!-- <html> in a comment --><p>x</p>'));
+  // Only a document START counts: `<html>` mentioned in a script or a code sample is still a fragment.
+  assert.ok(checkIsFragment('<meta name="kmwc:title" content="X">\n<script>// `dir` on any ancestor / <html> mirrors it</script>'));
+  assert.ok(checkIsFragment('<pre><code>&lt;html&gt;</code></pre><template><html></html></template>'));
+  assert.ok(!checkIsFragment('﻿<!-- header -->\n<html lang="en"><body></body></html>'));
+  assert.ok(!checkIsFragment('  <!doctype html>\n<p>x</p>'));
 });
 
 test('composer: every scaffold page (full and --minimal) composes', () => {

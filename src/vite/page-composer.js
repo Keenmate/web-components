@@ -42,6 +42,9 @@ const HEAD_ELEMENT_PATTERN = /<link\b[^>]*>\s*|<style\b[^>]*>[\s\S]*?<\/style>\s
 const ATTRIBUTE_PATTERN = /([a-zA-Z][\w-]*)(?:\s*=\s*"([^"]*)")?/g;
 
 const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/g;
+// A full document STARTS with a doctype or <html> (after a BOM, whitespace, comments). Matching
+// `<html>` anywhere would misread a fragment whose script or code sample mentions it.
+const DOCUMENT_START_PATTERN = /^﻿?(?:\s|<!--[\s\S]*?-->)*<(?:!doctype\b|html[\s>])/i;
 
 /**
  * Apply `mapper` to the text OUTSIDE HTML comments only, so a usage example in
@@ -152,7 +155,7 @@ export function getPageMeta(html) {
   return { pageMeta, htmlWithoutMeta };
 }
 
-export const checkIsFragment = (html) => !/<html[\s>]/i.test(html.replace(HTML_COMMENT_PATTERN, ''));
+export const checkIsFragment = (html) => !DOCUMENT_START_PATTERN.test(html);
 
 /** Wrap a fragment page in the devkit layout. */
 export function renderLayout(fragmentHtml, { config, pagePath }) {

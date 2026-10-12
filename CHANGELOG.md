@@ -47,3 +47,14 @@ First release of `@keenmate/web-components-devkit`, plus the component catalogue
 - **Playground** (`playground/`): a component scaffolded with `kmwc new`, linked to
   the devkit and registered in the catalogue (port 17300) — the e2e test bed for
   the kit, the presets and the scaffold, in dev and in the built site.
+
+### Fixed
+
+- **Fragment detection** (`checkIsFragment`): a page is a full document only when it
+  *starts* with `<!DOCTYPE` / `<html>` (after a BOM, whitespace or comments). A fragment
+  whose script or code sample mentions `<html>` was passed through without the layout
+  (found migrating web-commandpalette's playground page).
+
+### Migrated
+
+- **web-commandpalette** (1.0.0-rc02) — the first component on the devkit.
