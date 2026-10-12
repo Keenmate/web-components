@@ -123,6 +123,8 @@ export interface KmwcConfig {
 
 export const DEVKIT_ROOT: string;
 export const DEFAULT_RULEBOOK_PATH: string;
+/** The nearest `<ancestor>/BlissFramework/guidelines/web-components` above `startPath`, or null. */
+export function getRulebookPath(startPath: string): string | null;
 export const LEGACY_FILES: string[];
 export const PACKAGE_LEAK_RULES: Array<{ pattern: RegExp; label: string }>;
 export const PACKAGE_FILES_EXCLUSIONS: string[];

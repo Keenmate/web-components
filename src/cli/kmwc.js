@@ -41,6 +41,7 @@ Usage: kmwc <command> [options]
   new <name>                Scaffold a new component (e.g. \`kmwc new web-colorpicker --prefix cpk\`).
                             --title "…" --tag … --prefix … --dir … --port … --register
                             --minimal: empty skeleton (no inputs/events) instead of the sample
+                            --adopt: an already registered component (migration scratch scaffold)
   readme [--check]          Regenerate the README catalogue from components.json (devkit repo).
 
 Global: --root <dir>        Act on <dir> instead of the current directory.`);

@@ -3,6 +3,7 @@
  *
  *   kmwc new web-colorpicker --prefix cpk [--title "Web Color Picker"] [--tag web-colorpicker]
  *        [--dir ../web-colorpicker] [--port 13200] [--minimal] [--register] [--offline]
+ *   kmwc new web-editor --adopt --dir /tmp/web-editor [--prefix …]
  *
  * Default: a small working sample (a toggle with `label` / `active` inputs and
  * a `change` event) to rename or replace. `--minimal`: an empty skeleton — no
@@ -21,6 +22,12 @@
  * `.claude/commands/publish.md`, examples, fixtures + e2e specs, then the
  * `kmwc sync` files. The port block (dev = block, image = +10) is the next free
  * one in the component range (see PORT_RANGES in config.js; `--port` overrides).
+ *
+ * `--adopt` is for MIGRATING a component that is already registered: the id must
+ * be in components.json, the port block (and prefix, unless the entry has none —
+ * then `--prefix`) come from its entry, the npm-name check is skipped (the package
+ * may exist), and the registry is left alone. Scaffold into a scratch `--dir`,
+ * then move the component's own code into the generated shape.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -184,7 +191,7 @@ export function generatePackageJson({ componentId, packageName, tagline, tag, pr
 export async function run(args) {
   const requestedName = args._[0];
   if (!requestedName) {
-    throw new Error('usage: kmwc new <name> --prefix <2-4 letters> [--title "…"] [--tag …] [--dir …] [--port …] [--register] [--offline]');
+    throw new Error('usage: kmwc new <name> --prefix <2-4 letters> [--title "…"] [--tag …] [--dir …] [--port …] [--register] [--offline] [--adopt]');
   }
 
   const unscopedName = getUnscopedName(requestedName);
@@ -201,24 +208,35 @@ export async function run(args) {
 
   // ── intake ───────────────────────────────────────────────────────────────
   const registry = getRegistry();
-  if (registry.components.some((entry) => entry.id === componentId)) throw new Error(`"${componentId}" is already in components.json`);
+  const isAdopting = !!args.adopt;
+  const adoptedEntry = registry.components.find((entry) => entry.id === componentId);
+  if (isAdopting && !adoptedEntry) throw new Error(`--adopt: "${componentId}" is not in components.json — register it, or drop --adopt for a new component`);
+  if (!isAdopting && adoptedEntry) throw new Error(`"${componentId}" is already in components.json (migrating it? add --adopt)`);
+  if (isAdopting && args.register) throw new Error('--adopt never edits the registry — drop --register');
   if (existsSync(targetPath) && readdirSync(targetPath).length) throw new Error(`${targetPath} exists and is not empty`);
 
-  const prefix = args.prefix || generatePrefix(componentId);
+  if (isAdopting && adoptedEntry.prefix && args.prefix && args.prefix !== adoptedEntry.prefix) {
+    throw new Error(`--prefix ${args.prefix} ≠ the registered prefix "${adoptedEntry.prefix}"`);
+  }
+  const prefix = (isAdopting && adoptedEntry.prefix) || args.prefix || generatePrefix(componentId);
   if (!prefix) {
     throw new Error(
       `cannot derive a CSS prefix for "${componentId}" — is "${featureName}" one English word or several? ` +
         `Pass --prefix (initials of each word, e.g. daterangepicker → drp; component-intake.md "C — CSS prefix derivation").`
     );
   }
-  const prefixError = checkPrefix(prefix, getReservedPrefixes(registry));
+  // An adopted component's own registered prefix isn't a clash with itself.
+  const reservedPrefixes = getReservedPrefixes(registry);
+  if (isAdopting && adoptedEntry.prefix) reservedPrefixes.delete(adoptedEntry.prefix);
+  const prefixError = checkPrefix(prefix, reservedPrefixes);
   if (prefixError) throw new Error(prefixError);
 
-  if (!args.offline && checkIsPackageNameTaken(packageName)) throw new Error(`${packageName} already exists on npm (component-intake.md "B")`);
+  if (!isAdopting && !args.offline && checkIsPackageNameTaken(packageName)) throw new Error(`${packageName} already exists on npm (component-intake.md "B")`);
 
-  const devPort = Number(args.port) || getNextPortBlock(registry);
+  if (isAdopting && args.port && Number(args.port) !== adoptedEntry.port) throw new Error(`--port ${args.port} ≠ the registered port block ${adoptedEntry.port}`);
+  const devPort = isAdopting ? adoptedEntry.port : Number(args.port) || getNextPortBlock(registry);
   if (devPort % PORT_BLOCK_SIZE !== 0) throw new Error(`--port ${devPort} is not a port block (a multiple of ${PORT_BLOCK_SIZE})`);
-  const portOwner = registry.components.find((entry) => entry.port === devPort);
+  const portOwner = registry.components.find((entry) => entry.port === devPort && entry.id !== componentId);
   if (portOwner) throw new Error(`port block ${devPort} belongs to ${portOwner.id} — omit --port to take the next free block`);
   const corePackageJsonPath = join(DEVKIT_ROOT, '..', 'web-components-core', 'package.json');
   const coreVersion = existsSync(corePackageJsonPath) ? getJsonFile(corePackageJsonPath).version : '1.0.0-rc12';
@@ -279,7 +297,10 @@ export async function run(args) {
     repo: `https://github.com/keenmate/${componentId}`,
     port: devPort,
   };
-  if (args.register) {
+  if (isAdopting) {
+    if (!adoptedEntry.prefix) console.log(`
+The registry entry has no prefix — add "prefix": "${prefix}" to its components.json entry.`);
+  } else if (args.register) {
     const registryPath = join(DEVKIT_ROOT, 'components.json');
     const registryJson = getJsonFile(registryPath);
     const lastComponentIndex = registryJson.components.map((entry) => entry.kind).lastIndexOf('component');

@@ -2,11 +2,11 @@
 // (The examples kit is covered end-to-end by playground/e2e — `npm run test:e2e`.)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { mapKmwcConfig, getRegistry, getNextPortBlock, getPortRange, getPortsForBlock, DEVKIT_ROOT, PORT_BLOCK_SIZE, PACKAGE_FILES_EXCLUSIONS } from '../src/config.js';
+import { mapKmwcConfig, getRegistry, getNextPortBlock, getPortRange, getPortsForBlock, getRulebookPath, DEVKIT_ROOT, PORT_BLOCK_SIZE, PACKAGE_FILES_EXCLUSIONS } from '../src/config.js';
 import {
   getSyncPlan,
   renderTemplate,
@@ -43,6 +43,30 @@ test('config: defaults derive from the package', () => {
   assert.equal(config.examples.storagePrefix, 'web-sample');
   assert.equal(config.image.name, 'registry.km8.es/web-sample-examples:prod');
   assert.equal(config.cssVariables.checkMode, 'declared');
+});
+
+test('config: the rulebook is found above the component, wherever the devkit is installed', () => {
+  // <tmp>/Git/BlissFramework/guidelines/web-components + <tmp>/Git/KM/web-x/node_modules/… (an npm install).
+  const treeRoot = mkdtempSync(join(tmpdir(), 'kmwc-rulebook-'));
+  try {
+    const rulebookPath = join(treeRoot, 'Git', 'BlissFramework', 'guidelines', 'web-components');
+    const componentRoot = join(treeRoot, 'Git', 'KM', 'web-x');
+    mkdirSync(rulebookPath, { recursive: true });
+    mkdirSync(join(componentRoot, 'node_modules'), { recursive: true });
+    assert.equal(getRulebookPath(componentRoot), rulebookPath);
+    assert.equal(getRulebookPath(join(componentRoot, 'node_modules')), rulebookPath);
+    const savedEnvPath = process.env.KMWC_RULEBOOK_PATH;
+    delete process.env.KMWC_RULEBOOK_PATH;
+    try {
+      assert.equal(mapKmwcConfig(createPackageJson(), componentRoot).rulebook.path, rulebookPath);
+      assert.equal(mapKmwcConfig(createPackageJson({ rulebook: { path: '../rules' } }), componentRoot).rulebook.path, join(treeRoot, 'Git', 'KM', 'rules'));
+    } finally {
+      if (savedEnvPath !== undefined) process.env.KMWC_RULEBOOK_PATH = savedEnvPath;
+    }
+    assert.equal(getRulebookPath(join(treeRoot, 'elsewhere')), getRulebookPath(tmpdir()), 'nothing above → whatever the real filesystem has (usually null)');
+  } finally {
+    rmSync(treeRoot, { recursive: true, force: true });
+  }
 });
 
 test('registry: ids and prefixes unique; each kind numbers its port blocks by 100 inside its range', () => {

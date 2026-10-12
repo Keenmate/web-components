@@ -70,12 +70,12 @@
     {
       "id": "web-editor",
       "kind": "component",
+      "prefix": "km",
       "port": 12700,
       "path": "../web-editor",
       "npm": "@keenmate/web-editor",
       "examples": "https://examples.web-editor.keenmate.dev",
-      "monorepo": true,
-      "note": "Monorepo: ProseMirror-based WYSIWYG / Markdown editor."
+      "note": "ProseMirror-based WYSIWYG / Markdown editor."
     },
     {
       "id": "web-switch",

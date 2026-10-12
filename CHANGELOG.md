@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-rc02] - 2026-10-12
+
+### Added
+
+- **`kmwc new --adopt`** for migrating a component that is already in the registry:
+  the same scaffold, with the entry's port block and prefix (or `--prefix` when the
+  entry has none), no npm-name check (the package may exist) and no registry edit.
+  Scaffold into a scratch `--dir`, then move the component's code into it — how
+  web-editor's one-package monorepo was flattened.
+
+### Fixed
+
+- **`kmwc doctor` skipped every rulebook suite once the devkit came from npm.** The
+  rulebook was looked up at a fixed path from the devkit (`<devkit>/../../BlissFramework`),
+  which lands inside `node_modules` for an installed package. It is now the nearest
+  `BlissFramework/guidelines/web-components` above the component (then above the
+  devkit); `kmwc.rulebook.path` resolves against the component root.
+
+### Migrated
+
+- **web-editor** — flattened from a one-package npm-workspaces monorepo; registry entry
+  now carries its prefix (`km`) and no longer says monorepo.
+
 ## [1.0.0-rc01] - 2026-10-12 [PUBLISHED]
 
 First release of `@keenmate/web-components-devkit`, plus the component catalogue.

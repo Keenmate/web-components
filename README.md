@@ -42,7 +42,7 @@ them in the same shape: `@keenmate/web-components-devkit`.
 | **web-commandpalette** | `@keenmate/web-commandpalette` | `cp` | 12400 | [repo](https://github.com/keenmate/web-commandpalette) · [examples](https://examples.web-commandpalette.keenmate.dev) | ✅ | Framework-agnostic command-palette web component — modes, multi-step commands, scoped + global search,… |
 | **web-dropzone** | `@keenmate/web-dropzone` | `dz` | 12500 | [repo](https://github.com/keenmate/web-dropzone) | — | Lightweight file dropzone web component with drag-drop, previews, validation, and multiple display modes. |
 | **web-grid** | `@keenmate/web-grid` | `wg` | 12600 | [repo](https://github.com/keenmate/web-grid) · [docs](https://web-grid.keenmate.com) · [showcase](https://web-grid.keenmate.com) | — | Framework-agnostic data grid web component with sorting, filtering, inline editing, and keyboard navigation |
-| **web-editor** | `@keenmate/web-editor` | — | 12700 | [examples](https://examples.web-editor.keenmate.dev) | — | KeenMate Web Editor monorepo — a framework-agnostic WYSIWYG / Markdown editor built on ProseMirror. |
+| **web-editor** | `@keenmate/web-editor` | `km` | 12700 | [examples](https://examples.web-editor.keenmate.dev) | ✅ | Keenmate Web Editor — a framework-agnostic WYSIWYG / Markdown editor built on ProseMirror. |
 | **web-switch** | `@keenmate/web-switch` | — | 12800 | [repo](https://github.com/keenmate/web-switch) | — | Framework-agnostic web component wrapper for @keenmate/svelte-switch. Works with React, Vue, Angular, or… |
 | **web-timepicker** | — | — | 12900 | — | — | Vanilla-JS prototypes (spiral / slider time pickers); no package yet. |
 | **web-wysiwyg** | — | — | 13000 | — | — | ProseMirror exploration; superseded by web-editor. |
@@ -166,7 +166,8 @@ Every field is optional. Defaults are derived from the package.
     "checkMode": "declared"                      // or "consumed" (var() reads)
   },
   "rulebook": {
-    "path": "../../BlissFramework/guidelines/web-components", // default; env KMWC_RULEBOOK_PATH wins
+    "path": "../BlissFramework/guidelines/web-components", // relative to the component; default: the nearest
+                                                 // BlissFramework checkout above it. env KMWC_RULEBOOK_PATH wins
     "skippedChecks": []                          // e.g. ["responsive-overlay"]
   },
   "sync": { "skippedFiles": [] }                 // e.g. ["Makefile"] to opt a file out
@@ -302,6 +303,7 @@ kmwc doctor [--json]          devkit checks + package contents + the rulebook's 
 kmwc check-vars [--strict]    component-variables.manifest.json ⇔ CSS
 kmwc check-release --tag t    latest ⇔ release version, rc ⇔ -rcN, version not yet on npm
 kmwc new web-<name>           scaffold a component (--prefix, --title, --tag, --dir, --port, --minimal, --register)
+                              --adopt: scaffold an ALREADY registered component (its port/prefix) to migrate into
 kmwc readme [--check]         regenerate this README's catalogue (devkit repo only)
 ```
 
@@ -365,6 +367,12 @@ command prints the reminder.
 ### Migrating a component
 
 `kmwc doctor` lists everything that's left, so run it after each step.
+
+**Repo in a different shape** (a one-package monorepo, a non-standard layout)?
+Don't teach the devkit the old shape: back the repo up, run `kmwc new web-<name>
+--adopt --dir <scratch>` (same files, with the registered port and prefix, no
+registry edits), and move the component's own code into that layout with
+`git mv`. web-editor was flattened this way.
 
 1. `npm i -D @keenmate/web-components-devkit vite@^7` (plus `@playwright/test`
    if the repo has e2e tests).

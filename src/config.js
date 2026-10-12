@@ -19,8 +19,28 @@ import { createRequire } from 'node:module';
 /** Absolute path of the devkit package root (this repo). */
 export const DEVKIT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Default rulebook location: a BlissFramework checkout next to the KM folder. */
-export const DEFAULT_RULEBOOK_PATH = resolve(DEVKIT_ROOT, '..', '..', 'BlissFramework', 'guidelines', 'web-components');
+const RULEBOOK_RELATIVE_PATH = join('BlissFramework', 'guidelines', 'web-components');
+
+/**
+ * The nearest BlissFramework rulebook checkout: `<ancestor>/BlissFramework/
+ * guidelines/web-components` for the first ancestor of `startPath` that has one
+ * (e.g. C:\Git\KM\web-editor → C:\Git\BlissFramework\…), or null. Searching
+ * from the component (not a fixed path from the devkit) is what keeps it
+ * working when the devkit is installed into node_modules from npm.
+ */
+export function getRulebookPath(startPath) {
+  let directory = resolve(startPath);
+  for (;;) {
+    const candidatePath = join(directory, RULEBOOK_RELATIVE_PATH);
+    if (existsSync(candidatePath)) return candidatePath;
+    const parentDirectory = dirname(directory);
+    if (parentDirectory === directory) return null;
+    directory = parentDirectory;
+  }
+}
+
+/** Fallback rulebook location: the nearest checkout above the devkit, else next to the KM folder. */
+export const DEFAULT_RULEBOOK_PATH = getRulebookPath(DEVKIT_ROOT) ?? resolve(DEVKIT_ROOT, '..', '..', RULEBOOK_RELATIVE_PATH);
 
 /** Files the devkit now owns — finding one of these in a component is a doctor error. */
 export const LEGACY_FILES = [
@@ -235,7 +255,9 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
       checkMode: cssVariables.checkMode || 'declared',
     },
     rulebook: {
-      path: process.env.KMWC_RULEBOOK_PATH || rulebook.path || DEFAULT_RULEBOOK_PATH,
+      path:
+        process.env.KMWC_RULEBOOK_PATH ||
+        (rulebook.path ? resolve(root, rulebook.path) : getRulebookPath(root) ?? DEFAULT_RULEBOOK_PATH),
       skippedChecks: rulebook.skippedChecks || [],
     },
     sync: {
