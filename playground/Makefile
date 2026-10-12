@@ -89,7 +89,7 @@ check-version: ## Show the current package version
 check-vars: ## Validate component-variables.manifest.json against the CSS
 	npx kmwc check-vars
 
-doctor: ## Check this repo against the KeenMate component standard
+doctor: ## Check this repo against the Keenmate component standard
 	npx kmwc doctor
 
 sync: ## Regenerate devkit-owned files (Dockerfile, nginx.conf, Makefile, …)

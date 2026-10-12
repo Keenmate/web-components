@@ -118,7 +118,7 @@ export function generatePackageJson({ componentId, packageName, tagline, tag, pr
     description: tagline,
     type: 'module',
     license: 'MIT',
-    author: 'KeenMate',
+    author: 'Keenmate s.r.o.',
     homepage: `https://github.com/keenmate/${componentId}`,
     repository: { type: 'git', url: `git+https://github.com/keenmate/${componentId}.git` },
     keywords: ['web-components', 'custom-elements', 'keenmate', 'bliss', tag],

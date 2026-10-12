@@ -1,10 +1,10 @@
 {
   "name": "@keenmate/web-components-devkit",
   "version": "0.1.0",
-  "description": "Shared dev, example-site and build infrastructure for KeenMate web components: Vite preset, examples kit (chapter nav, copy-link, controls store, shared styles), Playwright preset and the `kmwc` CLI (sync, doctor, check-vars, new, readme).",
+  "description": "Shared dev, example-site and build infrastructure for Keenmate web components: Vite preset, examples kit (chapter nav, copy-link, controls store, shared styles), Playwright preset and the `kmwc` CLI (sync, doctor, check-vars, new, readme).",
   "type": "module",
   "license": "MIT",
-  "author": "KeenMate",
+  "author": "Keenmate s.r.o.",
   "homepage": "https://github.com/keenmate/web-components",
   "repository": {
     "type": "git",

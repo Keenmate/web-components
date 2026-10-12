@@ -1,6 +1,6 @@
-# KeenMate Web Components
+# Keenmate Web Components
 
-The index of KeenMate's web components **and** the shared tooling that keeps
+The index of Keenmate's web components **and** the shared tooling that keeps
 them in the same shape: `@keenmate/web-components-devkit`.
 
 - **[Catalogue](#catalogue)**: every component, library, showcase and test

@@ -185,7 +185,7 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
     prefix: packageConfig.prefix || '',
     repository: getRepositoryUrl(packageJson),
     homepage: packageJson.homepage || '',
-    author: typeof packageJson.author === 'string' ? packageJson.author : packageJson.author?.name || 'KeenMate',
+    author: typeof packageJson.author === 'string' ? packageJson.author : packageJson.author?.name || 'Keenmate s.r.o.',
     license: packageJson.license || 'MIT',
     library: {
       entry: library.entry || 'src/index.ts',

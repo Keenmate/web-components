@@ -63,7 +63,7 @@ export function renderExamplesIndex(indexConfig) {
         .join('')}
     </div>
     <footer class="${classes.footer}">
-      <p>Created by <a href="https://github.com/keenmate" target="_blank" rel="noopener">KeenMate</a>${footerLinks
+      <p>Created by <a href="https://github.com/keenmate" target="_blank" rel="noopener">Keenmate s.r.o.</a>${footerLinks
         .map((link) => ` | <a href="${mapToEscapedHtml(link.href)}" target="_blank" rel="noopener">${mapToEscapedHtml(link.label)}</a>`)
         .join('')}${
         pageConfig.devkitVersion

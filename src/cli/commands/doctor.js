@@ -1,5 +1,5 @@
 /**
- * kmwc doctor — check a component repo against the KeenMate standard.
+ * kmwc doctor — check a component repo against the Keenmate standard.
  *
  * Two halves:
  *   1. Devkit checks — drift prevention: every check is something a past

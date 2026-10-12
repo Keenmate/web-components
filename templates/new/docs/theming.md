@@ -20,7 +20,7 @@ All sizes multiply through `--{{PREFIX}}-rem` (default `10px`; set `1rem` to
 follow the page font size).
 
 ```css
-/* every KeenMate component on the page */
+/* every Keenmate component on the page */
 :root { --base-accent-color: #10b981; }
 
 /* this component only */

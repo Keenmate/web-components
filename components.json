@@ -1,5 +1,5 @@
 {
-  "$comment": "Registry of KeenMate web components — source for the README catalogue (`npm run readme`). `port` is the repo's block: dev server = port, preview = port + 1, examples image = port + 10. Each kind has its own range with headroom (components 12100–14900, libraries 15000–15900, showcases/docs 16000–16900, tests 17000–17900), numbered by 100 in registry order; `kmwc doctor` checks package.json#kmwc.ports against it and `kmwc new` takes the next block. `prefix` mirrors the reserved-prefix table in BlissFramework guidelines/web-components/base-variables.md (the authority).",
+  "$comment": "Registry of Keenmate web components — source for the README catalogue (`npm run readme`). `port` is the repo's block: dev server = port, preview = port + 1, examples image = port + 10. Each kind has its own range with headroom (components 12100–14900, libraries 15000–15900, showcases/docs 16000–16900, tests 17000–17900), numbered by 100 in registry order; `kmwc doctor` checks package.json#kmwc.ports against it and `kmwc new` takes the next block. `prefix` mirrors the reserved-prefix table in BlissFramework guidelines/web-components/base-variables.md (the authority).",
   "components": [
     {
       "id": "web-multiselect",

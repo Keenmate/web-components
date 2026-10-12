@@ -4,7 +4,7 @@
   "description": "Devkit test bed — exercises the Vite preset, examples kit and CLI end-to-end.",
   "type": "module",
   "license": "MIT",
-  "author": "KeenMate",
+  "author": "Keenmate s.r.o.",
   "homepage": "https://github.com/keenmate/web-playground",
   "repository": {
     "type": "git",

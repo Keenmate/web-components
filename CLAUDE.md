@@ -2,7 +2,7 @@
 
 This repo is two things:
 
-1. **The catalogue** of KeenMate web components. `components.json` is the
+1. **The catalogue** of Keenmate web components. `components.json` is the
    registry; the README table between the `kmwc:catalogue` markers is generated
    from it (`npm run readme`). Never hand-edit inside the markers.
 2. **`@keenmate/web-components-devkit`**: the shared dev / example-site / build

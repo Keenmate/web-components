@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * kmwc — the KeenMate web-components devkit CLI.
+ * kmwc — the Keenmate web-components devkit CLI.
  *
  *   kmwc sync [--check]               regenerate devkit-owned files from package.json#kmwc
  *   kmwc doctor [--json]              check this repo against the devkit + rulebook standard
@@ -25,7 +25,7 @@ const COMMAND_LOADERS = {
 };
 
 function renderUsage() {
-  console.log(`kmwc — KeenMate web-components devkit
+  console.log(`kmwc — Keenmate web-components devkit
 
 Usage: kmwc <command> [options]
 

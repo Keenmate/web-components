@@ -1,6 +1,6 @@
 ## Shared infrastructure — `@keenmate/web-components-devkit` (read before touching examples/build files)
 
-This repo follows the KeenMate component standard: the BlissFramework rulebook
+This repo follows the Keenmate component standard: the BlissFramework rulebook
 (`C:\Git\BlissFramework\guidelines\web-components\` — structure, naming, CSS,
 theming, README, CEM, publish) plus the devkit (`../web-components`, published
 as `@keenmate/web-components-devkit`), which owns the example-site kit, the
