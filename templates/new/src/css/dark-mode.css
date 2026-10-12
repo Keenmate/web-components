@@ -1,0 +1,36 @@
+/* ==============================================================================
+   DARK MODE — framework class + per-instance signal handling (Strategy B)
+   ==============================================================================
+   Every --{{PREFIX}}-* colour in variables.css resolves through light-dark(),
+   so flipping `color-scheme` on the host picks the right branch without
+   touching any --base-* value — the consumer's themed --base-* stays the
+   source of truth. Declared ONLY when the consumer signals intent, never bare
+   on :host (that would shadow the page's inherited color-scheme).
+
+   Signals handled (color-scheme.md):
+     #1-#3 OS / forced / page color-scheme — inherited, light-dark() resolves.
+     #4 Framework class on an ancestor — [data-theme], [data-bs-theme], .dark / .light
+     #5 Per-instance attribute — <{{TAG}} data-theme="dark|light">, wins over #4. */
+
+/* DARK — framework class on an ancestor (signal #4) */
+:host-context([data-theme="dark"]),
+:host-context([data-bs-theme="dark"]),
+:host-context(.dark) {
+    color-scheme: dark;
+}
+
+/* LIGHT — framework class on an ancestor (signal #4) */
+:host-context([data-theme="light"]),
+:host-context([data-bs-theme="light"]),
+:host-context(.light) {
+    color-scheme: light;
+}
+
+/* Per-instance attribute on the host (signal #5) */
+:host([data-theme="dark"]) {
+    color-scheme: dark;
+}
+
+:host([data-theme="light"]) {
+    color-scheme: light;
+}

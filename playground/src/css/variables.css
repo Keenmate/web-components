@@ -1,0 +1,40 @@
+/* ==============================================================================
+   CSS CUSTOM PROPERTIES (:host level)
+   ==============================================================================
+   Every --pg-* variable reads through the cross-component --base-* hook
+   with a standalone fallback; colours fall back to light-dark(), so the
+   component follows the page's color-scheme. `color-scheme` is deliberately
+   NOT declared here (it would shadow the page's) — see dark-mode.css.
+
+   Override from outside the shadow DOM:
+     web-playground { --pg-accent-color: #10b981; }
+   ============================================================================== */
+
+:host {
+    /* ==========================================================================
+       SCALE
+       ==========================================================================
+       Unitless --base-* sizes multiply through --pg-rem. Set it to 1rem
+       to follow the host page's font size (Pure Admin integration). */
+    --pg-rem: 10px;
+
+    /* ==========================================================================
+       COLORS
+       ========================================================================== */
+    --pg-bg: var(--base-main-bg, light-dark(#ffffff, #1a1a1a));
+    --pg-text-color-1: var(--base-text-color-1, light-dark(#242424, #f5f5f5));
+    --pg-border-color: var(--base-border-color, light-dark(#e0e0e0, #3d3d3d));
+    --pg-accent-color: var(--base-accent-color, light-dark(#0078d4, #3a96dd));
+    --pg-text-color-on-accent: var(--base-text-color-on-accent, light-dark(#ffffff, #ffffff));
+    --pg-hover-bg: var(--base-hover-bg, color-mix(in srgb, var(--pg-text-color-1) 8%, var(--pg-bg)));
+
+    /* ==========================================================================
+       TYPOGRAPHY & SHAPE
+       ========================================================================== */
+    --pg-font-family: var(--base-font-family, inherit);
+    --pg-font-size-base: calc(var(--base-font-size-base, 1.6) * var(--pg-rem));
+    --pg-root-border-radius: calc(var(--base-border-radius-md, 0.6) * var(--pg-rem));
+    --pg-root-min-height: calc(var(--base-input-size-md-height, 3.5) * var(--pg-rem));
+    --pg-root-padding-block: calc(0.6 * var(--pg-rem));
+    --pg-root-padding-inline: calc(1.2 * var(--pg-rem));
+}

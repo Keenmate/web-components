@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/keenmate/schemas/main/component-variables.schema.json",
+  "component": "@keenmate/web-playground",
+  "prefix": "pg",
+  "baseVariables": [
+    { "name": "base-main-bg", "required": false, "usage": "Component surface" },
+    { "name": "base-text-color-1", "required": false, "usage": "Label text" },
+    { "name": "base-border-color", "required": false, "usage": "Button border" },
+    { "name": "base-accent-color", "required": false, "usage": "Active state fill, focus outline" },
+    { "name": "base-text-color-on-accent", "required": false, "usage": "Label text in the active state" },
+    { "name": "base-hover-bg", "required": false, "usage": "Hover background (falls back to a text/surface color-mix)" },
+    { "name": "base-font-family", "required": false, "usage": "Font family" },
+    { "name": "base-font-size-base", "required": false, "usage": "Font size (multiplier × --pg-rem)" },
+    { "name": "base-border-radius-md", "required": false, "usage": "Corner radius (multiplier × --pg-rem)" },
+    { "name": "base-input-size-md-height", "required": false, "usage": "Minimum height (multiplier × --pg-rem)" }
+  ],
+  "componentVariables": [
+    { "name": "pg-rem", "category": "spacing", "usage": "Base unit for every size (default 10px; 1rem follows the page font size)" },
+    { "name": "pg-bg", "category": "surface", "usage": "Component surface" },
+    { "name": "pg-text-color-1", "category": "text", "usage": "Label text" },
+    { "name": "pg-border-color", "category": "border", "usage": "Button border" },
+    { "name": "pg-accent-color", "category": "accent", "usage": "Active state fill, focus outline" },
+    { "name": "pg-text-color-on-accent", "category": "text", "usage": "Label text in the active state" },
+    { "name": "pg-hover-bg", "category": "state", "usage": "Hover background" },
+    { "name": "pg-font-family", "category": "typography", "usage": "Font family" },
+    { "name": "pg-font-size-base", "category": "typography", "usage": "Font size" },
+    { "name": "pg-root-border-radius", "category": "radius", "usage": "Corner radius" },
+    { "name": "pg-root-min-height", "category": "spacing", "usage": "Minimum height" },
+    { "name": "pg-root-padding-block", "category": "spacing", "usage": "Vertical padding" },
+    { "name": "pg-root-padding-inline", "category": "spacing", "usage": "Horizontal padding" }
+  ]
+}

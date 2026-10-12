@@ -1,0 +1,20 @@
+/* ==============================================================================
+   CONTROLS
+   ==============================================================================
+   The root toggle button. */
+.{{PREFIX}}__root {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--{{PREFIX}}-root-min-height);
+    padding: var(--{{PREFIX}}-root-padding-block) var(--{{PREFIX}}-root-padding-inline);
+    border: 1px solid var(--{{PREFIX}}-border-color);
+    border-radius: var(--{{PREFIX}}-root-border-radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.{{PREFIX}}__label {
+    white-space: nowrap;
+}

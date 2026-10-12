@@ -1,0 +1,4 @@
+/* Component-only example rules (unlayered → always beat @layer kmwc). */
+.card p.local-override {
+    color: rgb(200, 0, 0);
+}

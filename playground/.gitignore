@@ -1,0 +1,7 @@
+node_modules/
+dist/
+dist-examples/
+test-results/
+playwright-report/
+*.tgz
+.makefile.env

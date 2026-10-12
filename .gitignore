@@ -1,0 +1,8 @@
+node_modules/
+*.tgz
+
+# playground build / test output
+playground/dist/
+playground/dist-examples/
+playground/test-results/
+playground/playwright-report/

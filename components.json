@@ -1,0 +1,209 @@
+{
+  "$comment": "Registry of KeenMate web components. Source for the README catalogue (`npm run readme`) and the authority for port allocation (`kmwc doctor` cross-checks each component's package.json#kmwc.ports against it). Ports: each component owns a block of 100 — dev = block, preview = block + 1, image = block + 10. `note` is shown when the package has no description; `portNote` records reassigned ports until the repo migrates. `prefix` mirrors the reserved-prefix table in BlissFramework guidelines/web-components/base-variables.md (the authority) — kmwc new refuses any prefix listed here or there.",
+  "components": [
+    {
+      "id": "web-multiselect",
+      "kind": "component",
+      "prefix": "ms",
+      "path": "../web-multiselect",
+      "npm": "@keenmate/web-multiselect",
+      "repo": "https://github.com/keenmate/web-multiselect",
+      "examples": "https://examples.web-multiselect.keenmate.dev",
+      "docs": "https://web-multiselect.keenmate.dev",
+      "showcase": "web-multiselect-showcase",
+      "ports": {
+        "dev": 12200,
+        "image": 12210
+      }
+    },
+    {
+      "id": "web-daterangepicker",
+      "kind": "component",
+      "prefix": "drp",
+      "path": "../web-daterangepicker",
+      "npm": "@keenmate/web-daterangepicker",
+      "repo": "https://github.com/keenmate/web-daterangepicker",
+      "docs": "https://web-daterangepicker.keenmate.dev",
+      "showcase": "web-daterangepicker-showcase",
+      "ports": {
+        "dev": 12300,
+        "image": 12310
+      }
+    },
+    {
+      "id": "web-treeview",
+      "kind": "component",
+      "prefix": "wtv",
+      "path": "../web-treeview",
+      "npm": "@keenmate/web-treeview",
+      "repo": "https://github.com/keenmate/web-treeview",
+      "showcase": "web-treeview-showcase",
+      "ports": {
+        "dev": 12600,
+        "image": 12610
+      },
+      "portNote": "was dev 21111 / image 12210 (image clashed with web-multiselect)"
+    },
+    {
+      "id": "web-commandpalette",
+      "kind": "component",
+      "prefix": "cp",
+      "path": "../web-commandpalette",
+      "npm": "@keenmate/web-commandpalette",
+      "repo": "https://github.com/keenmate/web-commandpalette",
+      "examples": "https://examples.web-commandpalette.keenmate.dev",
+      "ports": {
+        "dev": 12500,
+        "image": 12510
+      },
+      "portNote": "was 12300 / 12310 (clashed with web-daterangepicker)"
+    },
+    {
+      "id": "web-dropzone",
+      "kind": "component",
+      "prefix": "dz",
+      "path": "../web-dropzone",
+      "npm": "@keenmate/web-dropzone",
+      "repo": "https://github.com/keenmate/web-dropzone",
+      "monorepo": true,
+      "ports": {
+        "dev": 12700,
+        "image": 12710
+      },
+      "note": "Monorepo: renderer + headless core.",
+      "portNote": "was dev 12200 / image 12310 (clashed)"
+    },
+    {
+      "id": "web-grid",
+      "kind": "component",
+      "prefix": "wg",
+      "path": "../web-grid",
+      "npm": "@keenmate/web-grid",
+      "repo": "https://github.com/keenmate/web-grid",
+      "docs": "https://web-grid.keenmate.com",
+      "showcase": "web-grid-showcase",
+      "monorepo": true,
+      "ports": {
+        "dev": 12900,
+        "image": 12910
+      }
+    },
+    {
+      "id": "web-editor",
+      "kind": "component",
+      "path": "../web-editor",
+      "npm": "@keenmate/web-editor",
+      "examples": "https://examples.web-editor.keenmate.dev",
+      "monorepo": true,
+      "status": "experimental",
+      "ports": {
+        "dev": 12800,
+        "image": 12810
+      },
+      "note": "Monorepo: ProseMirror-based WYSIWYG / Markdown editor.",
+      "portNote": "image was 12410 (inside the core block)"
+    },
+    {
+      "id": "web-switch",
+      "kind": "component",
+      "path": "../web-switch",
+      "npm": "@keenmate/web-switch",
+      "repo": "https://github.com/keenmate/web-switch",
+      "ports": {
+        "dev": 13000,
+        "image": 13010
+      },
+      "note": "Svelte-based wrapper around @keenmate/svelte-switch.",
+      "portNote": "dev was 21112"
+    },
+    {
+      "id": "web-timepicker",
+      "kind": "component",
+      "path": "../web-timepicker",
+      "status": "experimental",
+      "note": "Vanilla-JS prototypes (spiral / slider time pickers); no package yet."
+    },
+    {
+      "id": "web-wysiwyg",
+      "kind": "component",
+      "path": "../web-wysiwyg",
+      "status": "experimental",
+      "note": "ProseMirror exploration; superseded by web-editor."
+    },
+    {
+      "id": "web-components-core",
+      "kind": "library",
+      "path": "../web-components-core",
+      "npm": "@keenmate/web-components-core",
+      "ports": {
+        "dev": 12400,
+        "image": 12410
+      },
+      "note": "Runtime foundation: BlissElement, reactive input table, converters, logging, positioning, CEM preset."
+    },
+    {
+      "id": "web-components",
+      "kind": "library",
+      "path": ".",
+      "npm": "@keenmate/web-components-devkit",
+      "repo": "https://github.com/keenmate/web-components",
+      "note": "This repo — dev/demo/build tooling (Vite preset, examples kit, kmwc CLI)."
+    },
+    {
+      "id": "web-multiselect-showcase",
+      "kind": "showcase",
+      "path": "../web-multiselect-showcase",
+      "for": "web-multiselect"
+    },
+    {
+      "id": "web-daterangepicker-showcase",
+      "kind": "showcase",
+      "path": "../web-daterangepicker-showcase",
+      "for": "web-daterangepicker"
+    },
+    {
+      "id": "web-treeview-showcase",
+      "kind": "showcase",
+      "path": "../web-treeview-showcase",
+      "for": "web-treeview"
+    },
+    {
+      "id": "web-grid-showcase",
+      "kind": "showcase",
+      "path": "../web-grid-showcase",
+      "for": "web-grid",
+      "url": "https://web-grid.keenmate.com"
+    },
+    {
+      "id": "web-multiselect-docs",
+      "kind": "docs",
+      "path": "../web-multiselect-docs",
+      "for": "web-multiselect",
+      "note": "Content-only docs (keendocs)."
+    },
+    {
+      "id": "web-component-framework-test",
+      "kind": "test",
+      "path": "../web-component-framework-test",
+      "ports": {
+        "dev": 13100
+      },
+      "note": "Smoke + contrast tests inside CSS host frameworks (plain / Bootstrap / …).",
+      "portNote": "dev was 12300 (clashed with web-daterangepicker)"
+    },
+    {
+      "id": "web-multiselect-test",
+      "kind": "test",
+      "path": "../web-multiselect-test",
+      "for": "web-multiselect",
+      "note": "npm-install vs direct-file consumption checks before publishing."
+    },
+    {
+      "id": "web-multiselect-positioning-demo",
+      "kind": "test",
+      "path": "../web-multiselect-positioning-demo",
+      "for": "web-multiselect",
+      "note": "Single-page positioning repro."
+    }
+  ]
+}

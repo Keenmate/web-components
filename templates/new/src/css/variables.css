@@ -1,0 +1,40 @@
+/* ==============================================================================
+   CSS CUSTOM PROPERTIES (:host level)
+   ==============================================================================
+   Every --{{PREFIX}}-* variable reads through the cross-component --base-* hook
+   with a standalone fallback; colours fall back to light-dark(), so the
+   component follows the page's color-scheme. `color-scheme` is deliberately
+   NOT declared here (it would shadow the page's) — see dark-mode.css.
+
+   Override from outside the shadow DOM:
+     {{TAG}} { --{{PREFIX}}-accent-color: #10b981; }
+   ============================================================================== */
+
+:host {
+    /* ==========================================================================
+       SCALE
+       ==========================================================================
+       Unitless --base-* sizes multiply through --{{PREFIX}}-rem. Set it to 1rem
+       to follow the host page's font size (Pure Admin integration). */
+    --{{PREFIX}}-rem: 10px;
+
+    /* ==========================================================================
+       COLORS
+       ========================================================================== */
+    --{{PREFIX}}-bg: var(--base-main-bg, light-dark(#ffffff, #1a1a1a));
+    --{{PREFIX}}-text-color-1: var(--base-text-color-1, light-dark(#242424, #f5f5f5));
+    --{{PREFIX}}-border-color: var(--base-border-color, light-dark(#e0e0e0, #3d3d3d));
+    --{{PREFIX}}-accent-color: var(--base-accent-color, light-dark(#0078d4, #3a96dd));
+    --{{PREFIX}}-text-color-on-accent: var(--base-text-color-on-accent, light-dark(#ffffff, #ffffff));
+    --{{PREFIX}}-hover-bg: var(--base-hover-bg, color-mix(in srgb, var(--{{PREFIX}}-text-color-1) 8%, var(--{{PREFIX}}-bg)));
+
+    /* ==========================================================================
+       TYPOGRAPHY & SHAPE
+       ========================================================================== */
+    --{{PREFIX}}-font-family: var(--base-font-family, inherit);
+    --{{PREFIX}}-font-size-base: calc(var(--base-font-size-base, 1.6) * var(--{{PREFIX}}-rem));
+    --{{PREFIX}}-root-border-radius: calc(var(--base-border-radius-md, 0.6) * var(--{{PREFIX}}-rem));
+    --{{PREFIX}}-root-min-height: calc(var(--base-input-size-md-height, 3.5) * var(--{{PREFIX}}-rem));
+    --{{PREFIX}}-root-padding-block: calc(0.6 * var(--{{PREFIX}}-rem));
+    --{{PREFIX}}-root-padding-inline: calc(1.2 * var(--{{PREFIX}}-rem));
+}

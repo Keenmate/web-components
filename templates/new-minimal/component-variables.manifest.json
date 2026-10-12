@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/keenmate/schemas/main/component-variables.schema.json",
+  "component": "{{PACKAGE_NAME}}",
+  "prefix": "{{PREFIX}}",
+  "baseVariables": [
+    { "name": "base-main-bg", "required": false, "usage": "Component surface" },
+    { "name": "base-text-color-1", "required": false, "usage": "Text" },
+    { "name": "base-border-color", "required": false, "usage": "Root border" },
+    { "name": "base-font-family", "required": false, "usage": "Font family" },
+    { "name": "base-font-size-base", "required": false, "usage": "Font size (multiplier × --{{PREFIX}}-rem)" },
+    { "name": "base-border-radius-md", "required": false, "usage": "Corner radius (multiplier × --{{PREFIX}}-rem)" }
+  ],
+  "componentVariables": [
+    { "name": "{{PREFIX}}-rem", "category": "spacing", "usage": "Base unit for every size (default 10px; 1rem follows the page font size)" },
+    { "name": "{{PREFIX}}-bg", "category": "surface", "usage": "Component surface" },
+    { "name": "{{PREFIX}}-text-color-1", "category": "text", "usage": "Text" },
+    { "name": "{{PREFIX}}-border-color", "category": "border", "usage": "Root border" },
+    { "name": "{{PREFIX}}-font-family", "category": "typography", "usage": "Font family" },
+    { "name": "{{PREFIX}}-font-size-base", "category": "typography", "usage": "Font size" },
+    { "name": "{{PREFIX}}-root-border-radius", "category": "radius", "usage": "Corner radius" },
+    { "name": "{{PREFIX}}-root-padding-block", "category": "spacing", "usage": "Vertical padding" },
+    { "name": "{{PREFIX}}-root-padding-inline", "category": "spacing", "usage": "Horizontal padding" }
+  ]
+}

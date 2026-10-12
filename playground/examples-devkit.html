@@ -1,0 +1,49 @@
+<meta name="kmwc:title" content="Devkit kit">
+<meta name="kmwc:subtitle" content="Layout, includes, demos, accent tokens, local overrides, version badge.">
+<meta name="kmwc:body-class" content="devkit-page">
+
+<!-- Component-only page rules: moved into <head> by the layout; unlayered, so
+     they beat the shared @layer kmwc styles regardless of load order. -->
+<link rel="stylesheet" href="examples-local.css">
+
+<p><span id="page-version" data-kmwc-version></span></p>
+
+<div class="card" id="dk01">
+    <h2>DK01 · Accent tokens <span class="badge new">New</span></h2>
+    <p>The header gradient and buttons follow <code>--kmwc-accent-color</code>.</p>
+    <div class="demo-area">
+        <button type="button" id="accent-button">Accent button</button>
+    </div>
+</div>
+
+<div class="card">
+    <h2>DK02 · Local overrides win</h2>
+    <p class="local-override" id="local-override">This paragraph is restyled by examples-local.css.</p>
+</div>
+
+<div class="card">
+    <h2>DK03 · The component on a kit page</h2>
+    <div class="demo-area">
+        <web-playground id="dk-component" label="Follows the page theme" active></web-playground>
+    </div>
+</div>
+
+<div class="card">
+    <h2>DK04 · Includes</h2>
+    <kmwc-include src="partials/devkit-callout.html" note-title="From a partial" id-suffix="one">
+        Inner content goes to <code>{{content}}</code>.
+    </kmwc-include>
+</div>
+
+<div class="card">
+    <h2>DK05 · Demo with shown script</h2>
+    <kmwc-demo>
+        <web-playground id="dk-demo" label="Off"></web-playground>
+        <script type="module" data-kmwc-show>
+            const demo = document.getElementById('dk-demo');
+            demo.addEventListener('change', (event) => {
+                demo.setAttribute('label', event.detail.isActive ? 'On' : 'Off');
+            });
+        </script>
+    </kmwc-demo>
+</div>

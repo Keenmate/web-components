@@ -1,0 +1,43 @@
+/* ==============================================================================
+   BASE STYLES
+   ==============================================================================
+   FOUC prevention and the theme container (:host). */
+
+/* ==============================================================================
+   FOUC PREVENTION
+   ==============================================================================
+   Light-DOM rule (reaches the page via index.ts's side-effect CSS import):
+   reserve the post-upgrade footprint and hide child text until the element is
+   defined. The tag MUST equal the customElements.define() tag. */
+web-playground:not(:defined) {
+    display: inline-block;
+    min-height: calc(3.5 * 10px);
+    color: transparent !important;
+    background: transparent;
+}
+
+/* ==============================================================================
+   THEME CONTAINER
+   ==============================================================================
+   :host is the container: layout sanity, the default surface, text colour and
+   font. Self-painted host (D-TC-3 case 1). */
+:host {
+    display: inline-block;
+    position: relative;
+    box-sizing: border-box;
+    background: var(--pg-bg);
+    color: var(--pg-text-color-1);
+    font-family: var(--pg-font-family);
+    font-size: var(--pg-font-size-base);
+    border-radius: var(--pg-root-border-radius);
+}
+
+:host([hidden]) {
+    display: none;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+}

@@ -1,0 +1,28 @@
+<meta name="kmwc:title" content="Theming">
+<meta name="kmwc:subtitle" content="--base-* / --{{PREFIX}}-* overrides and the dark-mode signals.">
+
+<kmwc-include src="partials/note.html" title="Theme signals">
+    The ☀/☾ switch (top right) sets <code>data-theme</code> on the page — the
+    same signal a host app sends. <code>data-theme</code> on one instance wins.
+</kmwc-include>
+
+<div class="card">
+    <h2>TH01 · Dark-mode signals</h2>
+    <p>Page theme reaches every instance; <code>data-theme</code> on one instance overrides it.</p>
+    <kmwc-demo>
+        <{{TAG}} id="th-follow" label="Follows the page" active></{{TAG}}>
+        <{{TAG}} id="th-dark" label="data-theme=dark" data-theme="dark" active></{{TAG}}>
+        <{{TAG}} id="th-light" label="data-theme=light" data-theme="light" active></{{TAG}}>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>TH02 · Variable overrides</h2>
+    <p><code>--base-accent-color</code> themes every KeenMate component in a subtree; <code>--{{PREFIX}}-accent-color</code> one instance.</p>
+    <kmwc-demo>
+        <div style="--base-accent-color: #10b981">
+            <{{TAG}} id="th-base" label="--base-accent-color" active></{{TAG}}>
+            <{{TAG}} id="th-local" label="--{{PREFIX}}-accent-color" active style="--{{PREFIX}}-accent-color: #8b5cf6"></{{TAG}}>
+        </div>
+    </kmwc-demo>
+</div>

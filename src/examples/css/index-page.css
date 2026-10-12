@@ -1,0 +1,118 @@
+/* ==============================================================================
+   EXAMPLES KIT — INDEX PAGE
+   ==============================================================================
+   The generated examples landing page (index-page.js → body.kmwc-index). */
+@layer kmwc {
+    /* ==========================================================================
+       PAGE & HEADER
+       ========================================================================== */
+    body.kmwc-index {
+        min-height: 100vh;
+    }
+
+    .kmwc-index__page {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .kmwc-index__header {
+        background: var(--kmwc-header-bg);
+        border-radius: 16px;
+        padding: 2.5rem 3rem;
+        margin-bottom: 2rem;
+        color: var(--kmwc-text-color-on-accent);
+    }
+
+    .kmwc-index__header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+        color: var(--kmwc-text-color-on-accent);
+    }
+
+    .kmwc-index__tagline {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0 0 1rem 0;
+    }
+
+    .kmwc-index__version:not(:empty) {
+        display: inline-block;
+        background: color-mix(in srgb, var(--kmwc-text-color-on-accent) 20%, transparent);
+        padding: 0.35rem 0.85rem;
+        border-radius: var(--kmwc-radius-md);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    /* ==========================================================================
+       CARDS
+       ========================================================================== */
+    .kmwc-index__cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .kmwc-index__card {
+        background: var(--kmwc-main-bg);
+        border-radius: var(--kmwc-radius-lg);
+        padding: 1.75rem;
+        box-shadow: 0 2px 8px var(--kmwc-shadow-color);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .kmwc-index__card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px var(--kmwc-shadow-color);
+        text-decoration: none;
+    }
+
+    .kmwc-index__icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .kmwc-index__card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+        color: var(--kmwc-text-color-1);
+    }
+
+    .kmwc-index__card-description {
+        color: var(--kmwc-text-color-3);
+        line-height: 1.6;
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .kmwc-index__badge {
+        display: inline-block;
+        background: var(--kmwc-badge-new-bg);
+        color: var(--kmwc-text-color-on-accent);
+        padding: 0.15rem 0.5rem;
+        border-radius: var(--kmwc-radius-sm);
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        vertical-align: middle;
+        text-transform: uppercase;
+    }
+
+    .kmwc-index__footer {
+        text-align: center;
+        margin-top: 3rem;
+        color: var(--kmwc-text-color-3);
+        font-size: 0.875rem;
+    }
+
+    @media (max-width: 768px) {
+        .kmwc-index__header {
+            padding: 1.75rem 1.5rem;
+        }
+    }
+}

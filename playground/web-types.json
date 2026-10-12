@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JetBrains/web-types/master/schema/web-types.json",
+  "name": "@keenmate/web-playground",
+  "version": "0.1.0",
+  "description-markup": "markdown",
+  "contributions": {
+    "html": {
+      "elements": [
+        {
+          "name": "web-playground",
+          "description": "\n\n---\n\n\n### **Events:**\n - **change**\n\n### **Methods:**\n \n\n\n### **CSS Properties:**\n - **--pg-rem** - Base unit for every size (default 10px; 1rem follows the page font size) _(default: undefined)_\n- **--pg-bg** - Component surface _(default: undefined)_\n- **--pg-text-color-1** - Label text _(default: undefined)_\n- **--pg-border-color** - Button border _(default: undefined)_\n- **--pg-accent-color** - Active state fill, focus outline _(default: undefined)_\n- **--pg-text-color-on-accent** - Label text in the active state _(default: undefined)_\n- **--pg-hover-bg** - Hover background _(default: undefined)_\n- **--pg-font-family** - Font family _(default: undefined)_\n- **--pg-font-size-base** - Font size _(default: undefined)_\n- **--pg-root-border-radius** - Corner radius _(default: undefined)_\n- **--pg-root-min-height** - Minimum height _(default: undefined)_\n- **--pg-root-padding-block** - Vertical padding _(default: undefined)_\n- **--pg-root-padding-inline** - Horizontal padding _(default: undefined)_",
+          "doc-url": "",
+          "attributes": [
+            {
+              "name": "label",
+              "description": "Text shown inside the component.",
+              "value": {
+                "type": "string",
+                "default": "'Hello from web-playground'"
+              }
+            },
+            {
+              "name": "active",
+              "description": "Whether the component is in its active (pressed) state. Toggled by clicking; fires `change`.",
+              "value": { "type": "boolean" }
+            }
+          ],
+          "events": [{ "name": "change" }],
+          "js": {
+            "properties": [
+              {
+                "name": "label",
+                "description": "Text shown inside the component.",
+                "type": "string"
+              },
+              {
+                "name": "isActive",
+                "description": "Whether the component is in its active (pressed) state. Toggled by clicking; fires `change`.",
+                "type": "boolean"
+              }
+            ],
+            "events": [{ "name": "change" }]
+          }
+        }
+      ]
+    },
+    "css": {
+      "properties": [
+        {
+          "name": "--pg-rem",
+          "description": "Base unit for every size (default 10px; 1rem follows the page font size)"
+        },
+        { "name": "--pg-bg", "description": "Component surface" },
+        { "name": "--pg-text-color-1", "description": "Label text" },
+        { "name": "--pg-border-color", "description": "Button border" },
+        {
+          "name": "--pg-accent-color",
+          "description": "Active state fill, focus outline"
+        },
+        {
+          "name": "--pg-text-color-on-accent",
+          "description": "Label text in the active state"
+        },
+        { "name": "--pg-hover-bg", "description": "Hover background" },
+        { "name": "--pg-font-family", "description": "Font family" },
+        { "name": "--pg-font-size-base", "description": "Font size" },
+        { "name": "--pg-root-border-radius", "description": "Corner radius" },
+        { "name": "--pg-root-min-height", "description": "Minimum height" },
+        {
+          "name": "--pg-root-padding-block",
+          "description": "Vertical padding"
+        },
+        {
+          "name": "--pg-root-padding-inline",
+          "description": "Horizontal padding"
+        }
+      ],
+      "pseudo-elements": []
+    }
+  }
+}

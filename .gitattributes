@@ -1,0 +1,9 @@
+# LF everywhere: templates render Makefiles / Dockerfiles / shell-consumed
+# files, and the rulebook's publish-command checks byte-compare canonical blocks.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary

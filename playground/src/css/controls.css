@@ -1,0 +1,20 @@
+/* ==============================================================================
+   CONTROLS
+   ==============================================================================
+   The root toggle button. */
+.pg__root {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--pg-root-min-height);
+    padding: var(--pg-root-padding-block) var(--pg-root-padding-inline);
+    border: 1px solid var(--pg-border-color);
+    border-radius: var(--pg-root-border-radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.pg__label {
+    white-space: nowrap;
+}

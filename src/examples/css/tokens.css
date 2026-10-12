@@ -1,0 +1,110 @@
+/* ==============================================================================
+   EXAMPLES KIT — TOKENS
+   ==============================================================================
+   The page-chrome counterpart of a component's variables.css. Same two-layer
+   model as the rulebook (base-variables.md): every --kmwc-* token reads through
+   the cross-component --base-* hook with a light-dark() fallback, so
+
+     • a theme-designer theme (:root --base-*) restyles the demo page AND the
+       component together — demo pages demonstrate cross-component theming;
+     • with no --base-* set, the page still looks right, in light and dark.
+
+   Unlike component variables (theme-container.md: never on :root), page
+   tokens DO live on :root — the page is the scope here. Feature files read
+   only --kmwc-* tokens; colour literals live in this file alone.
+
+   Re-theme a component's example site via package.json#kmwc.theme (injected
+   as --kmwc-accent-color / --kmwc-accent-end-color) — never by copying CSS. */
+@layer kmwc {
+    /* ==========================================================================
+       COLOR SCHEME — driven by <html data-theme> (theme switch)
+       ==========================================================================
+       light (default) / dark force the scheme; auto follows the OS. Components
+       on the page inherit color-scheme and see the same data-theme signal via
+       :host-context([data-theme="…"]). */
+    :root {
+        color-scheme: light;
+    }
+
+    :root[data-theme="dark"] {
+        color-scheme: dark;
+    }
+
+    :root[data-theme="auto"] {
+        color-scheme: light dark;
+    }
+
+    :root {
+        /* ======================================================================
+           COLORS — ACCENT
+           ====================================================================== */
+        --kmwc-accent-color: var(--base-accent-color, #667eea);
+        --kmwc-accent-end-color: #764ba2;
+        --kmwc-accent-color-hover: var(--base-accent-color-hover, color-mix(in srgb, var(--kmwc-accent-color) 88%, black));
+        --kmwc-accent-color-active: var(--base-accent-color-active, color-mix(in srgb, var(--kmwc-accent-color) 72%, black));
+        --kmwc-accent-light-bg: var(--base-accent-color-light, color-mix(in srgb, var(--kmwc-accent-color) 12%, transparent));
+        --kmwc-accent-light-bg-hover: var(--base-accent-color-light-hover, color-mix(in srgb, var(--kmwc-accent-color) 20%, transparent));
+        --kmwc-accent-border-color: color-mix(in srgb, var(--kmwc-accent-color) 40%, transparent);
+        --kmwc-accent-shadow-color: color-mix(in srgb, var(--kmwc-accent-color) 35%, transparent);
+        --kmwc-text-color-on-accent: var(--base-text-color-on-accent, #ffffff);
+        --kmwc-header-bg: linear-gradient(135deg, var(--kmwc-accent-color) 0%, var(--kmwc-accent-end-color) 100%);
+
+        /* ======================================================================
+           COLORS — TEXT
+           ====================================================================== */
+        --kmwc-text-color-1: var(--base-text-color-1, light-dark(#2d3748, #f5f5f5));
+        --kmwc-text-color-2: var(--base-text-color-2, light-dark(#4a5568, #d4d4d4));
+        --kmwc-text-color-3: var(--base-text-color-3, light-dark(#718096, #a3a3a3));
+        --kmwc-text-color-4: var(--base-text-color-4, light-dark(#9ca3af, #737373));
+
+        /* ======================================================================
+           COLORS — SURFACE
+           ====================================================================== */
+        --kmwc-page-bg: light-dark(#f7fafc, #111317);
+        --kmwc-main-bg: var(--base-main-bg, light-dark(#ffffff, #1a1a1a));
+        --kmwc-elevated-bg: var(--base-elevated-bg, light-dark(#edf2f7, #2b2b2b));
+        --kmwc-hover-bg: var(--base-hover-bg, color-mix(in srgb, var(--kmwc-text-color-1) 6%, var(--kmwc-main-bg)));
+        --kmwc-border-color: var(--base-border-color, light-dark(#e2e8f0, #3d3d3d));
+        --kmwc-border-color-strong: light-dark(#cbd5e0, #525252);
+        --kmwc-shadow-color: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.45));
+
+        /* ======================================================================
+           COLORS — INPUTS & CODE
+           ====================================================================== */
+        --kmwc-input-bg: var(--base-input-bg, light-dark(#ffffff, #1f1f1f));
+        --kmwc-input-color: var(--base-input-color, var(--kmwc-text-color-1));
+        --kmwc-input-border: var(--base-input-border, 1px solid light-dark(#d1d5db, #5a5a5a));
+        --kmwc-code-bg: light-dark(#2d3748, #0d1117);
+        --kmwc-code-text-color: #e2e8f0;
+        --kmwc-code-comment-color: #8b949e;
+        --kmwc-code-keyword-color: #c678dd;
+        --kmwc-code-string-color: #98c379;
+        --kmwc-code-function-color: #61afef;
+        --kmwc-code-property-color: #d19a66;
+        --kmwc-console-bg: light-dark(#0f172a, #05070d);
+        --kmwc-console-text-color: #e2e8f0;
+        --kmwc-console-muted-color: #94a3b8;
+        --kmwc-console-highlight-color: #68d391;
+        --kmwc-inline-code-bg: light-dark(#edf2f7, #2b2b2b);
+
+        /* ======================================================================
+           COLORS — SEMANTIC
+           ====================================================================== */
+        --kmwc-success-color: light-dark(#2f855a, #68d391);
+        --kmwc-warning-color: light-dark(#b45309, #fbbf24);
+        --kmwc-danger-color: var(--base-danger-color, light-dark(#dc2626, #f87c86));
+        --kmwc-info-color: light-dark(#2563eb, #60a5fa);
+        --kmwc-neutral-color: light-dark(#6b7280, #9ca3af);
+        --kmwc-badge-new-bg: light-dark(#e53e3e, #f56565);
+
+        /* ======================================================================
+           TYPOGRAPHY & SHAPE
+           ====================================================================== */
+        --kmwc-font-family: var(--base-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif);
+        --kmwc-mono-font-family: ui-monospace, SFMono-Regular, Menlo, 'Courier New', monospace;
+        --kmwc-radius-lg: 12px;
+        --kmwc-radius-md: 8px;
+        --kmwc-radius-sm: 6px;
+        --kmwc-max-width: 1400px;
+    }
+}

@@ -1,0 +1,251 @@
+/* ==============================================================================
+   EXAMPLES KIT — CONTENT
+   ==============================================================================
+   Output panels, code, notes, grids, reference tables, badges. */
+@layer kmwc {
+    /* ==========================================================================
+       OUTPUT
+       ==========================================================================
+       Light `.output` panels; opt into the console look per page with
+       `class="dark-output"` on <body>. */
+    .output {
+        margin-top: 1rem;
+    }
+
+    .output-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--kmwc-text-color-2);
+    }
+
+    .output pre,
+    pre {
+        background: var(--kmwc-page-bg);
+        color: var(--kmwc-text-color-1);
+        padding: 1rem;
+        border-radius: var(--kmwc-radius-sm);
+        overflow-x: auto;
+        font-size: 0.875rem;
+        border: 1px solid var(--kmwc-border-color);
+    }
+
+    .dark-output .output {
+        background: var(--kmwc-code-bg);
+        color: var(--kmwc-console-muted-color);
+        padding: 1rem;
+        border-radius: var(--kmwc-radius-md);
+        margin-top: 1rem;
+        font-family: var(--kmwc-mono-font-family);
+        font-size: 0.875rem;
+        overflow-x: auto;
+        border: none;
+    }
+
+    .dark-output .output-label {
+        color: var(--kmwc-accent-color);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .dark-output .output pre {
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: inherit;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    /* ==========================================================================
+       CODE
+       ==========================================================================
+       The dark surface lives on `.code-block` itself, so it works whether a
+       page wraps code in <pre> or drops a bare <code> straight inside. */
+    .code-block {
+        margin: 1.5rem 0;
+        position: relative;
+        background: var(--kmwc-code-bg);
+        color: var(--kmwc-code-text-color);
+        padding: 1.5rem;
+        border-radius: var(--kmwc-radius-md);
+        overflow-x: auto;
+        font-family: var(--kmwc-mono-font-family);
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+
+    .code-block pre {
+        margin: 0;
+        background: transparent;
+        padding: 0;
+        overflow-x: visible;
+        border: none;
+        color: inherit;
+    }
+
+    .code-block > code {
+        white-space: pre;
+        display: block;
+    }
+
+    .code-block .keyword { color: var(--kmwc-code-keyword-color); }
+    .code-block .string { color: var(--kmwc-code-string-color); }
+    .code-block .comment { color: var(--kmwc-code-comment-color); font-style: italic; }
+    .code-block .function { color: var(--kmwc-code-function-color); }
+    .code-block .property { color: var(--kmwc-code-property-color); }
+
+    .code-block .copy-button {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        background: color-mix(in srgb, var(--kmwc-code-text-color) 10%, transparent);
+        color: var(--kmwc-code-text-color);
+        border: 1px solid color-mix(in srgb, var(--kmwc-code-text-color) 20%, transparent);
+        border-radius: 4px;
+    }
+
+    .code-block .copy-button:hover {
+        background: color-mix(in srgb, var(--kmwc-code-text-color) 20%, transparent);
+    }
+
+    code {
+        background: var(--kmwc-inline-code-bg);
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-size: 0.9em;
+        color: var(--kmwc-accent-color);
+        font-family: var(--kmwc-mono-font-family);
+    }
+
+    pre code,
+    .code-block code,
+    .code-block pre code {
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        color: inherit;
+        font-size: inherit;
+    }
+
+    /* ==========================================================================
+       NOTES
+       ========================================================================== */
+    .note {
+        --kmwc-note-color: var(--kmwc-accent-color);
+        background: color-mix(in srgb, var(--kmwc-note-color) 10%, transparent);
+        padding: 1rem;
+        border-radius: var(--kmwc-radius-sm);
+        border-left: 4px solid var(--kmwc-note-color);
+        margin: 1rem 0;
+    }
+
+    .note.warning { --kmwc-note-color: var(--kmwc-warning-color); }
+    .note.info { --kmwc-note-color: var(--kmwc-info-color); }
+    .note.success { --kmwc-note-color: var(--kmwc-success-color); }
+    .note.error { --kmwc-note-color: var(--kmwc-danger-color); }
+
+    .note-title {
+        font-weight: 600;
+        color: var(--kmwc-note-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .note ul {
+        margin-left: 1.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .note li {
+        margin-bottom: 0.5rem;
+    }
+
+    /* ==========================================================================
+       GRIDS
+       ==========================================================================
+       One auto-fit grid tuned by `--grid-min` / `--grid-gap`, e.g.
+       `<div class="card-grid" style="--grid-min: 240px">`. */
+    .grid,
+    .grid-2,
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(var(--grid-min, 300px), 1fr));
+        gap: var(--grid-gap, 2rem);
+    }
+
+    .grid-2 {
+        --grid-min: 400px;
+    }
+
+    .col-span-full {
+        grid-column: 1 / -1;
+    }
+
+    /* ==========================================================================
+       REFERENCE TABLE & BADGES
+       ========================================================================== */
+    .reference-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        margin-bottom: 2rem;
+    }
+
+    .reference-table th,
+    .reference-table td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border: 1px solid var(--kmwc-border-color);
+    }
+
+    .reference-table th {
+        background: var(--kmwc-elevated-bg);
+        font-weight: 600;
+    }
+
+    .reference-table tbody tr:hover {
+        background: var(--kmwc-hover-bg);
+    }
+
+    .reference-table tr.is-highlight {
+        background: var(--kmwc-accent-light-bg);
+    }
+
+    .reference-table code {
+        padding: 0.125rem 0.375rem;
+        font-size: 0.75rem;
+    }
+
+    /* Section-header badge pill (e.g. a "NEW" tag beside an h2). */
+    .badge {
+        display: inline-block;
+        background: var(--kmwc-accent-color);
+        color: var(--kmwc-text-color-on-accent);
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge.new {
+        background: var(--kmwc-badge-new-bg);
+    }
+
+    .muted {
+        color: var(--kmwc-text-color-3);
+    }
+
+    .mt-1 {
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .grid,
+        .grid-2,
+        .card-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+}

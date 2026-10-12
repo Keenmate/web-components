@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/keenmate/schemas/main/component-variables.schema.json",
+  "component": "{{PACKAGE_NAME}}",
+  "prefix": "{{PREFIX}}",
+  "baseVariables": [
+    { "name": "base-main-bg", "required": false, "usage": "Component surface" },
+    { "name": "base-text-color-1", "required": false, "usage": "Label text" },
+    { "name": "base-border-color", "required": false, "usage": "Button border" },
+    { "name": "base-accent-color", "required": false, "usage": "Active state fill, focus outline" },
+    { "name": "base-text-color-on-accent", "required": false, "usage": "Label text in the active state" },
+    { "name": "base-hover-bg", "required": false, "usage": "Hover background (falls back to a text/surface color-mix)" },
+    { "name": "base-font-family", "required": false, "usage": "Font family" },
+    { "name": "base-font-size-base", "required": false, "usage": "Font size (multiplier × --{{PREFIX}}-rem)" },
+    { "name": "base-border-radius-md", "required": false, "usage": "Corner radius (multiplier × --{{PREFIX}}-rem)" },
+    { "name": "base-input-size-md-height", "required": false, "usage": "Minimum height (multiplier × --{{PREFIX}}-rem)" }
+  ],
+  "componentVariables": [
+    { "name": "{{PREFIX}}-rem", "category": "spacing", "usage": "Base unit for every size (default 10px; 1rem follows the page font size)" },
+    { "name": "{{PREFIX}}-bg", "category": "surface", "usage": "Component surface" },
+    { "name": "{{PREFIX}}-text-color-1", "category": "text", "usage": "Label text" },
+    { "name": "{{PREFIX}}-border-color", "category": "border", "usage": "Button border" },
+    { "name": "{{PREFIX}}-accent-color", "category": "accent", "usage": "Active state fill, focus outline" },
+    { "name": "{{PREFIX}}-text-color-on-accent", "category": "text", "usage": "Label text in the active state" },
+    { "name": "{{PREFIX}}-hover-bg", "category": "state", "usage": "Hover background" },
+    { "name": "{{PREFIX}}-font-family", "category": "typography", "usage": "Font family" },
+    { "name": "{{PREFIX}}-font-size-base", "category": "typography", "usage": "Font size" },
+    { "name": "{{PREFIX}}-root-border-radius", "category": "radius", "usage": "Corner radius" },
+    { "name": "{{PREFIX}}-root-min-height", "category": "spacing", "usage": "Minimum height" },
+    { "name": "{{PREFIX}}-root-padding-block", "category": "spacing", "usage": "Vertical padding" },
+    { "name": "{{PREFIX}}-root-padding-inline", "category": "spacing", "usage": "Horizontal padding" }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vscode-css-languageservice/main/docs/customData.schema.json",
+  "version": 1.1,
+  "properties": [
+    {
+      "name": "--pg-rem",
+      "description": "Base unit for every size (default 10px; 1rem follows the page font size)",
+      "values": []
+    },
+    { "name": "--pg-bg", "description": "Component surface", "values": [] },
+    { "name": "--pg-text-color-1", "description": "Label text", "values": [] },
+    {
+      "name": "--pg-border-color",
+      "description": "Button border",
+      "values": []
+    },
+    {
+      "name": "--pg-accent-color",
+      "description": "Active state fill, focus outline",
+      "values": []
+    },
+    {
+      "name": "--pg-text-color-on-accent",
+      "description": "Label text in the active state",
+      "values": []
+    },
+    {
+      "name": "--pg-hover-bg",
+      "description": "Hover background",
+      "values": []
+    },
+    { "name": "--pg-font-family", "description": "Font family", "values": [] },
+    { "name": "--pg-font-size-base", "description": "Font size", "values": [] },
+    {
+      "name": "--pg-root-border-radius",
+      "description": "Corner radius",
+      "values": []
+    },
+    {
+      "name": "--pg-root-min-height",
+      "description": "Minimum height",
+      "values": []
+    },
+    {
+      "name": "--pg-root-padding-block",
+      "description": "Vertical padding",
+      "values": []
+    },
+    {
+      "name": "--pg-root-padding-inline",
+      "description": "Horizontal padding",
+      "values": []
+    }
+  ],
+  "pseudoElements": []
+}

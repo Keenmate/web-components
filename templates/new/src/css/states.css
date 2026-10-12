@@ -1,0 +1,22 @@
+/* ==============================================================================
+   STATES
+   ==============================================================================
+   Hover, focus and the active (pressed) modifier. */
+.{{PREFIX}}__root:hover {
+    background: var(--{{PREFIX}}-hover-bg);
+}
+
+.{{PREFIX}}__root:focus-visible {
+    outline: 2px solid var(--{{PREFIX}}-accent-color);
+    outline-offset: 2px;
+}
+
+.{{PREFIX}}__root--active {
+    background: var(--{{PREFIX}}-accent-color);
+    border-color: var(--{{PREFIX}}-accent-color);
+    color: var(--{{PREFIX}}-text-color-on-accent);
+}
+
+.{{PREFIX}}__root--active:hover {
+    background: var(--{{PREFIX}}-accent-color);
+}

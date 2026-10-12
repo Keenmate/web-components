@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" data-kmwc="off">
+<head>
+    <meta charset="UTF-8">
+    <title>web-playground dark-mode fixture</title>
+</head>
+<body>
+    <web-playground id="light-default" label="light default"></web-playground>
+    <web-playground id="dark-instance" label="dark instance" data-theme="dark"></web-playground>
+    <div data-theme="dark">
+        <web-playground id="dark-ancestor" label="dark ancestor"></web-playground>
+    </div>
+    <div style="--base-main-bg: rgb(255, 0, 0)">
+        <web-playground id="base-themed" label="--base-main-bg"></web-playground>
+    </div>
+    <script type="module" src="/src/index.ts"></script>
+</body>
+</html>

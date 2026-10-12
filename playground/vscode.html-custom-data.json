@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vscode-html-languageservice/main/docs/customData.schema.json",
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "web-playground",
+      "description": "\n---\n\n\n### **Events:**\n - **change**\n\n### **Methods:**\n \n\n\n### **CSS Properties:**\n - **--pg-rem** - Base unit for every size (default 10px; 1rem follows the page font size) _(default: undefined)_\n- **--pg-bg** - Component surface _(default: undefined)_\n- **--pg-text-color-1** - Label text _(default: undefined)_\n- **--pg-border-color** - Button border _(default: undefined)_\n- **--pg-accent-color** - Active state fill, focus outline _(default: undefined)_\n- **--pg-text-color-on-accent** - Label text in the active state _(default: undefined)_\n- **--pg-hover-bg** - Hover background _(default: undefined)_\n- **--pg-font-family** - Font family _(default: undefined)_\n- **--pg-font-size-base** - Font size _(default: undefined)_\n- **--pg-root-border-radius** - Corner radius _(default: undefined)_\n- **--pg-root-min-height** - Minimum height _(default: undefined)_\n- **--pg-root-padding-block** - Vertical padding _(default: undefined)_\n- **--pg-root-padding-inline** - Horizontal padding _(default: undefined)_",
+      "attributes": [
+        {
+          "name": "label",
+          "description": "Text shown inside the component.",
+          "values": []
+        },
+        {
+          "name": "active",
+          "description": "Whether the component is in its active (pressed) state. Toggled by clicking; fires `change`.",
+          "values": []
+        }
+      ],
+      "references": []
+    }
+  ]
+}

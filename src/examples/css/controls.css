@@ -1,0 +1,205 @@
+/* ==============================================================================
+   EXAMPLES KIT — CONTROLS
+   ==============================================================================
+   Demo forms, the `.controls` switch rows, demo areas and buttons. */
+@layer kmwc {
+    /* ==========================================================================
+       FORMS
+       ========================================================================== */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--kmwc-text-color-1);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+        color: var(--kmwc-text-color-3);
+    }
+
+    /* Demo form panel — a soft card wrapping a live <form>; `.form-actions`
+       holds the submit/inspect buttons below a rule. */
+    form {
+        background: var(--kmwc-elevated-bg);
+        padding: 1.5rem;
+        border-radius: var(--kmwc-radius-md);
+        margin-top: 1rem;
+    }
+
+    .form-actions {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--kmwc-border-color-strong);
+    }
+
+    /* ==========================================================================
+       CONTROL ROWS
+       ==========================================================================
+       `.controls` rows hold the switches that drive a demo; their values are
+       saved by attachControlsPersistence(). */
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        align-items: center;
+    }
+
+    .controls label,
+    .toggle-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .toggle-label {
+        margin-bottom: 0.75rem;
+    }
+
+    .controls input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--kmwc-accent-color);
+    }
+
+    .controls select,
+    .controls input[type="text"],
+    .controls input[type="number"],
+    .controls input[type="search"],
+    .control-group input,
+    .control-group select {
+        padding: 0.4rem 0.6rem;
+        border: var(--kmwc-input-border);
+        border-radius: var(--kmwc-radius-sm);
+        font-size: 0.875rem;
+        background: var(--kmwc-input-bg);
+        color: var(--kmwc-input-color);
+    }
+
+    /* Control group — a label stacked over an input/select; rows of them wrap
+       via `.control-row`. */
+    .control-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+        margin-bottom: 1rem;
+    }
+
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .control-group label {
+        font-size: 0.75rem;
+        color: var(--kmwc-text-color-2);
+        font-weight: 500;
+    }
+
+    .field-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    .field-grow {
+        flex: 1;
+    }
+
+    /* ==========================================================================
+       DEMO AREAS
+       ========================================================================== */
+    .demo-area {
+        background: var(--kmwc-page-bg);
+        padding: 1.5rem;
+        border-radius: var(--kmwc-radius-md);
+        margin: 1rem 0;
+    }
+
+    .demo-label {
+        display: block;
+        font-weight: 600;
+        color: var(--kmwc-text-color-1);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Trailing action buttons directly in a demo panel get top spacing; never
+       touches buttons nested in a `.controls` row. */
+    .demo-area > button {
+        margin-top: 1rem;
+    }
+
+    .demo-area > button + button {
+        margin-inline-start: 0.5rem;
+    }
+
+    /* ==========================================================================
+       BUTTONS
+       ========================================================================== */
+    button,
+    button.btn-primary {
+        cursor: pointer;
+        background: var(--kmwc-accent-color);
+        color: var(--kmwc-text-color-on-accent);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: var(--kmwc-radius-sm);
+        font-size: 0.875rem;
+        transition: background 0.2s;
+    }
+
+    button:hover,
+    button.btn-primary:hover {
+        background: var(--kmwc-accent-color-hover);
+    }
+
+    button:disabled,
+    button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    button.secondary,
+    button.btn-secondary {
+        background: var(--kmwc-neutral-color);
+        color: var(--kmwc-text-color-on-accent);
+    }
+
+    button.secondary:hover,
+    button.btn-secondary:hover {
+        background: color-mix(in srgb, var(--kmwc-neutral-color) 80%, black);
+    }
+
+    button.btn-outline {
+        background: var(--kmwc-main-bg);
+        color: var(--kmwc-text-color-1);
+        border: 1px solid var(--kmwc-border-color-strong);
+    }
+
+    button.btn-outline:hover {
+        background: var(--kmwc-hover-bg);
+    }
+
+    button.btn-danger {
+        background: var(--kmwc-danger-color);
+        color: var(--kmwc-text-color-on-accent);
+    }
+
+    button.btn-danger:hover {
+        background: color-mix(in srgb, var(--kmwc-danger-color) 85%, black);
+    }
+}

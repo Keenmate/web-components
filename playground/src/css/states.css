@@ -1,0 +1,22 @@
+/* ==============================================================================
+   STATES
+   ==============================================================================
+   Hover, focus and the active (pressed) modifier. */
+.pg__root:hover {
+    background: var(--pg-hover-bg);
+}
+
+.pg__root:focus-visible {
+    outline: 2px solid var(--pg-accent-color);
+    outline-offset: 2px;
+}
+
+.pg__root--active {
+    background: var(--pg-accent-color);
+    border-color: var(--pg-accent-color);
+    color: var(--pg-text-color-on-accent);
+}
+
+.pg__root--active:hover {
+    background: var(--pg-accent-color);
+}

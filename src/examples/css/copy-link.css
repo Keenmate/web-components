@@ -1,0 +1,82 @@
+/* ==============================================================================
+   EXAMPLES KIT — COPY-LINK
+   ==============================================================================
+   Button appended inside every section <h2> (copy-link.js). Fades in on
+   heading hover, flips to a check + "Copied!" on success. */
+@layer kmwc {
+    .kmwc-copy-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        line-height: 1;
+        padding: 0.25rem 0.4rem;
+        margin-inline-start: 0.15rem;
+        border: 1px solid transparent;
+        border-radius: var(--kmwc-radius-md);
+        background: transparent;
+        color: var(--kmwc-text-color-4);
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .card h2:hover .kmwc-copy-link,
+    .example-section h2:hover .kmwc-copy-link,
+    .kmwc-copy-link:focus-visible {
+        opacity: 1;
+    }
+
+    .kmwc-copy-link:hover {
+        color: var(--kmwc-accent-color);
+        background: var(--kmwc-accent-light-bg);
+        border-color: var(--kmwc-accent-border-color);
+    }
+
+    .kmwc-copy-link:focus-visible {
+        outline: 2px solid var(--kmwc-accent-color);
+        outline-offset: 1px;
+    }
+
+    .kmwc-copy-link__icon {
+        width: 1.05em;
+        height: 1.05em;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .kmwc-copy-link__icon--check,
+    .kmwc-copy-link__label {
+        display: none;
+    }
+
+    .kmwc-copy-link__label {
+        font-weight: 600;
+        font-size: 0.7rem;
+    }
+
+    .kmwc-copy-link--copied,
+    .kmwc-copy-link--failed {
+        --kmwc-copy-link-feedback-color: var(--kmwc-success-color);
+        opacity: 1;
+        color: var(--kmwc-copy-link-feedback-color);
+        background: color-mix(in srgb, var(--kmwc-copy-link-feedback-color) 10%, transparent);
+        border-color: color-mix(in srgb, var(--kmwc-copy-link-feedback-color) 40%, transparent);
+    }
+
+    .kmwc-copy-link--failed {
+        --kmwc-copy-link-feedback-color: var(--kmwc-danger-color);
+    }
+
+    .kmwc-copy-link--copied .kmwc-copy-link__icon--link {
+        display: none;
+    }
+
+    .kmwc-copy-link--copied .kmwc-copy-link__icon--check,
+    .kmwc-copy-link--copied .kmwc-copy-link__label {
+        display: inline-flex;
+    }
+}

@@ -1,0 +1,408 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "src/logger.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "LOGGING_CATEGORIES",
+          "type": {
+            "text": "['INIT', 'UI', 'INTERACTION']"
+          },
+          "default": "['INIT', 'UI', 'INTERACTION']"
+        },
+        {
+          "kind": "variable",
+          "name": "logging"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "LOGGING_CATEGORIES",
+          "declaration": {
+            "name": "LOGGING_CATEGORIES",
+            "module": "src/logger.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "logging",
+          "declaration": {
+            "name": "logging",
+            "module": "src/logger.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/playground.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "WebPlayground",
+          "members": [
+            {
+              "kind": "field",
+              "name": "#container",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement"
+              },
+              "default": "container"
+            },
+            {
+              "kind": "field",
+              "name": "#config",
+              "privacy": "private",
+              "type": {
+                "text": "PlaygroundConfig"
+              },
+              "default": "{ ...config }"
+            },
+            {
+              "kind": "field",
+              "name": "#rootElement",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLButtonElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#labelElement",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLSpanElement | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "method",
+              "name": "render",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "Build the markup once."
+            },
+            {
+              "kind": "method",
+              "name": "update",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "partialConfig",
+                  "type": {
+                    "text": "Partial<PlaygroundConfig>"
+                  }
+                }
+              ],
+              "description": "Patch the rendered DOM to a (partial) new config."
+            },
+            {
+              "kind": "method",
+              "name": "toggle",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "destroy",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "handleRootClick",
+              "privacy": "private"
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "WebPlayground",
+          "declaration": {
+            "name": "WebPlayground",
+            "module": "src/playground.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/types.ts",
+      "declarations": [],
+      "exports": []
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/web-component.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "ATTRIBUTE_TABLE",
+          "type": {
+            "text": "readonly InputDef[]"
+          },
+          "default": "[ { configKey: 'label', attribute: 'label', converter: toText({ default: 'Hello from web-playground' }), on: 'update', description: 'Text shown inside the component.', }, { configKey: 'isActive', attribute: 'active', converter: toBool('default-false'), on: 'update', description: 'Whether the component is in its active (pressed) state. Toggled by clicking; fires `change`.', }, ]",
+          "description": "Every public input is one row: HTML attribute ⇔ config key, converter\n(parsing + validation), and what a change triggers. Attribute names read like\nHTML (`active`); config keys read like JavaScript (`isActive`)."
+        },
+        {
+          "kind": "class",
+          "description": "",
+          "name": "PlaygroundElement",
+          "members": [
+            {
+              "kind": "field",
+              "name": "inputs",
+              "privacy": "protected",
+              "static": true,
+              "default": "[ { configKey: 'label', attribute: 'label', converter: toText({ default: 'Hello from web-playground' }), on: 'update', description: 'Text shown inside the component.', }, { configKey: 'isActive', attribute: 'active', converter: toBool('default-false'), on: 'update', description: 'Whether the component is in its active (pressed) state. Toggled by clicking; fires `change`.', }, ]",
+              "type": {
+                "text": "readonly InputDef[]"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "events",
+              "type": {
+                "text": "array"
+              },
+              "privacy": "protected",
+              "static": true,
+              "default": "['change']"
+            },
+            {
+              "kind": "field",
+              "name": "#shadow",
+              "privacy": "private",
+              "type": {
+                "text": "ShadowRoot | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "#logicContainer",
+              "privacy": "private",
+              "type": {
+                "text": "HTMLElement | null"
+              },
+              "default": "null",
+              "description": "The logic class renders here, so it never touches the adopted/fallback <style>."
+            },
+            {
+              "kind": "field",
+              "name": "#logic",
+              "privacy": "private",
+              "type": {
+                "text": "WebPlayground | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "method",
+              "name": "reinit",
+              "privacy": "protected",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "description": "First connect + any `on: 'reinit'` change: (re)build from the full config."
+            },
+            {
+              "kind": "method",
+              "name": "update",
+              "privacy": "protected",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "partial",
+                  "type": {
+                    "text": "Record<string, unknown>"
+                  }
+                }
+              ],
+              "description": "`on: 'update'` changes: patch in place."
+            },
+            {
+              "kind": "method",
+              "name": "handleLogicChange",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "detail",
+                  "type": {
+                    "text": "PlaygroundEventDetail"
+                  }
+                }
+              ],
+              "description": "The logic class's `onChange` event → reflect + dispatch the `change` CustomEvent."
+            },
+            {
+              "kind": "field",
+              "name": "label",
+              "privacy": "public",
+              "type": {
+                "text": "string"
+              },
+              "default": "'Hello from web-playground'",
+              "attribute": "label",
+              "description": "Text shown inside the component."
+            },
+            {
+              "kind": "field",
+              "name": "isActive",
+              "privacy": "public",
+              "type": {
+                "text": "boolean"
+              },
+              "attribute": "active",
+              "description": "Whether the component is in its active (pressed) state. Toggled by clicking; fires `change`."
+            }
+          ],
+          "superclass": {
+            "name": "BlissElement",
+            "package": "@keenmate/web-components-core"
+          },
+          "attributes": [
+            {
+              "name": "label",
+              "fieldName": "label",
+              "type": {
+                "text": "string"
+              },
+              "default": "'Hello from web-playground'",
+              "description": "Text shown inside the component."
+            },
+            {
+              "name": "active",
+              "fieldName": "isActive",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether the component is in its active (pressed) state. Toggled by clicking; fires `change`."
+            }
+          ],
+          "events": [
+            {
+              "name": "change"
+            }
+          ],
+          "tagName": "web-playground",
+          "customElement": true,
+          "cssProperties": [
+            {
+              "name": "--pg-rem",
+              "description": "Base unit for every size (default 10px; 1rem follows the page font size)"
+            },
+            {
+              "name": "--pg-bg",
+              "description": "Component surface"
+            },
+            {
+              "name": "--pg-text-color-1",
+              "description": "Label text"
+            },
+            {
+              "name": "--pg-border-color",
+              "description": "Button border"
+            },
+            {
+              "name": "--pg-accent-color",
+              "description": "Active state fill, focus outline"
+            },
+            {
+              "name": "--pg-text-color-on-accent",
+              "description": "Label text in the active state"
+            },
+            {
+              "name": "--pg-hover-bg",
+              "description": "Hover background"
+            },
+            {
+              "name": "--pg-font-family",
+              "description": "Font family"
+            },
+            {
+              "name": "--pg-font-size-base",
+              "description": "Font size"
+            },
+            {
+              "name": "--pg-root-border-radius",
+              "description": "Corner radius"
+            },
+            {
+              "name": "--pg-root-min-height",
+              "description": "Minimum height"
+            },
+            {
+              "name": "--pg-root-padding-block",
+              "description": "Vertical padding"
+            },
+            {
+              "name": "--pg-root-padding-inline",
+              "description": "Horizontal padding"
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "ATTRIBUTE_TABLE",
+          "declaration": {
+            "name": "ATTRIBUTE_TABLE",
+            "module": "src/web-component.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "PlaygroundElement",
+          "declaration": {
+            "name": "PlaygroundElement",
+            "module": "src/web-component.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "web-playground",
+          "declaration": {
+            "name": "PlaygroundElement",
+            "module": "src/web-component.ts"
+          }
+        }
+      ]
+    }
+  ]
+}

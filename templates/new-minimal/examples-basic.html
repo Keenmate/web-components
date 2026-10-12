@@ -1,0 +1,23 @@
+<meta name="kmwc:title" content="Basic Usage">
+<meta name="kmwc:subtitle" content="The essentials of &lt;{{TAG}}&gt;.">
+
+<!-- A fragment page: the devkit layout adds <head>, the header (back link,
+     title, subtitle), the container and the component entry script; the kit
+     adds the shared styles, chapter nav, copy-links and theme switch.
+     Each <kmwc-demo> renders its markup live AND as a code block. -->
+
+<div class="card">
+    <h2>BU01 · Default</h2>
+    <p>Light-DOM children render through the default slot.</p>
+    <kmwc-demo>
+        <{{TAG}} id="ex-basic">Hello from &lt;{{TAG}}&gt;</{{TAG}}>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>BU02 · Dark instance</h2>
+    <p><code>data-theme="dark"</code> forces one instance dark.</p>
+    <kmwc-demo>
+        <{{TAG}} data-theme="dark">Always dark</{{TAG}}>
+    </kmwc-demo>
+</div>

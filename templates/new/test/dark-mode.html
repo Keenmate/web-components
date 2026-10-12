@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" data-kmwc="off">
+<head>
+    <meta charset="UTF-8">
+    <title>{{TAG}} dark-mode fixture</title>
+</head>
+<body>
+    <{{TAG}} id="light-default" label="light default"></{{TAG}}>
+    <{{TAG}} id="dark-instance" label="dark instance" data-theme="dark"></{{TAG}}>
+    <div data-theme="dark">
+        <{{TAG}} id="dark-ancestor" label="dark ancestor"></{{TAG}}>
+    </div>
+    <div style="--base-main-bg: rgb(255, 0, 0)">
+        <{{TAG}} id="base-themed" label="--base-main-bg"></{{TAG}}>
+    </div>
+    <script type="module" src="/src/index.ts"></script>
+</body>
+</html>

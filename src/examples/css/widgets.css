@@ -1,0 +1,133 @@
+/* ==============================================================================
+   EXAMPLES KIT — WIDGETS
+   ==============================================================================
+   Opt-in helpers more than one component's examples use. Add here (not to a
+   repo-local stylesheet) once a second component needs a pattern. */
+@layer kmwc {
+    /* ==========================================================================
+       LOG PANELS
+       ==========================================================================
+       `.log-panel` — monospace, scrollable box for streaming output; light by
+       default, `.log-panel--dark` for the console look; height cap via
+       `--log-max-height`. `.event-log` is the legacy dark console with
+       `.event-*` entries — prefer `.log-panel` for new pages. */
+    .log-panel {
+        font-family: var(--kmwc-mono-font-family);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        padding: 1rem 1.25rem;
+        border-radius: var(--kmwc-radius-md);
+        max-height: var(--log-max-height, 220px);
+        overflow: auto;
+        background: var(--kmwc-page-bg);
+        color: var(--kmwc-text-color-1);
+        border: 1px solid var(--kmwc-border-color);
+    }
+
+    .log-panel--dark {
+        background: var(--kmwc-console-bg);
+        color: var(--kmwc-console-text-color);
+        border-color: transparent;
+    }
+
+    .event-log {
+        background: var(--kmwc-console-bg);
+        color: var(--kmwc-console-muted-color);
+        padding: 1rem;
+        border-radius: var(--kmwc-radius-md);
+        font-family: var(--kmwc-mono-font-family);
+        font-size: 0.8rem;
+        max-height: 200px;
+        overflow-y: auto;
+        line-height: 1.5;
+    }
+
+    .event-log .event-entry {
+        padding: 0.15rem 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--kmwc-console-text-color) 6%, transparent);
+    }
+
+    .event-log .event-time { color: var(--kmwc-console-muted-color); }
+    .event-log .event-name { color: var(--kmwc-console-highlight-color); font-weight: 600; }
+
+    /* ==========================================================================
+       CSS-VARIABLE DEMO HELPERS
+       ==========================================================================
+       `.display-sliders` — (name, range, value) rows for live CSS-var demos;
+       `.css-readout` — chips showing measured values (`.is-gap` accents a
+       derived figure). */
+    .display-sliders {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 0.4rem 0.75rem;
+        margin: 0.25rem 0 0.75rem;
+        max-width: 460px;
+    }
+
+    .display-sliders label {
+        font-family: var(--kmwc-mono-font-family);
+        font-size: 0.78rem;
+        color: var(--kmwc-text-color-2);
+    }
+
+    .display-sliders input[type="range"] {
+        width: 100%;
+        accent-color: var(--kmwc-accent-color);
+    }
+
+    .display-sliders output {
+        font-family: var(--kmwc-mono-font-family);
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--kmwc-info-color);
+        min-width: 3.2em;
+        text-align: right;
+    }
+
+    .css-readout {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0.25rem 0 1rem;
+    }
+
+    .css-readout code { font-size: 0.78rem; }
+    .css-readout code b { color: var(--kmwc-info-color); font-weight: 700; }
+    .css-readout code.is-gap b { color: var(--kmwc-warning-color); }
+
+    /* ==========================================================================
+       STATUS DOTS & PILLS
+       ========================================================================== */
+    .status-dot {
+        --kmwc-status-color: var(--kmwc-neutral-color);
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--kmwc-status-color);
+        margin-right: 0.4rem;
+        vertical-align: middle;
+    }
+
+    .status-dot--ok { --kmwc-status-color: var(--kmwc-success-color); }
+    .status-dot--warn { --kmwc-status-color: var(--kmwc-warning-color); }
+    .status-dot--err { --kmwc-status-color: var(--kmwc-danger-color); }
+
+    .pill {
+        --kmwc-status-color: var(--kmwc-neutral-color);
+        display: inline-flex;
+        align-items: center;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-family: var(--kmwc-mono-font-family);
+        background: color-mix(in srgb, var(--kmwc-status-color) 16%, transparent);
+        color: var(--kmwc-status-color);
+    }
+
+    .pill--ok { --kmwc-status-color: var(--kmwc-success-color); }
+    .pill--warn { --kmwc-status-color: var(--kmwc-warning-color); }
+    .pill--err { --kmwc-status-color: var(--kmwc-danger-color); }
+}

@@ -1,0 +1,38 @@
+/* ==============================================================================
+   EXAMPLES KIT — THEME SWITCH
+   ==============================================================================
+   Fixed light / dark / auto button (theme-switch.js), top-right corner. */
+@layer kmwc {
+    .kmwc-theme-switch {
+        position: fixed;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 9000;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 50%;
+        border: 1px solid var(--kmwc-border-color);
+        background: var(--kmwc-main-bg);
+        color: var(--kmwc-text-color-1);
+        box-shadow: 0 2px 6px var(--kmwc-shadow-color);
+        cursor: pointer;
+    }
+
+    .kmwc-theme-switch:hover {
+        background: var(--kmwc-hover-bg);
+    }
+
+    .kmwc-theme-switch:focus-visible {
+        outline: 2px solid var(--kmwc-accent-color);
+        outline-offset: 2px;
+    }
+
+    .kmwc-theme-switch__icon {
+        font-size: 1.1rem;
+        line-height: 1;
+    }
+}

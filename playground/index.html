@@ -1,0 +1,17 @@
+<meta name="kmwc:layout" content="bare">
+<meta name="kmwc:entry" content="none">
+
+<!-- Header, cards, footer, version badge and the cross-page nav are all
+     rendered by the devkit from this registry + package.json#kmwc. -->
+<script type="module">
+    import { renderExamplesIndex } from '@keenmate/web-components-devkit/examples';
+
+    renderExamplesIndex({
+        pages: [
+            { href: 'examples-basic.html', icon: '🧩', title: 'Basic Usage', description: 'The essentials, as one live component driven by control switches.' },
+            { href: 'examples-theming.html', icon: '🎨', title: 'Theming', description: 'Dark-mode signals, --base-* and --pg-* overrides.' },
+            { href: 'examples-devkit.html', icon: '🧪', title: 'Devkit kit', badge: 'New', description: 'Exercises the devkit examples kit itself: layout, includes, demos, accent tokens, local overrides, version badge.' },
+        ],
+        links: [{ label: 'API Docs', href: 'https://github.com/keenmate/web-playground/blob/main/docs/usage.md' }],
+    });
+</script>

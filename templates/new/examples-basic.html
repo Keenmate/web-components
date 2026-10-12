@@ -1,0 +1,57 @@
+<meta name="kmwc:title" content="Basic Usage">
+<meta name="kmwc:subtitle" content="The essentials of &lt;{{TAG}}&gt;.">
+
+<!-- A fragment page: the devkit layout adds <head>, the header (back link,
+     title, subtitle), the container and the component entry script; the kit
+     adds the shared styles, chapter nav, copy-links and theme switch.
+     Each <kmwc-demo> renders its markup live AND as a code block. -->
+
+<div class="card">
+    <h2>BU01 · Label &amp; active state</h2>
+    <p>Every input is reactive through attribute and property alike. Click the component to toggle it — it fires <code>change</code>.</p>
+    <div class="controls">
+        <label>label <input type="text" id="bu-label" value="Hello from {{TAG}}"></label>
+        <label><input type="checkbox" id="bu-active"> <code>active</code></label>
+    </div>
+    <kmwc-demo>
+        <{{TAG}} id="ex-basic"></{{TAG}}>
+    </kmwc-demo>
+    <div class="log-panel" id="bu-log">Click the component…</div>
+</div>
+
+<div class="card">
+    <h2>BU02 · Declarative markup</h2>
+    <p>No JavaScript needed — attributes only.</p>
+    <kmwc-demo>
+        <{{TAG}} label="Pre-activated" active></{{TAG}}>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>BU03 · Listening for changes</h2>
+    <p>The <code>change</code> event carries <code>detail.isActive</code>; the script below runs on this page and is shown verbatim.</p>
+    <kmwc-demo>
+        <{{TAG}} id="ex-events" label="Off"></{{TAG}}>
+        <script type="module" data-kmwc-show>
+            const toggle = document.getElementById('ex-events');
+            toggle.addEventListener('change', (event) => {
+                toggle.setAttribute('label', event.detail.isActive ? 'On' : 'Off');
+            });
+        </script>
+    </kmwc-demo>
+</div>
+
+<script type="module">
+    import { attachControlsPersistence } from '@keenmate/web-components-devkit/examples';
+
+    const example = document.getElementById('ex-basic');
+    const log = document.getElementById('bu-log');
+    document.getElementById('bu-label').addEventListener('input', (event) => example.setAttribute('label', event.target.value));
+    document.getElementById('bu-active').addEventListener('change', (event) => example.toggleAttribute('active', event.target.checked));
+    example.addEventListener('change', (event) => {
+        log.textContent = `change → isActive: ${event.detail.isActive}`;
+        document.getElementById('bu-active').checked = event.detail.isActive;
+    });
+
+    attachControlsPersistence('basic');
+</script>

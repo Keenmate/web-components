@@ -1,0 +1,30 @@
+/* ==============================================================================
+   KMWC EXAMPLES KIT — MAIN ENTRY POINT
+   ==============================================================================
+   Loaded automatically on every example page by the kmwc Vite plugin.
+
+   Everything lives in `@layer kmwc`, so ANY unlayered rule — a page's own
+   <style>, a repo's `examples-local.css`, a light-DOM component's styles —
+   wins regardless of load order or specificity. The universal reset is
+   layered too, so it can never clobber a component (css-structure.md "The
+   unlayered-reset footgun").
+
+     • colours  → tokens (tokens.css) read through --base-*; per-site accent via
+                  package.json#kmwc.theme
+     • a rule   → write the selector unlayered in examples-local.css
+     • missing  → if two components need it, add it HERE, not locally
+
+   Page vocabulary (.card, .controls, .note, …) is authored by pages and stays
+   unprefixed; DOM the kit generates is prefixed BEM (kmwc-chapter-nav__item…). */
+@layer kmwc;
+
+@import './tokens.css';
+@import './base.css';
+@import './controls.css';
+@import './content.css';
+@import './widgets.css';
+@import './demo.css';
+@import './copy-link.css';
+@import './chapter-nav.css';
+@import './theme-switch.css';
+@import './index-page.css';

@@ -1,0 +1,50 @@
+/* ==============================================================================
+   EXAMPLES KIT — DEMO
+   ==============================================================================
+   <kmwc-demo> output: the live preview, then the code that produced it (a
+   `.code-block`, so it inherits the code styles) with the kit's copy button. */
+@layer kmwc {
+    .kmwc-demo {
+        margin: 1rem 0;
+    }
+
+    .kmwc-demo__preview {
+        margin-bottom: 0;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .kmwc-demo .kmwc-demo__code {
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .kmwc-demo .kmwc-demo__code:last-child {
+        border-bottom-left-radius: var(--kmwc-radius-md);
+        border-bottom-right-radius: var(--kmwc-radius-md);
+    }
+
+    .kmwc-demo .kmwc-demo__code + .kmwc-demo__code {
+        border-top: 1px solid color-mix(in srgb, var(--kmwc-code-text-color) 12%, transparent);
+    }
+
+    .kmwc-demo__copy {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        background: color-mix(in srgb, var(--kmwc-code-text-color) 10%, transparent);
+        color: var(--kmwc-code-text-color);
+        border: 1px solid color-mix(in srgb, var(--kmwc-code-text-color) 20%, transparent);
+        border-radius: 4px;
+    }
+
+    .kmwc-demo__copy:hover {
+        background: color-mix(in srgb, var(--kmwc-code-text-color) 20%, transparent);
+    }
+
+    .kmwc-demo__copy--copied {
+        color: var(--kmwc-success-color);
+    }
+}
