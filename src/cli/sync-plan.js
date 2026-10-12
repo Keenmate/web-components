@@ -54,7 +54,7 @@ export function getTemplateVariables(config) {
     CONTAINER_NAME: config.image.container,
     IMAGE_PORT: config.ports.image,
     DEV_PORT: config.ports.dev,
-    PREVIEW_PORT: config.ports.dev + 1,
+    PREVIEW_PORT: config.ports.preview,
   };
 }
 

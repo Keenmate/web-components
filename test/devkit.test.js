@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { mapKmwcConfig, getRegistry, DEVKIT_ROOT } from '../src/config.js';
+import { mapKmwcConfig, getRegistry, getNextPortBlock, getPortsForBlock, DEVKIT_ROOT, FIRST_PORT_BLOCK, PORT_BLOCK_SIZE } from '../src/config.js';
 import {
   getSyncPlan,
   renderTemplate,
@@ -44,7 +44,7 @@ test('config: defaults derive from the package', () => {
   assert.equal(config.cssVariables.checkMode, 'declared');
 });
 
-test('registry: ids, prefixes and port blocks are unique', () => {
+test('registry: ids and prefixes unique; every repo owns the next port block in one sequence', () => {
   const { components } = getRegistry();
   const ids = components.map((entry) => entry.id);
   assert.equal(new Set(ids).size, ids.length, 'duplicate id');
@@ -52,15 +52,14 @@ test('registry: ids, prefixes and port blocks are unique', () => {
   const prefixes = components.map((entry) => entry.prefix).filter(Boolean);
   assert.equal(new Set(prefixes).size, prefixes.length, 'duplicate prefix');
 
-  const portOwners = new Map();
-  for (const entry of components.filter((candidate) => candidate.ports)) {
-    // dev, preview (dev + 1) and image ports must never collide across repos.
-    const ports = [entry.ports.dev, entry.ports.dev != null ? entry.ports.dev + 1 : null, entry.ports.image].filter((port) => port != null);
-    for (const port of ports) {
-      assert.ok(!portOwners.has(port), `port ${port} used by both ${portOwners.get(port)} and ${entry.id}`);
-      portOwners.set(port, entry.id);
-    }
-  }
+  // One sequence, step PORT_BLOCK_SIZE, in registry order, no gaps.
+  components.forEach((entry, entryIndex) => {
+    assert.equal(entry.port, FIRST_PORT_BLOCK + entryIndex * PORT_BLOCK_SIZE, `${entry.id} breaks the port sequence`);
+    assert.ok(!('ports' in entry) && !('status' in entry), `${entry.id} carries a retired field`);
+  });
+  assert.equal(getNextPortBlock(), FIRST_PORT_BLOCK + components.length * PORT_BLOCK_SIZE);
+  const blockPorts = getPortsForBlock(12100);
+  assert.deepEqual(blockPorts, { dev: 12100, preview: 12101, image: 12110 });
   for (const entry of components) {
     if (entry.for) assert.ok(ids.includes(entry.for), `${entry.id}.for → unknown "${entry.for}"`);
   }

@@ -16,7 +16,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { getKmwcConfig, getRegistry, LEGACY_FILES, NON_PAGE_HTML_FILES } from '../../config.js';
+import { getKmwcConfig, getPortsForBlock, getRegistry, LEGACY_FILES, NON_PAGE_HTML_FILES } from '../../config.js';
 import { getSyncPlan, getScriptsPlan, CLAUDE_BLOCK_START } from '../sync-plan.js';
 import { checkIsFragment } from '../../vite/page-composer.js';
 
@@ -172,13 +172,14 @@ export function checkComponent(config, doctorConfig = {}) {
   if (!registryEntry) {
     addWarning('registry', `"${config.id}" is not in the devkit components.json`, 'add an entry (README catalogue + port allocation)');
   } else {
-    if (registryEntry.ports) {
-      const mismatchedPorts = ['dev', 'image'].filter((portName) => registryEntry.ports[portName] != null && registryEntry.ports[portName] !== config.ports[portName]);
+    if (registryEntry.port) {
+      const registryPorts = getPortsForBlock(registryEntry.port);
+      const mismatchedPorts = ['dev', 'image'].filter((portName) => registryPorts[portName] !== config.ports[portName]);
       if (mismatchedPorts.length) {
         addError(
           'registry',
-          mismatchedPorts.map((portName) => `ports.${portName} ${config.ports[portName]} ≠ registry ${registryEntry.ports[portName]}`).join('; '),
-          'use the registry ports in package.json#kmwc.ports'
+          mismatchedPorts.map((portName) => `ports.${portName} ${config.ports[portName]} ≠ registry ${registryPorts[portName]}`).join('; '),
+          `set package.json#kmwc.ports to { "dev": ${registryPorts.dev}, "image": ${registryPorts.image} } (components.json port block ${registryEntry.port})`
         );
       } else addPass('registry', `ports match the registry (dev ${config.ports.dev}, image ${config.ports.image})`);
     }

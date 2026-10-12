@@ -93,7 +93,7 @@ export interface KmwcConfig {
     shouldEmitSourcemap: boolean;
     external: string[];
   };
-  ports: { dev: number; image: number };
+  ports: { dev: number; preview: number; image: number };
   theme: { accentColor: string; accentEndColor: string };
   examples: {
     outDir: string;
@@ -125,6 +125,12 @@ export const DEVKIT_ROOT: string;
 export const DEFAULT_RULEBOOK_PATH: string;
 export const LEGACY_FILES: string[];
 export const NON_PAGE_HTML_FILES: string[];
+export const PORT_BLOCK_SIZE: number;
+export const FIRST_PORT_BLOCK: number;
+export const PREVIEW_PORT_OFFSET: number;
+export const IMAGE_PORT_OFFSET: number;
+export function getPortsForBlock(portBlock: number): { dev: number; preview: number; image: number };
+export function getNextPortBlock(registry?: { components: Array<Record<string, any>> }): number;
 export function getPeerModule(root: string, moduleId: string): any;
 export function loadPeerModule(root: string, moduleId: string): Promise<any>;
 export function getJsonFile(filePath: string): any;

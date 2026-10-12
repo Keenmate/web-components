@@ -198,7 +198,7 @@ export function defineComponentConfig(presetConfig = {}) {
         },
       },
       preview: {
-        port: config.ports.dev + 1,
+        port: config.ports.preview,
         strictPort: true,
       },
       build: isExamplesMode

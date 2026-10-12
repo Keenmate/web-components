@@ -1,7 +1,7 @@
 /**
  * kmwc readme — regenerate the README catalogue from components.json.
  *
- * Versions, descriptions and devkit adoption are read from the sibling
+ * Descriptions and devkit adoption are read from the sibling
  * checkouts (offline — no npm calls), so the table reflects the working copies
  * next to this repo. Rewrites only the region between the catalogue markers.
  */
@@ -14,7 +14,6 @@ export const CATALOGUE_END = '<!-- kmwc:catalogue:end -->';
 
 const DEVKIT_PACKAGE_NAME = '@keenmate/web-components-devkit';
 const SHORT_TEXT_LENGTH = 110;
-const STATUS_BADGES = { stable: '🟢 stable', rc: '🟡 rc', beta: '🟠 beta', experimental: '⚪ experimental', archived: '⚫ archived' };
 
 /** Read the package.json that represents a registry entry (monorepo-aware). */
 function getSiblingPackageInfo(entry) {
@@ -27,19 +26,9 @@ function getSiblingPackageInfo(entry) {
   const dependencies = { ...rootPackageJson?.dependencies, ...rootPackageJson?.devDependencies };
   return {
     isPresent: true,
-    version: mainPackageJson?.version || '',
     description: mainPackageJson?.description || rootPackageJson?.description || '',
     isDevkitAdopted: !!(rootPackageJson?.kmwc && dependencies[DEVKIT_PACKAGE_NAME]),
   };
-}
-
-function getStatus(entry, version) {
-  if (entry.status) return entry.status;
-  if (!version) return 'experimental';
-  if (/-rc/i.test(version)) return 'rc';
-  if (/-(beta|alpha)/i.test(version)) return 'beta';
-  if (/^0\./.test(version)) return 'experimental';
-  return 'stable';
 }
 
 const mapToTableCell = (text) => String(text ?? '').replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
@@ -47,6 +36,7 @@ const renderLink = (label, href) => (href ? `[${label}](${href})` : '');
 const mapToShortText = (text, maxLength = SHORT_TEXT_LENGTH) =>
   text.length > maxLength ? text.slice(0, maxLength - 1).replace(/\s+\S*$/, '') + '…' : text;
 const renderPackageName = (entry) => (entry.npm ? `\`${entry.npm}\`` : '—');
+const renderPort = (entry) => (entry.port ? String(entry.port) : '—');
 
 export function renderCatalogue(registry = getRegistry()) {
   const entries = registry.components;
@@ -54,8 +44,8 @@ export function renderCatalogue(registry = getRegistry()) {
   const lines = [];
 
   lines.push('### Components', '');
-  lines.push('| Component | Package | Version | Status | Prefix | Links | Devkit | About |');
-  lines.push('|---|---|---|---|---|---|:---:|---|');
+  lines.push('| Component | Package | Prefix | Dev port | Links | Devkit | About |');
+  lines.push('|---|---|---|---:|---|:---:|---|');
   for (const entry of getEntriesOfKind('component')) {
     const siblingInfo = getSiblingPackageInfo(entry);
     const companions = entries.filter((companion) => ['showcase', 'docs'].includes(companion.kind) && companion.for === entry.id);
@@ -66,33 +56,31 @@ export function renderCatalogue(registry = getRegistry()) {
       ...companions.map((companion) => (companion.url ? renderLink(companion.kind, companion.url) : `\`${companion.id}\``)),
     ].filter(Boolean);
     lines.push(
-      `| **${mapToTableCell(entry.id)}** | ${renderPackageName(entry)} | ${mapToTableCell(siblingInfo.version) || '—'} | ${STATUS_BADGES[getStatus(entry, siblingInfo.version)]} | ${entry.prefix ? `\`${entry.prefix}\`` : '—'} | ${links.join(' · ') || '—'} | ${siblingInfo.isDevkitAdopted ? '✅' : '—'} | ${mapToTableCell(mapToShortText(siblingInfo.description || entry.note || ''))} |`
+      `| **${mapToTableCell(entry.id)}** | ${renderPackageName(entry)} | ${entry.prefix ? `\`${entry.prefix}\`` : '—'} | ${renderPort(entry)} | ${links.join(' · ') || '—'} | ${siblingInfo.isDevkitAdopted ? '✅' : '—'} | ${mapToTableCell(mapToShortText(siblingInfo.description || entry.note || ''))} |`
     );
   }
 
   lines.push('', '### Shared libraries', '');
-  lines.push('| Library | Package | Version | About |');
-  lines.push('|---|---|---|---|');
+  lines.push('| Library | Package | Dev port | About |');
+  lines.push('|---|---|---:|---|');
   for (const entry of getEntriesOfKind('library')) {
     const siblingInfo = getSiblingPackageInfo(entry);
-    lines.push(`| **${mapToTableCell(entry.id)}** | ${renderPackageName(entry)} | ${mapToTableCell(siblingInfo.version) || '—'} | ${mapToTableCell(entry.note || siblingInfo.description)} |`);
+    lines.push(`| **${mapToTableCell(entry.id)}** | ${renderPackageName(entry)} | ${renderPort(entry)} | ${mapToTableCell(entry.note || siblingInfo.description)} |`);
   }
 
   lines.push('', '### Showcases, docs & test harnesses', '');
-  lines.push('| Repo | Kind | For | About |');
-  lines.push('|---|---|---|---|');
+  lines.push('| Repo | Kind | For | Dev port | About |');
+  lines.push('|---|---|---|---:|---|');
   for (const entry of entries.filter((candidate) => ['showcase', 'docs', 'test'].includes(candidate.kind))) {
     const about = entry.url ? `${renderLink(entry.url, entry.url)} ${entry.note || ''}` : entry.note || '';
-    lines.push(`| ${mapToTableCell(entry.id)} | ${entry.kind} | ${entry.for || '—'} | ${mapToTableCell(about)} |`);
+    lines.push(`| ${mapToTableCell(entry.id)} | ${entry.kind} | ${entry.for || '—'} | ${renderPort(entry)} | ${mapToTableCell(about)} |`);
   }
 
-  lines.push('', '### Port allocation', '');
-  lines.push('Each component owns a block of 100: dev server = block, preview = block + 1, examples image = block + 10. `kmwc doctor` enforces it.', '');
-  lines.push('| Repo | Dev | Image | Note |');
-  lines.push('|---|---:|---:|---|');
-  for (const entry of entries.filter((candidate) => candidate.ports).sort((left, right) => left.ports.dev - right.ports.dev)) {
-    lines.push(`| ${mapToTableCell(entry.id)} | ${entry.ports.dev ?? '—'} | ${entry.ports.image ?? '—'} | ${mapToTableCell(entry.portNote || '')} |`);
-  }
+  lines.push(
+    '',
+    '**Ports** — one sequence, a block of 100 per repo in registry order: dev server = **Dev port**, preview = +1, examples image = +10. ' +
+      'Run any number of repos side by side without collisions; `kmwc doctor` checks a repo against it and `kmwc new` takes the next free block.'
+  );
 
   return lines.join('\n');
 }

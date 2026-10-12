@@ -41,7 +41,7 @@ component repo and find a bug in a shared helper, the fix belongs in this repo.
 ## Layout
 
 ```
-components.json          registry: catalogue, CSS prefixes, port allocation
+components.json          registry: catalogue, CSS prefixes, port blocks
 src/config.js            package.json#kmwc → resolved config (defaults live here)
 src/vite/                defineComponentConfig() + createExamplesPlugin()
   page-composer.js         fragment pages → layout, <kmwc-include>, <kmwc-demo> (pure, unit-tested)
@@ -78,9 +78,11 @@ test/                    node:test unit tests
   `templates/new/.claude/commands/publish.md` mirrors the reference
   (`web-multiselect/.claude/commands/publish.md`) — `[canonical]` blocks stay
   byte-identical to it.
-- **Ports & prefixes:** each component owns a 100-block in `components.json`
-  (dev = block, preview = +1, image = +10) and its rulebook-reserved prefix.
-  The unit tests reject collisions.
+- **Ports & prefixes:** every registry entry owns one `port` block in a single
+  sequence by 100, in registry order (dev = block, preview = +1, image = +10 —
+  `getPortsForBlock()`); a new repo is appended and takes the next block. The
+  unit tests reject gaps and collisions. No versions/status in the registry —
+  they go stale.
 - **Changing what a component must look like** (new standard script, new
   legacy file, new doctor check, scaffold change): update `doctor.js`, the
   README, `templates/claude-block.md` and the playground together.

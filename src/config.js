@@ -32,6 +32,25 @@ export const LEGACY_FILES = [
   'scripts/check-variable-manifest.mjs',
 ];
 
+/**
+ * Port blocks: every repo owns one block of 100 in a single sequence
+ * (components.json `port`): dev server = block, preview = +1, examples image = +10.
+ */
+export const PORT_BLOCK_SIZE = 100;
+export const FIRST_PORT_BLOCK = 12100;
+export const PREVIEW_PORT_OFFSET = 1;
+export const IMAGE_PORT_OFFSET = 10;
+
+export function getPortsForBlock(portBlock) {
+  return { dev: portBlock, preview: portBlock + PREVIEW_PORT_OFFSET, image: portBlock + IMAGE_PORT_OFFSET };
+}
+
+/** The next free block after the highest one in the registry. */
+export function getNextPortBlock(registry = getRegistry()) {
+  const portBlocks = registry.components.map((entry) => entry.port).filter((port) => typeof port === 'number');
+  return portBlocks.length ? Math.max(...portBlocks) + PORT_BLOCK_SIZE : FIRST_PORT_BLOCK;
+}
+
 /** Root-level HTML files that are fragments, not pages (never built as entries). */
 export const NON_PAGE_HTML_FILES = ['plausible-snippet.html'];
 
@@ -146,7 +165,8 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
     },
     ports: {
       dev: devPort,
-      image: ports.image ?? devPort + 10,
+      preview: devPort + PREVIEW_PORT_OFFSET,
+      image: ports.image ?? devPort + IMAGE_PORT_OFFSET,
     },
     theme: {
       accentColor: theme.accentColor || '',

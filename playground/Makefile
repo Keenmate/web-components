@@ -11,9 +11,9 @@
 DOCKER_RUNNER  ?= podman
 IMAGE_NAME     ?= registry.km8.es/web-playground-examples:prod
 CONTAINER_NAME ?= web-playground-examples
-IMAGE_PORT     ?= 13910
-DEV_PORT       := 13900
-PREVIEW_PORT   := 13901
+IMAGE_PORT     ?= 14110
+DEV_PORT       := 14100
+PREVIEW_PORT   := 14101
 
 help: ## Show this help message
 	@echo "Available targets:"
@@ -22,7 +22,7 @@ help: ## Show this help message
 setup: ## Install dependencies
 	npm install
 
-dev: ## Start the dev server (examples on http://localhost:13900)
+dev: ## Start the dev server (examples on http://localhost:14100)
 	@rm -rf node_modules/.vite
 	npm run dev
 
@@ -30,7 +30,7 @@ dev: ## Start the dev server (examples on http://localhost:13900)
 # the only thing that can hold them. On Windows a PowerShell one-liner covers
 # IPv4 + IPv6 listeners; `$$_` escapes make's `$` and the single quotes stop sh
 # from expanding `$_` before PowerShell sees it.
-kill-port: ## Free the dev/preview ports (13900, 13901)
+kill-port: ## Free the dev/preview ports (14100, 14101)
 ifeq ($(OS),Windows_NT)
 	-@powershell -NoProfile -Command '$(DEV_PORT),$(PREVIEW_PORT) | ForEach-Object { Get-NetTCPConnection -LocalPort $$_ -State Listen -ErrorAction SilentlyContinue } | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $$_ -Force -ErrorAction SilentlyContinue }'
 else
@@ -44,7 +44,7 @@ build: ## Build the library (dist/)
 build-examples: ## Build the static examples site (dist-examples/)
 	npm run build:examples
 
-preview-examples: build-examples ## Serve the built examples site (http://localhost:13901)
+preview-examples: build-examples ## Serve the built examples site (http://localhost:14101)
 	npm run preview:examples
 
 package: build ## Create an npm tarball
@@ -115,7 +115,7 @@ test-e2e-install: ## Install the chromium browser binary (one-time)
 image-build: ## Build the examples container image
 	$(DOCKER_RUNNER) build --build-arg BUILD_TIME=$$(date -u +%Y-%m-%dT%H:%MZ) -t $(IMAGE_NAME) .
 
-image-run: ## Run the examples image on IMAGE_PORT (default 13910)
+image-run: ## Run the examples image on IMAGE_PORT (default 14110)
 	-@$(DOCKER_RUNNER) rm -f $(CONTAINER_NAME) >/dev/null 2>&1
 	$(DOCKER_RUNNER) run -d --name $(CONTAINER_NAME) -p $(IMAGE_PORT):80 $(IMAGE_NAME)
 	@echo "Serving examples at http://localhost:$(IMAGE_PORT)"

@@ -19,7 +19,8 @@
  * Produces Element / Logic / Side-layer sources, the canonical CSS set, a
  * Custom Elements Manifest config, README + docs/, CHANGELOG, LICENSE,
  * `.claude/commands/publish.md`, examples, fixtures + e2e specs, then the
- * `kmwc sync` files. The dev port is the next free 100-block in the registry.
+ * `kmwc sync` files. The port block (dev = block, image = +10) is the next free
+ * one in the registry's single sequence (`--port` overrides).
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -29,7 +30,10 @@ import {
   DEVKIT_ROOT,
   getDevkitPackageJson,
   getJsonFile,
+  getNextPortBlock,
+  getPortsForBlock,
   getRegistry,
+  PORT_BLOCK_SIZE,
   getUnscopedName,
   mapToPascalCase,
 } from '../../config.js';
@@ -45,11 +49,6 @@ const INFRASTRUCTURE_PREFIXES = ['kmwc', 'base'];
 const SHORT_SINGLE_WORD_LENGTH = 6;
 /** Template file names → generated names. */
 const FILE_NAME_PLACEHOLDERS = { _gitignore: '.gitignore' };
-
-function getNextPortBlock(registry) {
-  const devPorts = registry.components.map((entry) => entry.ports?.dev).filter((port) => typeof port === 'number' && port < 20000);
-  return (Math.floor(Math.max(12100, ...devPorts) / 100) + 1) * 100;
-}
 
 /** Prefixes reserved in the rulebook (base-variables.md "Existing prefixes" table) — empty when not checked out. */
 export function getRulebookPrefixes(rulebookPath = DEFAULT_RULEBOOK_PATH) {
@@ -151,7 +150,7 @@ function generatePackageJson({ componentId, packageName, tagline, tag, prefix, t
       tag,
       prefix,
       library: { globalName: logicClass, fileName: componentId },
-      ports: { dev: devPort, image: devPort + 10 },
+      ports: { dev: devPort, image: getPortsForBlock(devPort).image },
     },
     scripts: {
       dev: 'vite',
@@ -215,6 +214,9 @@ export async function run(args) {
   if (!args.offline && checkIsPackageNameTaken(packageName)) throw new Error(`${packageName} already exists on npm (component-intake.md "B")`);
 
   const devPort = Number(args.port) || getNextPortBlock(registry);
+  if (devPort % PORT_BLOCK_SIZE !== 0) throw new Error(`--port ${devPort} is not a port block (a multiple of ${PORT_BLOCK_SIZE})`);
+  const portOwner = registry.components.find((entry) => entry.port === devPort);
+  if (portOwner) throw new Error(`port block ${devPort} belongs to ${portOwner.id} — omit --port to take the next free block`);
   const corePackageJsonPath = join(DEVKIT_ROOT, '..', 'web-components-core', 'package.json');
   const coreVersion = existsSync(corePackageJsonPath) ? getJsonFile(corePackageJsonPath).version : '1.0.0-rc12';
   const today = new Date().toISOString().slice(0, 10);
@@ -272,8 +274,7 @@ export async function run(args) {
     path: relative(DEVKIT_ROOT, targetPath).replace(/\\/g, '/'),
     npm: packageName,
     repo: `https://github.com/keenmate/${componentId}`,
-    status: 'experimental',
-    ports: { dev: devPort, image: devPort + 10 },
+    port: devPort,
   };
   if (args.register) {
     const registryPath = join(DEVKIT_ROOT, 'components.json');
