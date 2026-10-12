@@ -16,7 +16,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { getKmwcConfig, getPortsForBlock, getRegistry, LEGACY_FILES, NON_PAGE_HTML_FILES } from '../../config.js';
+import { getKmwcConfig, getPortsForBlock, getRegistry, LEGACY_FILES, NON_PAGE_HTML_FILES, PACKAGE_LEAK_RULES, PACKAGE_FILES_EXCLUSIONS } from '../../config.js';
 import { getSyncPlan, getScriptsPlan, CLAUDE_BLOCK_START } from '../sync-plan.js';
 import { checkIsFragment } from '../../vite/page-composer.js';
 
@@ -188,10 +188,57 @@ export function checkComponent(config, doctorConfig = {}) {
     }
   }
 
+  // ── package contents ─────────────────────────────────────────────────────
+  if (doctorConfig.shouldCheckPackage !== false) checkPackageContents(config, { addPass, addWarning, addError });
+
   // ── rulebook suites ──────────────────────────────────────────────────────
   if (doctorConfig.shouldRunRulebook !== false) checkRulebook(config, { addPass, addWarning, addError });
 
   return results;
+}
+
+/** Packed paths that break PACKAGE_LEAK_RULES → [{ path, label }]. Pure — exported for tests. */
+export function getPackageLeaks(packedPaths) {
+  return packedPaths
+    .map((packedPath) => packedPath.replace(/\\/g, '/').replace(/^package\//, ''))
+    .flatMap((packedPath) => {
+      const leakRule = PACKAGE_LEAK_RULES.find((rule) => rule.pattern.test(packedPath));
+      return leakRule ? [{ path: packedPath, label: leakRule.label }] : [];
+    });
+}
+
+/** The file list `npm publish` would ship (no lifecycle scripts, nothing written). */
+function getPackedPaths(config) {
+  const packResult = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
+    cwd: config.root,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+  });
+  if (packResult.error || packResult.status !== 0) return null;
+  const packReport = JSON.parse(packResult.stdout.slice(packResult.stdout.indexOf('[')));
+  return packReport[0].files.map((file) => file.path);
+}
+
+function checkPackageContents(config, { addPass, addWarning, addError }) {
+  let packedPaths;
+  try {
+    packedPaths = getPackedPaths(config);
+  } catch {
+    packedPaths = null;
+  }
+  if (!packedPaths) {
+    addWarning('package', 'npm pack --dry-run failed — package contents not checked');
+    return;
+  }
+  const packageLeaks = getPackageLeaks(packedPaths);
+  for (const packageLeak of packageLeaks) {
+    addError(
+      'package',
+      `${packageLeak.path} would be published (${packageLeak.label})`,
+      `exclude it in package.json "files" (e.g. ${PACKAGE_FILES_EXCLUSIONS.map((exclusion) => `"${exclusion}"`).join(', ')}) or narrow the glob`
+    );
+  }
+  if (!packageLeaks.length) addPass('package', `${packedPaths.length} packed file(s), no dev-only files`);
 }
 
 function checkRulebook(config, { addPass, addWarning, addError }) {
@@ -222,7 +269,7 @@ function checkRulebook(config, { addPass, addWarning, addError }) {
 
 export async function run(args) {
   const config = getKmwcConfig(args.root);
-  const results = checkComponent(config, { shouldRunRulebook: !args['no-rulebook'] });
+  const results = checkComponent(config, { shouldRunRulebook: !args['no-rulebook'], shouldCheckPackage: !args['no-pack'] });
   const errorCount = results.filter((result) => result.level === 'error').length;
   const warningCount = results.filter((result) => result.level === 'warning').length;
 

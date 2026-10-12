@@ -69,6 +69,25 @@ export function getNextPortBlock(registry = getRegistry(), kind = 'component') {
   return nextBlock;
 }
 
+/**
+ * Files that must never reach a consumer's node_modules (`kmwc doctor` checks
+ * the `npm pack` file list). AI-assistant guidance (CLAUDE.md / .claude/)
+ * slips in whenever a `files` entry is a directory glob like `src/css`, so the
+ * scaffold's allowlist excludes it with PACKAGE_FILES_EXCLUSIONS.
+ */
+export const PACKAGE_LEAK_RULES = [
+  { pattern: /(^|\/)CLAUDE\.md$/i, label: 'CLAUDE.md (AI-assistant guidance)' },
+  { pattern: /(^|\/)\.claude\//, label: '.claude/ (AI-assistant commands)' },
+  { pattern: /^(test|tests|e2e)\//, label: 'test / e2e sources' },
+  { pattern: /\.(spec|test)\.[cm]?[jt]sx?$/, label: '*.spec / *.test files' },
+  { pattern: /^(examples-[^/]*\.html|index\.html|partials\/)/, label: 'example pages' },
+  { pattern: /^(dist-examples|test-results|playwright-report)\//, label: 'build / test output' },
+  { pattern: /(^|\/)(\.makefile\.env|Makefile\.local)$/, label: 'local make config' },
+];
+
+/** Negated `files` entries the scaffold adds (npm applies them after the globs). */
+export const PACKAGE_FILES_EXCLUSIONS = ['!**/CLAUDE.md', '!**/.claude'];
+
 /** Root-level HTML files that are fragments, not pages (never built as entries). */
 export const NON_PAGE_HTML_FILES = ['plausible-snippet.html'];
 

@@ -286,8 +286,9 @@ baseURL and the `npm run dev` web server come from `kmwc.ports.dev`.
 ```
 kmwc sync [--check]           regenerate Dockerfile, nginx.conf, Makefile, .dockerignore, the
                               CLAUDE.md devkit block, .gitignore entries, missing standard scripts
-kmwc doctor [--json]          devkit checks + the rulebook's *.checks.sh suites (exit 1 on errors)
-                              --verbose lists passes, --no-rulebook skips the suites
+kmwc doctor [--json]          devkit checks + package contents + the rulebook's *.checks.sh suites
+                              (exit 1 on errors). --verbose lists passes, --no-rulebook skips the
+                              suites, --no-pack skips the package-contents check
 kmwc check-vars [--strict]    component-variables.manifest.json ⇔ CSS
 kmwc check-release --tag t    latest ⇔ release version, rc ⇔ -rcN, version not yet on npm
 kmwc new web-<name>           scaffold a component (--prefix, --title, --tag, --dir, --port, --minimal, --register)
@@ -308,6 +309,13 @@ reports each `FAIL` as an error pointing at the matching `.checks.md` entry.
 When the rulebook isn't checked out (or there's no bash) the suites are
 skipped with a warning — the rulebook stays the single source of truth; the
 devkit never copies its rules.
+
+**Package contents.** Doctor runs `npm pack --dry-run` and fails on anything
+dev-only that would reach a consumer's `node_modules`: `CLAUDE.md` at any
+depth and `.claude/` (AI-assistant guidance, which a directory entry such as
+`src/css` in `files` sweeps in), `test/` / `e2e/` / `*.spec.*` / `*.test.*`,
+example pages and `partials/`, build/test output, and local make config. Keep
+`"!**/CLAUDE.md"` and `"!**/.claude"` at the end of `files`; the scaffold adds them.
 
 ### Scaffolding a component
 
@@ -330,6 +338,8 @@ rulebook suite on its first commit:
   `component-variables.manifest.json` (exported as `/manifest`)
 - README in the canonical shape, `docs/{usage,theming,examples,accessibility}.md`,
   CHANGELOG (`## [0.1.0] - <date>`), LICENSE, `.claude/commands/publish.md`
+- a `files` allowlist (dist, docs, manifests, editor-integration JSON) ending in
+  `!**/CLAUDE.md` and `!**/.claude`, so AI-assistant guidance never ships
 - examples (index, basic, theming), fixtures + smoke and dark-mode e2e specs,
   and the `kmwc sync` files
 

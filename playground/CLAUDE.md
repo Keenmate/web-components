@@ -35,6 +35,10 @@ locally — every local fork is how they drifted apart.
   **Landing page:** `renderExamplesIndex({ pages })` from the same module.
 - **Found a bug in a shared helper?** Fix it in `../web-components` (so every
   component gets it), not here. Say so in your summary if you can't.
-- Before finishing: `npx kmwc doctor` must pass — it runs the devkit checks
-  and the rulebook's `*.checks.sh` suites.
+- **Never ship AI-assistant files:** `package.json` `files` must keep
+  `"!**/CLAUDE.md"` and `"!**/.claude"` (a `CLAUDE.md` you add under `src/` is
+  otherwise published with it).
+- Before finishing: `npx kmwc doctor` must pass — it runs the devkit checks,
+  checks the `npm pack` file list for dev-only files, and runs the rulebook's
+  `*.checks.sh` suites.
 <!-- kmwc:devkit:end -->

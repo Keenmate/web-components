@@ -124,6 +124,8 @@ export interface KmwcConfig {
 export const DEVKIT_ROOT: string;
 export const DEFAULT_RULEBOOK_PATH: string;
 export const LEGACY_FILES: string[];
+export const PACKAGE_LEAK_RULES: Array<{ pattern: RegExp; label: string }>;
+export const PACKAGE_FILES_EXCLUSIONS: string[];
 export const NON_PAGE_HTML_FILES: string[];
 export const PORT_BLOCK_SIZE: number;
 export const PORT_RANGES: Array<{ kinds: string[]; firstBlock: number; lastBlock: number }>;

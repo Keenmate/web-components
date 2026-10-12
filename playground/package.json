@@ -41,7 +41,9 @@
     "custom-elements.json",
     "web-types.json",
     "vscode.html-custom-data.json",
-    "vscode.css-custom-data.json"
+    "vscode.css-custom-data.json",
+    "!**/CLAUDE.md",
+    "!**/.claude"
   ],
   "sideEffects": [
     "./dist/*.js",

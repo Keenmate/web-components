@@ -48,6 +48,11 @@ First release of `@keenmate/web-components-devkit`, plus the component catalogue
   the devkit and registered in the catalogue (port 17300) — the e2e test bed for
   the kit, the presets and the scaffold, in dev and in the built site.
 
+- **Package-contents check** in `kmwc doctor`: `npm pack --dry-run` must not ship
+  `CLAUDE.md` / `.claude/` (at any depth), tests and specs, example pages,
+  partials, build/test output or local make config (`--no-pack` skips it).
+  `kmwc new` ends `files` with `!**/CLAUDE.md` and `!**/.claude`.
+
 ### Fixed
 
 - **Fragment detection** (`checkIsFragment`): a page is a full document only when it

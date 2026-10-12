@@ -33,7 +33,8 @@ Usage: kmwc <command> [options]
                             the CLAUDE.md devkit block, .gitignore entries and missing
                             standard scripts. --check: report drift, write nothing.
   doctor [--json]           Check this repo against the devkit standard and the
-                            BlissFramework rulebook (*.checks.sh). --verbose, --no-rulebook.
+                            BlissFramework rulebook (*.checks.sh), and that npm pack ships no
+                            dev-only files. --verbose, --no-rulebook, --no-pack.
   check-vars [--strict]     Validate component-variables.manifest.json against the CSS.
   check-release --tag <t>   Gate a publish: latest ⇔ release version, rc ⇔ -rcN,
                             version not on npm yet. --offline skips the npm lookup.

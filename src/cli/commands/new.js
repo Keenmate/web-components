@@ -34,6 +34,7 @@ import {
   getPortsForBlock,
   getRegistry,
   PORT_BLOCK_SIZE,
+  PACKAGE_FILES_EXCLUSIONS,
   getUnscopedName,
   mapToPascalCase,
 } from '../../config.js';
@@ -110,7 +111,7 @@ function writeScaffoldFiles(templateRoot, targetPath, variables, featureName) {
   }
 }
 
-function generatePackageJson({ componentId, packageName, tagline, tag, prefix, title, devPort, coreVersion, devkitVersion, logicClass }) {
+export function generatePackageJson({ componentId, packageName, tagline, tag, prefix, title, devPort, coreVersion, devkitVersion, logicClass }) {
   return {
     name: packageName,
     version: '0.1.0',
@@ -142,6 +143,8 @@ function generatePackageJson({ componentId, packageName, tagline, tag, prefix, t
       'web-types.json',
       'vscode.html-custom-data.json',
       'vscode.css-custom-data.json',
+      // Never ship AI-assistant guidance, even if a directory above gets added.
+      ...PACKAGE_FILES_EXCLUSIONS,
     ],
     sideEffects: ['./dist/*.js', './dist/*.css', './src/index.ts', './src/web-component.ts', './src/css/*.css'],
     kmwc: {

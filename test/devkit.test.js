@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { mapKmwcConfig, getRegistry, getNextPortBlock, getPortRange, getPortsForBlock, DEVKIT_ROOT, PORT_BLOCK_SIZE } from '../src/config.js';
+import { mapKmwcConfig, getRegistry, getNextPortBlock, getPortRange, getPortsForBlock, DEVKIT_ROOT, PORT_BLOCK_SIZE, PACKAGE_FILES_EXCLUSIONS } from '../src/config.js';
 import {
   getSyncPlan,
   renderTemplate,
@@ -17,8 +17,8 @@ import {
 } from '../src/cli/sync-plan.js';
 import { checkManifestVariables } from '../src/cli/commands/check-vars.js';
 import { checkVersionForTag } from '../src/cli/commands/check-release.js';
-import { getSuiteFailures, RULEBOOK_SUITES } from '../src/cli/commands/doctor.js';
-import { checkPrefix, generatePrefix, getReservedPrefixes } from '../src/cli/commands/new.js';
+import { getSuiteFailures, getPackageLeaks, RULEBOOK_SUITES } from '../src/cli/commands/doctor.js';
+import { checkPrefix, generatePackageJson, generatePrefix, getReservedPrefixes } from '../src/cli/commands/new.js';
 import { renderCatalogue } from '../src/cli/commands/readme.js';
 import { createExamplesPlugin } from '../src/vite/index.js';
 import { parseArgs } from '../src/cli/args.js';
@@ -166,6 +166,21 @@ test('doctor: rulebook suite output is parsed into failures', () => {
   const suiteOutput = '\x1b[32m✅ PASS\x1b[0m C-CSS-1 ok\n\x1b[31m❌ FAIL\x1b[0m C-CSS-7 — 2 class(es) not BEM\n⏭  SKIP C-CSS-9 — n/a';
   assert.deepEqual(getSuiteFailures(suiteOutput), [{ checkId: 'C-CSS-7', reason: '2 class(es) not BEM' }]);
   assert.ok(RULEBOOK_SUITES.some((suite) => suite.name === 'publish-command'));
+});
+
+test('doctor: packed dev-only files are leaks; the scaffold excludes AI guidance', () => {
+  const packedPaths = [
+    'package/dist/web-sample.js', 'src/css/main.css', 'src/css/CLAUDE.md', 'CLAUDE.md', '.claude/commands/publish.md',
+    'e2e/smoke.spec.ts', 'test/fixture.html', 'src/web-component.test.ts', 'examples-basic.html', 'partials/note.html',
+    'docs/usage.md', 'README.md', 'LICENSE', 'component-variables.manifest.json', 'custom-elements.json',
+  ];
+  assert.deepEqual(
+    getPackageLeaks(packedPaths).map((packageLeak) => packageLeak.path),
+    ['src/css/CLAUDE.md', 'CLAUDE.md', '.claude/commands/publish.md', 'e2e/smoke.spec.ts', 'test/fixture.html', 'src/web-component.test.ts', 'examples-basic.html', 'partials/note.html']
+  );
+  const scaffoldFiles = generatePackageJson({ componentId: 'web-sample', packageName: '@keenmate/web-sample', tag: 'web-sample', prefix: 'ws', title: 'Web Sample', devPort: 12900 }).files;
+  for (const exclusion of PACKAGE_FILES_EXCLUSIONS) assert.ok(scaffoldFiles.includes(exclusion), `scaffold "files" lacks ${exclusion}`);
+  for (const exclusion of PACKAGE_FILES_EXCLUSIONS) assert.ok(JSON.parse(readFileSync(join(PLAYGROUND_ROOT, 'package.json'), 'utf8')).files.includes(exclusion));
 });
 
 test('kit: every generated class is kmwc-prefixed BEM', () => {
