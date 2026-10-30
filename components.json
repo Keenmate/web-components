@@ -118,6 +118,14 @@
       "note": "This repo — dev/demo/build tooling (Vite preset, examples kit, kmwc CLI)."
     },
     {
+      "id": "pure-css",
+      "kind": "library",
+      "port": 15200,
+      "path": "../pure-css",
+      "npm": "@keenmate/pure-css",
+      "note": "CSS framework mirroring the base-css-variables token contract (demo site + e2e on the dev port)."
+    },
+    {
       "id": "web-multiselect-showcase",
       "kind": "showcase",
       "port": 16000,

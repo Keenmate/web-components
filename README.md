@@ -53,6 +53,7 @@ them in the same shape: `@keenmate/web-components-devkit`.
 |---|---|---:|---|
 | **web-components-core** | `@keenmate/web-components-core` | 15000 | Runtime foundation: BlissElement, reactive input table, converters, logging, positioning, CEM preset. |
 | **web-components** | `@keenmate/web-components-devkit` | 15100 | This repo — dev/demo/build tooling (Vite preset, examples kit, kmwc CLI). |
+| **pure-css** | `@keenmate/pure-css` | 15200 | CSS framework mirroring the base-css-variables token contract (demo site + e2e on the dev port). |
 
 ### Showcases, docs & test harnesses
 
