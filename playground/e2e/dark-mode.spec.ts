@@ -9,18 +9,18 @@ test.describe('<web-playground> dark mode', () => {
   test('defaults to light, per-instance data-theme="dark" goes dark', async ({ page }) => {
     await page.goto('/test/dark-mode.html');
     expect(await getHostBackground(page, '#light-default')).toBe('rgb(255, 255, 255)');
-    expect(await getHostBackground(page, '#dark-instance')).toBe('rgb(26, 26, 26)');
+    expect(await getHostBackground(page, '#dark-instance')).toBe('rgb(30, 41, 59)');
   });
 
   test('an ancestor data-theme="dark" reaches the component', async ({ page }) => {
     await page.goto('/test/dark-mode.html');
-    expect(await getHostBackground(page, '#dark-ancestor')).toBe('rgb(26, 26, 26)');
+    expect(await getHostBackground(page, '#dark-ancestor')).toBe('rgb(30, 41, 59)');
   });
 
   test('a page color-scheme of dark is inherited', async ({ page }) => {
     await page.goto('/test/dark-mode.html');
     await page.evaluate(() => (document.documentElement.style.colorScheme = 'dark'));
-    expect(await getHostBackground(page, '#light-default')).toBe('rgb(26, 26, 26)');
+    expect(await getHostBackground(page, '#light-default')).toBe('rgb(30, 41, 59)');
   });
 
   test('--base-* themes the component', async ({ page }) => {

@@ -15,7 +15,7 @@ test.describe('examples kit', () => {
     expect(pageConfig?.id).toBe('web-playground');
 
     // Shared styles applied (base layer page background, light theme by default).
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(247, 250, 252)');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(248, 249, 250)');
 
     // One copy-link per section heading.
     await expect(page.locator('.card h2 .kmwc-copy-link')).toHaveCount(3);
@@ -32,7 +32,7 @@ test.describe('examples kit', () => {
     const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
     const page = await context.newPage();
     await page.goto('/examples-basic.html');
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(247, 250, 252)');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(248, 249, 250)');
     await expect(page.locator('.container > header')).not.toHaveCSS('background-image', 'none');
     await context.close();
   });
@@ -105,6 +105,23 @@ test.describe('examples kit', () => {
     await expect(page.locator('#page-version')).toHaveText(/^v0\.1\.0/);
   });
 
+  test('neutral fills keep their own text colour under a light primary', async ({ page }) => {
+    await page.goto('/examples-devkit.html');
+    // A light primary flips the on-accent text to black; the secondary button must not follow.
+    const colors = await page.evaluate(() => {
+      document.documentElement.style.setProperty('--kmwc-accent-color', '#fde047');
+      const button = document.createElement('button');
+      button.className = 'btn-secondary';
+      document.body.append(button);
+      return {
+        onAccent: getComputedStyle(document.querySelector('header')!).color,
+        onNeutral: getComputedStyle(button).color,
+      };
+    });
+    expect(colors.onAccent).toBe('color(srgb 0 0 0)');
+    expect(colors.onNeutral).toBe('color(srgb 1 1 1)');
+  });
+
   test('theme switch cycles light → dark → auto, persists, and reaches the component', async ({ page }) => {
     await page.goto('/examples-devkit.html');
     await page.evaluate(() => localStorage.clear());
@@ -118,8 +135,8 @@ test.describe('examples kit', () => {
 
     await themeSwitch.click();
     await expect(html).toHaveAttribute('data-theme', 'dark');
-    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(17, 19, 23)');
-    expect(await componentBackground()).toBe('rgb(26, 26, 26)'); // :host-context([data-theme="dark"])
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(15, 23, 42)');
+    expect(await componentBackground()).toBe('rgb(30, 41, 59)'); // :host-context([data-theme="dark"])
 
     await page.reload(); // applied before first paint by the injected bootstrap script
     await expect(html).toHaveAttribute('data-theme', 'dark');

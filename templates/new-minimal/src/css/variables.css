@@ -2,8 +2,10 @@
    CSS CUSTOM PROPERTIES (:host level)
    ==============================================================================
    Every --{{PREFIX}}-* variable reads through the cross-component --base-* hook
-   with a standalone fallback; colours fall back to light-dark(), so the
-   component follows the page's color-scheme. `color-scheme` is deliberately
+   with a standalone fallback: an input falls back to the contract default, a
+   derived token to the contract formula on this component's own tokens
+   (base-contract-check). Colours use light-dark(), so the component follows
+   the page's color-scheme. `color-scheme` is deliberately
    NOT declared here (it would shadow the page's) — see dark-mode.css.
 
    Override from outside the shadow DOM:
@@ -14,9 +16,9 @@
     /* Unitless --base-* sizes multiply through --{{PREFIX}}-rem. */
     --{{PREFIX}}-rem: 10px;
 
-    --{{PREFIX}}-bg: var(--base-main-bg, light-dark(#ffffff, #1a1a1a));
-    --{{PREFIX}}-text-color-1: var(--base-text-color-1, light-dark(#242424, #f5f5f5));
-    --{{PREFIX}}-border-color: var(--base-border-color, light-dark(#e0e0e0, #3d3d3d));
+    --{{PREFIX}}-bg: var(--base-main-bg, light-dark(#ffffff, #1e293b));
+    --{{PREFIX}}-text-color-1: var(--base-text-color-1, light-dark(#334155, #f1f5f9));
+    --{{PREFIX}}-border-color: var(--base-border-color, light-dark(oklch(from var(--{{PREFIX}}-bg) calc(l - 0.096) c h), oklch(from var(--{{PREFIX}}-bg) calc(l + 0.192) c h)));
 
     --{{PREFIX}}-font-family: var(--base-font-family, inherit);
     --{{PREFIX}}-font-size-base: calc(var(--base-font-size-base, 1.6) * var(--{{PREFIX}}-rem));

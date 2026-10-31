@@ -176,7 +176,7 @@
     button.secondary,
     button.btn-secondary {
         background: var(--kmwc-neutral-color);
-        color: var(--kmwc-text-color-on-accent);
+        color: var(--kmwc-text-color-on-neutral);
     }
 
     button.secondary:hover,
@@ -195,11 +195,11 @@
     }
 
     button.btn-danger {
-        background: var(--kmwc-danger-color);
-        color: var(--kmwc-text-color-on-accent);
+        background: var(--kmwc-danger-fill-color);
+        color: var(--kmwc-text-color-on-danger);
     }
 
     button.btn-danger:hover {
-        background: color-mix(in srgb, var(--kmwc-danger-color) 85%, black);
+        background: var(--kmwc-danger-fill-color-hover);
     }
 }

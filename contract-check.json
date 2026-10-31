@@ -1,0 +1,11 @@
+{
+  "$comment": "Deliberate differences from @keenmate/base-css-variables, read by `npm run check:contract` (base-contract-check). Each entry needs a reason.",
+  "allow": [
+    {
+      "token": "--base-font-family",
+      "rule": "C2",
+      "file": "variables.css",
+      "reason": "Scaffolded components inherit the page font standalone instead of imposing the contract's system stack (same as web-multiselect)."
+    }
+  ]
+}

@@ -19,6 +19,13 @@ them in the same shape: `@keenmate/web-components-devkit`.
 > positioning) lives in [`@keenmate/web-components-core`](../web-components-core).
 > Nothing here ships inside a component's bundle.
 
+## What's New in v1.0.0-rc02
+
+- **Theming — kit and scaffolds follow base-css-variables 2.0** — base-css-variables 2.0 dropped `--base-accent-color*`, `--base-text-color-on-accent` and `--base-input-color`, so a theme's primary colour silently stopped reaching the example pages and every newly scaffolded component. The `--kmwc-*` tokens in `src/examples/css/tokens.css` and the `templates/new*` `variables.css` now read `--base-primary-color` (with `-hover` / `-active` / `-bg-subtle`), `--base-on-primary-text-color` and `--base-input-text-color`, and the theming pages, docs and manifests set the new names. Standalone fallbacks are now the contract's own values, so a page looks the same with or without the contract loaded: a blue-500 primary instead of the old purple, slate surfaces, and on-colours computed from their fill. Re-run `kmwc new` output or diff your `variables.css` if you scaffolded on rc01.
+- **`npm run check:contract` — fallbacks can't drift from the contract** — `base-contract-check` from `@keenmate/base-css-variables` now runs over the kit, the scaffold templates and the playground. It fails when a `--base-*` read doesn't exist in the contract, when an input's fallback differs from the contract default, or when a derived token's fallback isn't the contract formula. Deliberate differences, such as the scaffolds inheriting the page font, are listed with a reason in `contract-check.json`. It's part of the gate before every kit or template change.
+- **`kmwc new --adopt` — migrate a component that's already registered** — Brings an existing repo onto the devkit with the same rulebook-shaped scaffold, using the registry entry's port block and CSS prefix, skipping the npm-name check (the package already exists) and leaving `components.json` untouched. Scaffold into a scratch `--dir` and move the component's code in. web-editor's one-package monorepo was flattened this way.
+- **`kmwc doctor` — rulebook suites run from an npm install** — With the devkit installed from npm instead of linked, doctor looked for the BlissFramework rulebook at a path relative to the devkit, which ended up inside `node_modules`, and silently skipped every suite. It now uses the nearest `BlissFramework/guidelines/web-components` above the component (then above the devkit), and `kmwc.rulebook.path` resolves against the component root.
+
 ## What's New in v1.0.0-rc01
 
 - **Devkit — one shared toolchain for every Keenmate web component** — Each `web-*` repo used to carry its own copy of the example helpers, the shared stylesheet, the Vite/Playwright configs and the deploy files, and every session "fixed" its own copy until they drifted apart. `@keenmate/web-components-devkit` owns all of it now: a component describes itself once in `package.json#kmwc` (title, prefix, ports, accent colours, analytics, image) and `defineComponentConfig()`, `definePlaywrightConfig()` and the `kmwc` CLI read it from there. A shared concern is fixed once in the devkit and every component picks it up on the next install.
@@ -54,6 +61,7 @@ them in the same shape: `@keenmate/web-components-devkit`.
 | **web-components-core** | `@keenmate/web-components-core` | 15000 | Runtime foundation: BlissElement, reactive input table, converters, logging, positioning, CEM preset. |
 | **web-components** | `@keenmate/web-components-devkit` | 15100 | This repo — dev/demo/build tooling (Vite preset, examples kit, kmwc CLI). |
 | **pure-css** | `@keenmate/pure-css` | 15200 | CSS framework mirroring the base-css-variables token contract (demo site + e2e on the dev port). |
+| **base-css-variables** | `@keenmate/base-css-variables` | 15300 | The shared --base-* token contract (base-variables.css) + base-contract-check; examples site + e2e on the dev port. |
 
 ### Showcases, docs & test harnesses
 

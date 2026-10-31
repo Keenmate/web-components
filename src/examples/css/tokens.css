@@ -9,6 +9,11 @@
        component together — demo pages demonstrate cross-component theming;
      • with no --base-* set, the page still looks right, in light and dark.
 
+   Fallbacks are the contract's own (@keenmate/base-css-variables): an input
+   falls back to its default, a derived token to the contract formula on the
+   --kmwc-* tokens, so a page looks the same with and without the contract.
+   `npm run check:contract` (base-contract-check) enforces it.
+
    Unlike component variables (theme-container.md: never on :root), page
    tokens DO live on :root — the page is the scope here. Feature files read
    only --kmwc-* tokens; colour literals live in this file alone.
@@ -38,42 +43,42 @@
         /* ======================================================================
            COLORS — ACCENT
            ====================================================================== */
-        --kmwc-accent-color: var(--base-accent-color, #667eea);
-        --kmwc-accent-end-color: #764ba2;
-        --kmwc-accent-color-hover: var(--base-accent-color-hover, color-mix(in srgb, var(--kmwc-accent-color) 88%, black));
-        --kmwc-accent-color-active: var(--base-accent-color-active, color-mix(in srgb, var(--kmwc-accent-color) 72%, black));
-        --kmwc-accent-light-bg: var(--base-accent-color-light, color-mix(in srgb, var(--kmwc-accent-color) 12%, transparent));
-        --kmwc-accent-light-bg-hover: var(--base-accent-color-light-hover, color-mix(in srgb, var(--kmwc-accent-color) 20%, transparent));
+        --kmwc-accent-color: var(--base-primary-color, #3b82f6);
+        --kmwc-accent-end-color: oklch(from var(--kmwc-accent-color) calc(l - 0.12) c calc(h + 25));  /* header gradient end */
+        --kmwc-accent-color-hover: var(--base-primary-color-hover, light-dark(color-mix(in srgb, black 15%, var(--kmwc-accent-color)), color-mix(in srgb, white 15%, var(--kmwc-accent-color))));
+        --kmwc-accent-color-active: var(--base-primary-color-active, light-dark(color-mix(in srgb, black 30%, var(--kmwc-accent-color)), color-mix(in srgb, white 30%, var(--kmwc-accent-color))));
+        --kmwc-accent-light-bg: var(--base-primary-bg-subtle, light-dark(color-mix(in srgb, var(--kmwc-accent-color) 10%, transparent), color-mix(in srgb, var(--kmwc-accent-color) 20%, transparent)));
+        --kmwc-accent-light-bg-hover: var(--base-primary-bg-subtle-hover, light-dark(color-mix(in srgb, var(--kmwc-accent-color) 15%, transparent), color-mix(in srgb, var(--kmwc-accent-color) 30%, transparent)));
         --kmwc-accent-border-color: color-mix(in srgb, var(--kmwc-accent-color) 40%, transparent);
         --kmwc-accent-shadow-color: color-mix(in srgb, var(--kmwc-accent-color) 35%, transparent);
-        --kmwc-text-color-on-accent: var(--base-text-color-on-accent, #ffffff);
+        --kmwc-text-color-on-accent: var(--base-on-primary-text-color, color(from color(from var(--kmwc-accent-color) srgb calc(0.21 * r * r * (0.4 + r * (0.82 - 0.22 * r)) + 0.72 * g * g * (0.4 + g * (0.82 - 0.22 * g)) + 0.07 * b * b * (0.4 + b * (0.82 - 0.22 * b))) 0 0) srgb clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1)));
         --kmwc-header-bg: linear-gradient(135deg, var(--kmwc-accent-color) 0%, var(--kmwc-accent-end-color) 100%);
 
         /* ======================================================================
            COLORS — TEXT
            ====================================================================== */
-        --kmwc-text-color-1: var(--base-text-color-1, light-dark(#2d3748, #f5f5f5));
-        --kmwc-text-color-2: var(--base-text-color-2, light-dark(#4a5568, #d4d4d4));
-        --kmwc-text-color-3: var(--base-text-color-3, light-dark(#718096, #a3a3a3));
-        --kmwc-text-color-4: var(--base-text-color-4, light-dark(#9ca3af, #737373));
+        --kmwc-text-color-1: var(--base-text-color-1, light-dark(#334155, #f1f5f9));
+        --kmwc-text-color-2: var(--base-text-color-2, color-mix(in srgb, var(--kmwc-text-color-1) 75%, var(--kmwc-main-bg)));
+        --kmwc-text-color-3: var(--base-text-color-3, color-mix(in srgb, var(--kmwc-text-color-1) 55%, var(--kmwc-main-bg)));
+        --kmwc-text-color-4: var(--base-text-color-4, color-mix(in srgb, var(--kmwc-text-color-1) 40%, var(--kmwc-main-bg)));
 
         /* ======================================================================
            COLORS — SURFACE
            ====================================================================== */
-        --kmwc-page-bg: light-dark(#f7fafc, #111317);
-        --kmwc-main-bg: var(--base-main-bg, light-dark(#ffffff, #1a1a1a));
-        --kmwc-elevated-bg: var(--base-elevated-bg, light-dark(#edf2f7, #2b2b2b));
-        --kmwc-hover-bg: var(--base-hover-bg, color-mix(in srgb, var(--kmwc-text-color-1) 6%, var(--kmwc-main-bg)));
-        --kmwc-border-color: var(--base-border-color, light-dark(#e2e8f0, #3d3d3d));
-        --kmwc-border-color-strong: light-dark(#cbd5e0, #525252);
-        --kmwc-shadow-color: light-dark(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.45));
+        --kmwc-page-bg: var(--base-page-bg, light-dark(#f8f9fa, #0f172a));
+        --kmwc-main-bg: var(--base-main-bg, light-dark(#ffffff, #1e293b));
+        --kmwc-elevated-bg: var(--base-elevated-bg, light-dark(oklch(from var(--kmwc-main-bg) calc(l - 0.03) c h), oklch(from var(--kmwc-main-bg) calc(l + 0.06) c h)));
+        --kmwc-hover-bg: var(--base-hover-bg, light-dark(color-mix(in oklch, oklch(from var(--kmwc-main-bg) calc(l - 0.45) c h) 14%, transparent), color-mix(in oklch, oklch(from var(--kmwc-main-bg) calc(l + 0.45) c h) 28%, transparent)));
+        --kmwc-border-color: var(--base-border-color, light-dark(oklch(from var(--kmwc-main-bg) calc(l - 0.096) c h), oklch(from var(--kmwc-main-bg) calc(l + 0.192) c h)));
+        --kmwc-border-color-strong: var(--base-input-border-color, light-dark(color-mix(in srgb, var(--kmwc-text-color-1) 45%, var(--kmwc-main-bg)), color-mix(in srgb, var(--kmwc-text-color-1) 35%, var(--kmwc-main-bg))));  /* control outline */
+        --kmwc-shadow-color: var(--base-shadow-color, light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.4)));
 
         /* ======================================================================
            COLORS — INPUTS & CODE
            ====================================================================== */
-        --kmwc-input-bg: var(--base-input-bg, light-dark(#ffffff, #1f1f1f));
-        --kmwc-input-color: var(--base-input-color, var(--kmwc-text-color-1));
-        --kmwc-input-border: var(--base-input-border, 1px solid light-dark(#d1d5db, #5a5a5a));
+        --kmwc-input-bg: var(--base-input-bg, var(--kmwc-main-bg));
+        --kmwc-input-color: var(--base-input-text-color, var(--kmwc-text-color-1));
+        --kmwc-input-border: var(--base-input-border, 1px solid var(--kmwc-border-color-strong));
         --kmwc-code-bg: light-dark(#2d3748, #0d1117);
         --kmwc-code-text-color: #e2e8f0;
         --kmwc-code-comment-color: #8b949e;
@@ -90,18 +95,27 @@
         /* ======================================================================
            COLORS — SEMANTIC
            ====================================================================== */
-        --kmwc-success-color: light-dark(#2f855a, #68d391);
-        --kmwc-warning-color: light-dark(#b45309, #fbbf24);
-        --kmwc-danger-color: var(--base-danger-color, light-dark(#dc2626, #f87c86));
-        --kmwc-info-color: light-dark(#2563eb, #60a5fa);
+        /* -color = the role as text on a surface (notes, feedback); the danger
+           button fills with --kmwc-danger-fill-color. */
+        --kmwc-success-color: var(--base-success-text-color, light-dark(#155724, #34d399));
+        --kmwc-warning-color: var(--base-warning-text-color, light-dark(#856404, #fbbf24));
+        --kmwc-danger-color: var(--base-danger-text-color, light-dark(#721c24, #f87171));
+        --kmwc-info-color: var(--base-info-text-color, light-dark(#0c5460, #22d3ee));
+        --kmwc-danger-fill-color: var(--base-danger-color, #dc2626);
+        --kmwc-danger-fill-color-hover: var(--base-danger-color-hover, light-dark(color-mix(in srgb, black 15%, var(--kmwc-danger-fill-color)), color-mix(in srgb, white 15%, var(--kmwc-danger-fill-color))));
+        --kmwc-text-color-on-danger: var(--base-on-danger-text-color, color(from color(from var(--kmwc-danger-fill-color) srgb calc(0.21 * r * r * (0.4 + r * (0.82 - 0.22 * r)) + 0.72 * g * g * (0.4 + g * (0.82 - 0.22 * g)) + 0.07 * b * b * (0.4 + b * (0.82 - 0.22 * b))) 0 0) srgb clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1)));
         --kmwc-neutral-color: light-dark(#6b7280, #9ca3af);
         --kmwc-badge-new-bg: light-dark(#e53e3e, #f56565);
+        /* Text on the neutral / badge fills: the contract's on-colour formula on
+           their own background, not on the accent (a light primary would turn it black). */
+        --kmwc-text-color-on-neutral: color(from color(from var(--kmwc-neutral-color) srgb calc(0.21 * r * r * (0.4 + r * (0.82 - 0.22 * r)) + 0.72 * g * g * (0.4 + g * (0.82 - 0.22 * g)) + 0.07 * b * b * (0.4 + b * (0.82 - 0.22 * b))) 0 0) srgb clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1));
+        --kmwc-text-color-on-badge-new: color(from color(from var(--kmwc-badge-new-bg) srgb calc(0.21 * r * r * (0.4 + r * (0.82 - 0.22 * r)) + 0.72 * g * g * (0.4 + g * (0.82 - 0.22 * g)) + 0.07 * b * b * (0.4 + b * (0.82 - 0.22 * b))) 0 0) srgb clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1));
 
         /* ======================================================================
            TYPOGRAPHY & SHAPE
            ====================================================================== */
-        --kmwc-font-family: var(--base-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif);
-        --kmwc-mono-font-family: ui-monospace, SFMono-Regular, Menlo, 'Courier New', monospace;
+        --kmwc-font-family: var(--base-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+        --kmwc-mono-font-family: var(--base-font-family-mono, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
         --kmwc-radius-lg: 12px;
         --kmwc-radius-md: 8px;
         --kmwc-radius-sm: 6px;

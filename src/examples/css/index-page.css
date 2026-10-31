@@ -93,7 +93,7 @@
     .kmwc-index__badge {
         display: inline-block;
         background: var(--kmwc-badge-new-bg);
-        color: var(--kmwc-text-color-on-accent);
+        color: var(--kmwc-text-color-on-badge-new);
         padding: 0.15rem 0.5rem;
         border-radius: var(--kmwc-radius-sm);
         font-size: 0.65rem;

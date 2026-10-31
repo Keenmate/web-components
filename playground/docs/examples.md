@@ -27,7 +27,7 @@ Combines a `--base-*` override (all components) with a `--pg-*` one
 
 ```html
 <style>
-  :root { --base-accent-color: #10b981; }
+  :root { --base-primary-color: #10b981; }
 </style>
 <web-playground label="Dark" data-theme="dark" style="--pg-root-border-radius: 999px"></web-playground>
 ```

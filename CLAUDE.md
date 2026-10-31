@@ -94,12 +94,13 @@ test/                    node:test unit tests
 npm test              # unit tests
 npm run test:e2e      # playground e2e — dev server AND built site (Chromium)
 npm run readme        # regenerate catalogue (readme:check in CI)
+npm run check:contract   # --base-* reads / sets in kit, templates, playground vs the contract
 cd playground && npx kmwc doctor --verbose     # every rulebook suite must be green
 node src/cli/kmwc.js doctor --root ../web-<x>   # read-only check of a sibling
 ```
 
 Before finishing a change to the kit or a template: `npm test`, `npm run
-test:e2e` and the playground doctor must pass, and a new kit feature gets a
+test:e2e`, `npm run check:contract` and the playground doctor must pass, and a new kit feature gets a
 spec in `playground/e2e/devkit.spec.ts`. `esbuild`'s postinstall may need
 `npm approve-scripts esbuild` after a fresh install.
 

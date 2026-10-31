@@ -18,7 +18,8 @@
  *        kmwc:layout      page (default) | bare (no header / container — e.g. the index)
  *        kmwc:entry       component entry script; default /<library.entry>, "none" to skip
  *        kmwc:body-class  classes for <body> (e.g. dark-output)
- *      <link> and <style> elements anywhere in a fragment move into <head>.
+ *      <link> and <style> elements anywhere in a fragment move into <head>
+ *      (not those inside a <script> — there they are strings, e.g. shadow-DOM styles).
  *   Full documents (<html …>) are left as they are — pages migrate one at a time.
  *
  * Pure string work on purpose: unit-testable, no HTML parser dependency. The
@@ -42,6 +43,9 @@ const HEAD_ELEMENT_PATTERN = /<link\b[^>]*>\s*|<style\b[^>]*>[\s\S]*?<\/style>\s
 const ATTRIBUTE_PATTERN = /([a-zA-Z][\w-]*)(?:\s*=\s*"([^"]*)")?/g;
 
 const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/g;
+// Comments plus whole <script> elements: a <style> / <link> inside a script is a string
+// (shadow-DOM styles, an SVG's own <style>), never a page element to move into <head>.
+const COMMENT_OR_SCRIPT_PATTERN = /<!--[\s\S]*?-->|<script\b[^>]*>[\s\S]*?<\/script>/gi;
 // A full document STARTS with a doctype or <html> (after a BOM, whitespace, comments). Matching
 // `<html>` anywhere would misread a fragment whose script or code sample mentions it.
 const DOCUMENT_START_PATTERN = /^﻿?(?:\s|<!--[\s\S]*?-->)*<(?:!doctype\b|html[\s>])/i;
@@ -50,12 +54,12 @@ const DOCUMENT_START_PATTERN = /^﻿?(?:\s|<!--[\s\S]*?-->)*<(?:!doctype\b|html[
  * Apply `mapper` to the text OUTSIDE HTML comments only, so a usage example in
  * a comment (`<!-- <kmwc-include src="…"> -->`) is never expanded.
  */
-export function mapOutsideComments(html, mapper) {
+export function mapOutsideComments(html, mapper, skippedPattern = HTML_COMMENT_PATTERN) {
   let mappedHtml = '';
   let lastIndex = 0;
-  for (const comment of html.matchAll(HTML_COMMENT_PATTERN)) {
-    mappedHtml += mapper(html.slice(lastIndex, comment.index)) + comment[0];
-    lastIndex = comment.index + comment[0].length;
+  for (const skipped of html.matchAll(skippedPattern)) {
+    mappedHtml += mapper(html.slice(lastIndex, skipped.index)) + skipped[0];
+    lastIndex = skipped.index + skipped[0].length;
   }
   return mappedHtml + mapper(html.slice(lastIndex));
 }
@@ -165,11 +169,14 @@ export function renderLayout(fragmentHtml, { config, pagePath }) {
   if (layout === 'page' && !pageMeta.title) throw new Error(`kmwc: ${pagePath}: a fragment page needs <meta name="kmwc:title" content="…">`);
 
   const headElements = [];
-  const bodyContent = mapOutsideComments(htmlWithoutMeta, (text) =>
-    text.replace(HEAD_ELEMENT_PATTERN, (element) => {
-      headElements.push(`    ${element.trim()}`);
-      return '';
-    })
+  const bodyContent = mapOutsideComments(
+    htmlWithoutMeta,
+    (text) =>
+      text.replace(HEAD_ELEMENT_PATTERN, (element) => {
+        headElements.push(`    ${element.trim()}`);
+        return '';
+      }),
+    COMMENT_OR_SCRIPT_PATTERN
   );
 
   const entry = pageMeta.entry ?? `/${config.library.entry.replace(/^\.?\//, '')}`;

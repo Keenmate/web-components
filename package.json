@@ -47,6 +47,7 @@
     "readme:check": "node src/cli/kmwc.js readme --check",
     "test": "node --test \"test/**/*.test.js\"",
     "test:e2e": "cd playground && npx playwright test",
+    "check:contract": "base-contract-check src templates playground",
     "playground": "cd playground && vite",
     "playground:build": "cd playground && vite build --mode examples",
     "playground:lib": "cd playground && vite build"
@@ -65,6 +66,7 @@
     }
   },
   "devDependencies": {
+    "@keenmate/base-css-variables": "^2.0.0-rc07",
     "typescript": "^5.9.3",
     "vite": "^7.3.7"
   },

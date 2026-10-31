@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0-rc02] - 2026-10-12
+## [1.0.0-rc02] - 2026-10-31 [PUBLISHED]
 
 ### Added
 
@@ -10,18 +10,45 @@
   Scaffold into a scratch `--dir`, then move the component's code into it — how
   web-editor's one-package monorepo was flattened.
 
+- **`npm run check:contract`** — `base-contract-check` (from `@keenmate/base-css-variables`,
+  a devDependency) over the kit, the scaffold templates and the playground: every `--base-*`
+  read or set exists in the contract, input fallbacks equal its defaults, derived ones are its
+  formulas. Deliberate differences go in `contract-check.json` (the scaffolds' `inherit` font).
+
 ### Fixed
 
+- **Kit and scaffolds read the 2.0 `--base-*` names.** `--base-accent-color*`,
+  `--base-text-color-on-accent` and `--base-input-color` were removed in base-css-variables
+  2.0.0, so a theme's primary never reached the example pages or a new component. Now
+  `--base-primary-color` / `-hover` / `-active`, `--base-primary-bg-subtle(-hover)`,
+  `--base-on-primary-text-color` and `--base-input-text-color`; the theming pages and docs set
+  `--base-primary-color`. Fallbacks are the contract's: example pages default to the blue-500
+  primary (was purple `#667eea`; the header gradient end now follows the accent), slate surfaces
+  (dark main `#1e293b`, page `#f8f9fa` / `#0f172a`) and the contract text, border, hover, shadow
+  and font values. The kit's status colours read `--base-<role>-text-color`; the danger button
+  fills with `--base-danger-color` and its text is `--base-on-danger-text-color`. The secondary
+  button and the index "new" badge compute their text from their own fill, so a light primary
+  no longer turns them black.
 - **`kmwc doctor` skipped every rulebook suite once the devkit came from npm.** The
   rulebook was looked up at a fixed path from the devkit (`<devkit>/../../BlissFramework`),
   which lands inside `node_modules` for an installed package. It is now the nearest
   `BlissFramework/guidelines/web-components` above the component (then above the
   devkit); `kmwc.rulebook.path` resolves against the component root.
+- **Fragment pages: a `<style>` or `<link>` inside a `<script>` stays put.** Shadow-DOM
+  styles and an SVG's own `<style>` written into a script were moved into `<head>`; they
+  are strings there, not page elements.
 
 ### Migrated
 
 - **web-editor** — flattened from a one-package npm-workspaces monorepo; registry entry
   now carries its prefix (`km`) and no longer says monorepo.
+- **pure-css** (library, 15200) and **base-css-variables** (library, 15300) added to the
+  registry.
+
+### Internal
+
+- **Root `Makefile`** for the devkit's own tasks: test, readme / contract checks, and
+  `publish` / `publish-rc` gated on `kmwc check-release`.
 
 ## [1.0.0-rc01] - 2026-10-12 [PUBLISHED]
 

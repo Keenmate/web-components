@@ -21,7 +21,7 @@ follow the page font size).
 
 ```css
 /* every Keenmate component on the page */
-:root { --base-accent-color: #10b981; }
+:root { --base-primary-color: #10b981; }
 
 /* this component only */
 {{TAG}} { --{{PREFIX}}-accent-color: #8b5cf6; }

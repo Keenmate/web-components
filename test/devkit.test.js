@@ -334,6 +334,14 @@ test('composer: fragments get the layout, full documents pass through', () => {
   assert.match(pageHtml, /<header>[\s\S]*class="back-link"[\s\S]*<h1>Basics<\/h1>[\s\S]*<p class="subtitle">Sub<\/p>[\s\S]*<\/header>\s*<div class="card">x<\/div>/);
   assert.ok(!pageHtml.includes('kmwc:title'));
 
+  // A <style> inside a script is a string (shadow-DOM styles, an SVG's own <style>) — it stays put.
+  const scriptStyleHtml = composePage(
+    '<meta name="kmwc:title" content="X">\n<style>.page{}</style>\n<script>el.innerHTML = `<style>.shadow{}</style><span></span>`;</script>',
+    { config, pagePath: '/examples-x.html' }
+  );
+  assert.match(scriptStyleHtml, /<head>[\s\S]*<style>\.page\{\}<\/style>[\s\S]*<\/head>/);
+  assert.match(scriptStyleHtml, /<\/head>[\s\S]*<script>el\.innerHTML = `<style>\.shadow\{\}<\/style><span><\/span>`;<\/script>/);
+
   const bareHtml = composePage('<meta name="kmwc:layout" content="bare">\n<meta name="kmwc:entry" content="none">\n<p>index</p>', { config, pagePath: '/index.html' });
   assert.ok(!bareHtml.includes('<header>') && !bareHtml.includes('src="/src/index.ts"'));
   assert.throws(() => composePage('<p>no title</p>', { config, pagePath: '/x.html' }), /needs <meta name="kmwc:title"/);

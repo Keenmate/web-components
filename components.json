@@ -126,6 +126,15 @@
       "note": "CSS framework mirroring the base-css-variables token contract (demo site + e2e on the dev port)."
     },
     {
+      "id": "base-css-variables",
+      "kind": "library",
+      "port": 15300,
+      "path": "../base-css-variables",
+      "npm": "@keenmate/base-css-variables",
+      "repo": "https://github.com/keenmate/base-css-variables",
+      "note": "The shared --base-* token contract (base-variables.css) + base-contract-check; examples site + e2e on the dev port."
+    },
+    {
       "id": "web-multiselect-showcase",
       "kind": "showcase",
       "port": 16000,

@@ -27,7 +27,7 @@ Combines a `--base-*` override (all components) with a `--{{PREFIX}}-*` one
 
 ```html
 <style>
-  :root { --base-accent-color: #10b981; }
+  :root { --base-primary-color: #10b981; }
 </style>
 <{{TAG}} label="Dark" data-theme="dark" style="--{{PREFIX}}-root-border-radius: 999px"></{{TAG}}>
 ```
