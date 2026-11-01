@@ -61,6 +61,19 @@
         align-items: center;
         gap: 0.5rem;
         cursor: pointer;
+        /* A long label wraps inside the row instead of pushing the page wider. */
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
+
+    .controls label code,
+    .toggle-label code {
+        overflow-wrap: anywhere;
+    }
+
+    /* A select is as wide as its longest option — cap it at the row. */
+    .controls select {
+        max-width: 100%;
     }
 
     .toggle-label {

@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Example pages no longer widen the page on a phone** — on screens ≤ 768 px a
+  `.reference-table` scrolls inside its card, a long `.controls` label (or `<code>` in it)
+  wraps and a `.controls` select is capped at the row, instead of overflowing. Besides the sideways scroll, an over-wide page made mobile
+  browsers grow the layout viewport (a 390 px phone reporting ~600 px), so pages that
+  demo device / breakpoint detection showed the wrong class.
+
 ### Added
 
 - **`kmwc doctor` runs the rulebook's new `example-pages` suite** — every example `<h2>`

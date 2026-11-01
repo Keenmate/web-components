@@ -247,5 +247,14 @@
         .card-grid {
             grid-template-columns: 1fr;
         }
+
+        /* A wide reference table scrolls inside its card instead of widening the
+           page. Widening matters beyond looks: mobile browsers grow the layout
+           viewport to fit, so a 390 px phone reports ~600 px and the page's own
+           device / breakpoint detection lies. */
+        .reference-table {
+            display: block;
+            overflow-x: auto;
+        }
     }
 }
