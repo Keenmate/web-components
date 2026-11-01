@@ -19,6 +19,12 @@ them in the same shape: `@keenmate/web-components-devkit`.
 > positioning) lives in [`@keenmate/web-components-core`](../web-components-core).
 > Nothing here ships inside a component's bundle.
 
+## What's New in v1.0.0-rc04
+
+- **Example-page grids — wide content scrolls instead of widening the page** — A `<pre>` or table inside a `.grid`, `.grid-2` or `.card-grid` item still pushed the page wider than a phone: grid items default to `min-width: auto` (their min-content), so the single `1fr` column at ≤ 768 px grew to fit the content instead of letting it scroll. Every item of the three grids now gets `min-width: 0`, the same rule pure-css puts on its `.pc-col-*` columns. Found by two agents migrating web-components-core's example pages, which drop their page-local workaround with this release.
+- **`.controls` — long `<code>` in a button wraps on a phone** — rc03 wrapped `<code>` only inside `.controls` labels, so a button whose label was an unbroken API name (`setAttribute("…")`) still overflowed the row. The wrap rule (`overflow-wrap: anywhere`) now covers any `<code>` in a `.controls` row, and a `.controls` button is capped at the row width. An e2e spec injects both cases at 390 px and checks that the page stays inside the screen.
+- **Playground — a Widgets page for the kit's opt-in helpers** — `.log-panel` (light and `--dark`), the legacy `.event-log`, `.pill` / `.status-dot` tones, `.display-sliders` and `.css-readout` had no demo, so their look was only checked on component pages. The new `examples-widgets.html` (WG01–WG04) shows them as they are today, including the gaps the coming log-tone work fixes (no line tones, leading spaces collapsing in a log line), and gets its own e2e spec.
+
 ## What's New in v1.0.0-rc03
 
 - **Spotlight — Ctrl/⌘+K chapter search across every example page** — Example sites grew to dozens of chapters over several pages, and the per-page chapter nav only knew its own page. The Vite plugin now builds an index of every page's `<h2>`s (`virtual:kmwc-chapters`), coded and uncoded, and Ctrl/⌘+K opens a search that matches the section code or the heading text (`th7` finds `TH07`), grouped by page with the current one first. Enter jumps, Ctrl/⌘+Enter opens a new tab. It mirrors web-commandpalette's markup, matching, keyboard map and CSS without depending on it; `npm run check:spotlight-mirror` lists what changed there since the last alignment. Turn it off with `kmwc.examples.isSpotlightEnabled: false`.
@@ -27,13 +33,6 @@ them in the same shape: `@keenmate/web-components-devkit`.
 - **Scaffold — component CSS no longer restyles the host page** — The `*, *::before, *::after { box-sizing: inherit }` reset in the `kmwc new` and `--minimal` templates also reached the page through the component's light-DOM stylesheet, in a layer that beats `@layer kmwc`, so page controls rendered content-box (a 36 px input came out 38 px). It is scoped to `:host *` now, and a unit test rejects any universal or bare-element selector in scaffold CSS. Components scaffolded on rc01/rc02 should make the same one-line change in `src/css/base.css`.
 - **Example pages — short chapter links, phones and the example-pages suite** — `#th07`, `#th7` or an uncoded heading's slug now scroll to that chapter on arrival. On a phone, example pages no longer grow wider than the screen, which made mobile browsers report a wrong viewport to pages that demo breakpoints. `kmwc doctor` runs the rulebook's new `example-pages` suite: every example `<h2>` carries a permanent section code.
 - **`make dev` at the devkit root** — the standard `dev` / `kill-port` / `build-examples` / `preview-examples` targets, run against the playground.
-
-## What's New in v1.0.0-rc02
-
-- **Theming — kit and scaffolds follow base-css-variables 2.0** — base-css-variables 2.0 dropped `--base-accent-color*`, `--base-text-color-on-accent` and `--base-input-color`, so a theme's primary colour silently stopped reaching the example pages and every newly scaffolded component. The `--kmwc-*` tokens in `src/examples/css/tokens.css` and the `templates/new*` `variables.css` now read `--base-primary-color` (with `-hover` / `-active` / `-bg-subtle`), `--base-on-primary-text-color` and `--base-input-text-color`, and the theming pages, docs and manifests set the new names. Standalone fallbacks are now the contract's own values, so a page looks the same with or without the contract loaded: a blue-500 primary instead of the old purple, slate surfaces, and on-colours computed from their fill. Re-run `kmwc new` output or diff your `variables.css` if you scaffolded on rc01.
-- **`npm run check:contract` — fallbacks can't drift from the contract** — `base-contract-check` from `@keenmate/base-css-variables` now runs over the kit, the scaffold templates and the playground. It fails when a `--base-*` read doesn't exist in the contract, when an input's fallback differs from the contract default, or when a derived token's fallback isn't the contract formula. Deliberate differences, such as the scaffolds inheriting the page font, are listed with a reason in `contract-check.json`. It's part of the gate before every kit or template change.
-- **`kmwc new --adopt` — migrate a component that's already registered** — Brings an existing repo onto the devkit with the same rulebook-shaped scaffold, using the registry entry's port block and CSS prefix, skipping the npm-name check (the package already exists) and leaving `components.json` untouched. Scaffold into a scratch `--dir` and move the component's code in. web-editor's one-package monorepo was flattened this way.
-- **`kmwc doctor` — rulebook suites run from an npm install** — With the devkit installed from npm instead of linked, doctor looked for the BlissFramework rulebook at a path relative to the devkit, which ended up inside `node_modules`, and silently skipped every suite. It now uses the nearest `BlissFramework/guidelines/web-components` above the component (then above the devkit), and `kmwc.rulebook.path` resolves against the component root.
 
 ## Catalogue
 
@@ -286,6 +285,9 @@ doctor` lists the ones still repeating the head/header boilerplate.
   (tighter cells; the controls in it shrink via `--kmwc-control-height`) — plus
   `tr.is-highlight` and a `.num` cell (right-aligned, tabular figures). On a phone
   a wide table scrolls inside its card. See the playground's `examples-tables.html`.
+- **Widgets** (`.log-panel` / `--dark`, `.event-log`, `.pill`, `.status-dot`,
+  `.display-sliders`, `.css-readout`) are shown in the playground's
+  `examples-widgets.html`.
 - **Theme switch** (top right) cycles light → dark → auto and sets
   `data-theme` on `<html>` — the same signal components react to via
   `:host-context([data-theme])`, so every example page is a dark-mode smoke

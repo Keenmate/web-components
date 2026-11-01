@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0-rc04] - 2026-11-01 [PUBLISHED]
+
+### Fixed
+
+- **A wide `<pre>` or table in a `.grid` / `.grid-2` / `.card-grid` item no longer widens the
+  page on a phone** — grid items kept `min-width: auto` (their min-content), so the single
+  `1fr` column grew past the screen instead of letting the content scroll. Items now get
+  `min-width: 0`. Reported from web-components-core's page migration.
+- **Long `<code>` in a `.controls` button wraps** — rc03 only wrapped code inside
+  `.controls` labels; it now covers any `.controls code`, and a `.controls` button is
+  capped at the row width.
+- **The playground's form-controls page now links `examples-local.css`** — FC08's
+  `.fc-player` row was unstyled; the e2e spec now checks it.
+
+### Added
+
+- **Playground: a Widgets page** (`examples-widgets.html`, WG01–WG04) showing the kit's
+  opt-in helpers as they are today — light and dark `.log-panel`, the legacy `.event-log`,
+  `.pill` / `.status-dot` tones, `.display-sliders` with a live `.css-readout` — the base for
+  the coming log-tone work. With an e2e spec.
+
 ## [1.0.0-rc03] - 2026-11-01 [PUBLISHED]
 
 ### Fixed
