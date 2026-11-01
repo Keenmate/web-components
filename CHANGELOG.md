@@ -12,11 +12,36 @@
 
 ### Added
 
+- **Spotlight: Ctrl/⌘+K chapter search across every example page** — matches a chapter whose
+  section code or heading text contains the query (`th7` finds `TH07`; uncoded `Summary` /
+  reference sections by title), grouped by page with the current page first; Enter jumps,
+  Ctrl/⌘+Enter opens a new tab. The Vite plugin builds the index (`virtual:kmwc-chapters`)
+  from every page's `<h2>`s; `kmwc.examples.isSpotlightEnabled: false` turns it off. It mirrors
+  web-commandpalette's markup, matching, keyboard map, open/close and CSS without depending on
+  it — `npm run check:spotlight-mirror` lists what changed there since the last alignment.
+  New page tokens `--kmwc-overlay-bg` and `--kmwc-focused-bg` / `-text-color` / `-outline`
+  read the same `--base-*` hooks as wcp, so both look alike under a theme.
+- **Short chapter links** — `#th07`, `#th7` or the slug of an uncoded heading scroll to that
+  chapter on arrival.
+- **`make dev` (and `kill-port`, `build-examples`, `preview-examples`) at the repo root** — the
+  standard targets, run against the playground; `make playground` is gone.
 - **`kmwc doctor` runs the rulebook's new `example-pages` suite** — every example `<h2>`
   carries a permanent section code (`TH07 · Title`), a prefix belongs to one page, no code
   is used twice. The generated CLAUDE.md block points at the rule. The convention was
   already in the scaffold and the playground but written down nowhere, so sessions
   building new pages didn't know it.
+
+### Known issues
+
+- **Opening the spotlight shifts the page sideways** on systems with classic scrollbars: the
+  mirrored core `lockBodyScroll()` only sets `overflow: hidden`, so the scrollbar disappears
+  (wcp has the same jump). pure-admin / pure-css avoid it with a `position: fixed` lock and
+  width compensation; the proposal to bring that into core is in web-commandpalette's CLAUDE.md.
+- **The scaffold's component CSS sets `box-sizing` on the whole host page** —
+  `templates/new/src/css/base.css` has an unscoped `*, *::before, *::after { box-sizing: inherit }`
+  that also reaches the page through the light-DOM stylesheet, in a layer that beats `@layer kmwc`
+  (visible as the spotlight input overflowing in the playground). Fix pending: scope it to
+  `:host *`.
 
 ## [1.0.0-rc02] - 2026-10-31 [PUBLISHED]
 

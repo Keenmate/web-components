@@ -1,0 +1,24 @@
+{
+  "description": "The examples-kit spotlight mirrors web-commandpalette (wcp) without depending on it. Each pair below is kept structurally identical (devkit naming); `npm run check:spotlight-mirror` lists wcp commits touching a source file since alignedCommit. Port the fix, then set alignedCommit to wcp's HEAD.",
+  "repositories": {
+    "web-commandpalette": { "path": "../web-commandpalette", "alignedCommit": "c0ff2415f0a0a29abc814adc3bfb1539f39d4e4a" },
+    "web-components-core": { "path": "../web-components-core", "alignedCommit": "8ed039595e7219ae8cc681b0b60f83aaf638a590" }
+  },
+  "mirrors": [
+    { "repository": "web-commandpalette", "source": "src/filter.ts", "parts": ["norm", "matchesAny()"], "target": "src/examples/chapter-search.js" },
+    { "repository": "web-commandpalette", "source": "src/icons.ts", "parts": ["escapeHtml()"], "target": "src/examples/chapter-search.js" },
+    { "repository": "web-commandpalette", "source": "src/render.ts", "parts": ["highlight()"], "target": "src/examples/chapter-search.js" },
+    { "repository": "web-commandpalette", "source": "src/render.ts", "parts": ["createShell()", "itemHtml()", "sectionHtml()", "rowsHtml()", "footerHtml()", "isMac()", "chordKeycap()", "Renderer #paintActive() / #syncActiveDescendant() / #scrollActive()"], "target": "src/examples/spotlight.js" },
+    { "repository": "web-commandpalette", "source": "src/keyboard.ts", "parts": ["isTypingTarget()", "GlobalKeys.handle()", "handleInputKeydown()"], "target": "src/examples/spotlight.js" },
+    { "repository": "web-commandpalette", "source": "src/palette.ts", "parts": ["PAGE_STEP", "PaletteEngine.move()"], "target": "src/examples/spotlight.js" },
+    { "repository": "web-commandpalette", "source": "src/web-component.ts", "parts": ["open()", "close()", "toggle()", "container keydown (focus trap)"], "target": "src/examples/spotlight.js" },
+    { "repository": "web-commandpalette", "source": "src/css/dialog.css", "parts": ["dialog", "fullscreen sheet"], "target": "src/examples/css/spotlight.css" },
+    { "repository": "web-commandpalette", "source": "src/css/search.css", "parts": ["search", "input"], "target": "src/examples/css/spotlight.css" },
+    { "repository": "web-commandpalette", "source": "src/css/results.css", "parts": ["results", "home sections", "rows", "highlight", "empty"], "target": "src/examples/css/spotlight.css" },
+    { "repository": "web-commandpalette", "source": "src/css/footer.css", "parts": ["footer", "hints", "keycaps"], "target": "src/examples/css/spotlight.css" },
+    { "repository": "web-commandpalette", "source": "src/css/animations.css", "parts": ["cp-fade-in", "cp-slide-down", "reduced motion"], "target": "src/examples/css/spotlight.css" },
+    { "repository": "web-commandpalette", "source": "src/css/variables.css", "parts": ["--cp-backdrop-bg", "--cp-item-active-*", "--cp-highlight-*"], "target": "src/examples/css/tokens.css" },
+    { "repository": "web-components-core", "source": "src/overlay/scroll-lock.ts", "parts": ["lockBodyScroll()"], "target": "src/examples/spotlight.js" },
+    { "repository": "web-components-core", "source": "src/menu/open-menu.ts", "parts": ["deepActiveElement()"], "target": "src/examples/spotlight.js" }
+  ]
+}

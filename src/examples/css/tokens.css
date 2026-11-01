@@ -72,6 +72,16 @@
         --kmwc-border-color: var(--base-border-color, light-dark(oklch(from var(--kmwc-main-bg) calc(l - 0.096) c h), oklch(from var(--kmwc-main-bg) calc(l + 0.192) c h)));
         --kmwc-border-color-strong: var(--base-input-border-color, light-dark(color-mix(in srgb, var(--kmwc-text-color-1) 45%, var(--kmwc-main-bg)), color-mix(in srgb, var(--kmwc-text-color-1) 35%, var(--kmwc-main-bg))));  /* control outline */
         --kmwc-shadow-color: var(--base-shadow-color, light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.4)));
+        --kmwc-overlay-bg: var(--base-overlay-bg, rgba(30, 41, 59, 0.5));  /* behind a modal (spotlight) */
+
+        /* ======================================================================
+           FOCUSED ITEM — the keyboard cursor in a list (spotlight rows); the
+           shared state every Keenmate list uses (wcp --cp-item-active-*)
+           ====================================================================== */
+        --kmwc-outline-width: var(--base-outline-width, 1px);
+        --kmwc-focused-bg: var(--base-focused-bg, transparent);
+        --kmwc-focused-text-color: var(--base-focused-text-color, currentColor);
+        --kmwc-focused-outline: var(--base-focused-outline, var(--kmwc-outline-width) solid var(--kmwc-accent-color));
 
         /* ======================================================================
            COLORS — INPUTS & CODE

@@ -58,6 +58,7 @@ templates/               generated-file templates, examples-layout.html, templat
                          scaffold) + templates/new-minimal (overlay for --minimal)
 playground/              real component made by `kmwc new`, linked via file:.. — the e2e target
 test/                    node:test unit tests
+scripts/                 maintainer scripts, not shipped (spotlight ↔ web-commandpalette mirror check)
 ```
 
 ## Rules
@@ -71,6 +72,10 @@ test/                    node:test unit tests
   tokens and colour literals live only in `tokens.css` (a unit test enforces
   it). Kit-generated classes are `kmwc-` prefixed BEM, from `constants.js`. The
   page vocabulary (`.card`, `.controls`, …) is the pages' — add, don't rename.
+- **The spotlight mirrors web-commandpalette** (`spotlight.js`, `chapter-search.js`,
+  `css/spotlight.css`): blocks marked `mirrors …` keep wcp's structure in devkit naming.
+  Change one side → port it to the other, and keep `scripts/spotlight-mirror.json` current
+  (`npm run check:spotlight-mirror`). Never import wcp or core into the kit.
 - **Kit mounting is deferred one task** (see `auto.js`): in builds Vite hoists
   the kit import before the page's inline script.
 - **Templates:** `{{UPPER_CASE}}` placeholders only. The Makefile template uses
@@ -91,6 +96,7 @@ test/                    node:test unit tests
 ## Commands
 
 ```
+make dev              # playground (the demo site) dev server, http://localhost:17300
 npm test              # unit tests
 npm run test:e2e      # playground e2e — dev server AND built site (Chromium)
 npm run readme        # regenerate catalogue (readme:check in CI)

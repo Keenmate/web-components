@@ -235,6 +235,7 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
       staticPaths: examples.staticPaths || [],
       excludedPages: examples.excludedPages || [],
       storagePrefix: examples.storagePrefix || id,
+      isSpotlightEnabled: examples.isSpotlightEnabled ?? true,
     },
     analytics: {
       plausibleSiteId: analytics.plausibleSiteId || '',

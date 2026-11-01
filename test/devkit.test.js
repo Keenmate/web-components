@@ -23,7 +23,12 @@ import { checkPrefix, generatePackageJson, generatePrefix, getReservedPrefixes }
 import { renderCatalogue } from '../src/cli/commands/readme.js';
 import { createExamplesPlugin } from '../src/vite/index.js';
 import { parseArgs } from '../src/cli/args.js';
-import { CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, THEME_SWITCH_CLASSES } from '../src/examples/constants.js';
+import { CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, SPOTLIGHT_CLASSES, THEME_SWITCH_CLASSES } from '../src/examples/constants.js';
+import { generateChapterIndex, getPageChapters, getHeadingText } from '../src/vite/chapter-index.js';
+import { searchChapters, checkMatchesAny, renderHighlightedText } from '../src/examples/chapter-search.js';
+import { getMovedIndex } from '../src/examples/spotlight.js';
+import { findSectionByHash, getChapterCode, mapToCodeKey } from '../src/examples/sections.js';
+import { getExamplePages } from '../src/vite/index.js';
 import { composePage, resolveIncludes, renderDemos, mapToDedentedText, checkIsFragment } from '../src/vite/page-composer.js';
 
 const PLAYGROUND_ROOT = join(DEVKIT_ROOT, 'playground');
@@ -224,7 +229,7 @@ test('package: every runtime export of a public entry is declared in its hand-wr
 });
 
 test('kit: every generated class is kmwc-prefixed BEM', () => {
-  const kitClassNames = [CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, THEME_SWITCH_CLASSES].flatMap((classes) => Object.values(classes));
+  const kitClassNames = [CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, SPOTLIGHT_CLASSES, THEME_SWITCH_CLASSES].flatMap((classes) => Object.values(classes));
   for (const className of kitClassNames) {
     assert.match(className, /^kmwc-[a-z]+(-[a-z]+)*(__[a-z]+(-[a-z]+)*)?(--[a-z]+(-[a-z]+)*)?$/, `${className} is not kmwc BEM`);
   }
@@ -370,6 +375,106 @@ test('composer: every scaffold page (full and --minimal) composes', () => {
       assert.ok(!/<kmwc-(include|demo)\b/.test(composedHtml.replace(/<!--[\s\S]*?-->/g, '')), `${variantDirectory}/${pageFile} left a kmwc tag`);
     }
   }
+});
+
+test('chapter index: headings → code, title, page, link (coded by code, uncoded by slug)', () => {
+  assert.equal(getHeadingText('RS01 &middot; Shared <code>--base-*</code> <span class="badge new">New</span>'), 'RS01 · Shared --base-*');
+  assert.equal(getHeadingText('Phases &amp; Config&#160;Cell'), 'Phases & Config Cell', 'entities decoded, whitespace collapsed');
+
+  const pageHtml = [
+    '<html><head><title>Theming — Web Sample</title><style>h2{}</style></head><body>',
+    '<header><h1>Theming</h1></header>',
+    '<!-- <h2>XX01 · commented out</h2> -->',
+    '<div class="card"><h2>TH07 · Per-instance <code>data-theme</code></h2></div>',
+    '<div class="card"><h2>EV4b · Non-standard code</h2></div>',
+    '<script>el.innerHTML = "<h2>XX02 · from a script</h2>";</script>',
+    '<div class="card"><h2>API summary</h2></div>',
+    '<div class="card"><h2>Summary</h2></div><div class="card"><h2>Summary</h2></div>',
+    '</body></html>',
+  ].join('\n');
+  const chapters = getPageChapters(pageHtml, { pageHref: 'examples-theming.html' });
+  assert.deepEqual(
+    chapters.map((chapter) => [chapter.code, chapter.title, chapter.href]),
+    [
+      ['TH07', 'Per-instance data-theme', 'examples-theming.html#th07'],
+      ['EV4b', 'Non-standard code', 'examples-theming.html#ev4b'],
+      [null, 'API summary', 'examples-theming.html#api-summary'],
+      [null, 'Summary', 'examples-theming.html#summary'],
+      [null, 'Summary', 'examples-theming.html#summary-2'],
+    ]
+  );
+  assert.ok(chapters.every((chapter) => chapter.pageTitle === 'Theming'));
+
+  // The playground: every example page, composed (includes resolved), the landing page left out.
+  const config = getPlaygroundConfig();
+  const playgroundChapters = generateChapterIndex(config, getExamplePages(config));
+  assert.ok(!playgroundChapters.some((chapter) => chapter.pageHref === 'index.html'));
+  assert.deepEqual([...new Set(playgroundChapters.map((chapter) => chapter.pageTitle))], ['Basic Usage', 'Devkit kit', 'Theming']);
+  assert.ok(playgroundChapters.some((chapter) => chapter.code === null && chapter.title === 'Summary'));
+});
+
+test('chapter search: code or title contains the query (wcp matchesAny); exact code, then code prefix, then the rest', () => {
+  const chapters = [
+    { code: 'BU01', title: 'Basic theming setup' },
+    { code: 'TH01', title: 'Dark mode signals' },
+    { code: 'TH07', title: 'Per-instance data-theme' },
+    { code: null, title: 'API summary' },
+    { code: 'TH12', title: 'API for themes' },
+  ];
+  const getLabels = (query) => searchChapters(chapters, query).map((chapter) => chapter.code ?? chapter.title);
+  assert.deepEqual(getLabels(''), ['BU01', 'TH01', 'TH07', 'API summary', 'TH12']);
+  assert.deepEqual(getLabels('  '), ['BU01', 'TH01', 'TH07', 'API summary', 'TH12'], 'blank = all (wcp: trimmed needle)');
+  assert.deepEqual(getLabels('th07'), ['TH07']);
+  assert.deepEqual(getLabels('TH7'), ['TH07'], 'zero padding does not matter');
+  assert.deepEqual(getLabels('th'), ['TH01', 'TH07', 'TH12', 'BU01'], 'code prefix before text hits');
+  assert.deepEqual(getLabels('api'), ['API summary', 'TH12']);
+  assert.deepEqual(getLabels('data-theme'), ['TH07'], 'the whole query is one substring');
+  assert.deepEqual(getLabels('theme api'), [], 'words are not split (wcp semantics)');
+
+  assert.ok(checkMatchesAny([null, 'Dark mode'], ' MODE '));
+  assert.ok(!checkMatchesAny(['Dark mode'], 'light'));
+  assert.equal(renderHighlightedText('Per-instance <data>-Theme', 'theme'), 'Per-instance &lt;data&gt;-<mark>Theme</mark>');
+  assert.equal(renderHighlightedText('aaaa', 'aa'), '<mark>aa</mark><mark>aa</mark>');
+  assert.equal(renderHighlightedText('a & b', ' '), 'a &amp; b');
+});
+
+test('spotlight: wcp keyboard map — arrows wrap, page keys step 8 and clamp, Home/End', () => {
+  assert.equal(getMovedIndex(4, 5, 'down'), 0);
+  assert.equal(getMovedIndex(0, 5, 'up'), 4);
+  assert.equal(getMovedIndex(-1, 5, 'up'), 4);
+  assert.equal(getMovedIndex(2, 20, 'pageDown'), 10);
+  assert.equal(getMovedIndex(15, 20, 'pageDown'), 19);
+  assert.equal(getMovedIndex(5, 20, 'pageUp'), 0);
+  assert.equal(getMovedIndex(7, 20, 'home'), 0);
+  assert.equal(getMovedIndex(7, 20, 'end'), 19);
+  assert.equal(getMovedIndex(-1, 0, 'down'), -1, 'empty list: no move');
+});
+
+test('spotlight mirror: every mirrored source names an existing target and a known repository', () => {
+  const mirrorConfig = JSON.parse(readFileSync(join(DEVKIT_ROOT, 'scripts', 'spotlight-mirror.json'), 'utf8'));
+  for (const mirror of mirrorConfig.mirrors) {
+    assert.ok(mirror.repository in mirrorConfig.repositories, `${mirror.source}: unknown repository ${mirror.repository}`);
+    assert.ok(readFileSync(join(DEVKIT_ROOT, mirror.target), 'utf8').length, `${mirror.target} missing`);
+  }
+  assert.ok(Object.values(mirrorConfig.repositories).every((repository) => /^[0-9a-f]{40}$/.test(repository.alignedCommit)));
+});
+
+test('chapter links: a hash resolves by anchor id, section code or heading slug', () => {
+  assert.equal(getChapterCode('TH07 · Title'), 'TH07');
+  assert.equal(getChapterCode('Summary'), null);
+  assert.equal(mapToCodeKey('TH07'), 'th7');
+  assert.equal(mapToCodeKey('TH100'), 'th100');
+  const sections = [
+    { id: 'dk01', label: 'DK01 · Accent tokens' },
+    { id: 'th07-per-instance-data-theme', label: 'TH07 · Per-instance data-theme' },
+    { id: 'wrap-up', label: 'Summary' },
+  ];
+  assert.equal(findSectionByHash('#th07-per-instance-data-theme', sections)?.id, 'th07-per-instance-data-theme');
+  assert.equal(findSectionByHash('#th07', sections)?.id, 'th07-per-instance-data-theme');
+  assert.equal(findSectionByHash('#TH7', sections)?.id, 'th07-per-instance-data-theme');
+  assert.equal(findSectionByHash('#summary', sections)?.id, 'wrap-up', 'uncoded section with its own id');
+  assert.equal(findSectionByHash('#nothing', sections), null);
+  assert.equal(findSectionByHash('#', sections), null);
 });
 
 test('readme: catalogue renders every registry entry', () => {

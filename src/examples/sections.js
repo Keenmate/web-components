@@ -8,7 +8,7 @@
  * reusing an existing section/h2 id before slugging the heading text.
  * Idempotent: a second call returns the same ids.
  */
-import { HEADING_CHIP_SELECTOR, SECTION_CONTAINER_SELECTOR, SECTION_SELECTOR } from './constants.js';
+import { CHAPTER_CODE_PATTERN, HEADING_CHIP_SELECTOR, SECTION_CONTAINER_SELECTOR, SECTION_SELECTOR } from './constants.js';
 
 export function generateSlug(text) {
   return String(text)
@@ -50,4 +50,41 @@ export function ensureSectionAnchors(root = document) {
     usedIds.add(id);
     return { heading, section, id, label };
   });
+}
+
+/** `TH07 · Title` → 'TH07'; an uncoded label (`Summary`) → null. */
+export function getChapterCode(label) {
+  return String(label).match(CHAPTER_CODE_PATTERN)?.[1] ?? null;
+}
+
+/** Comparison key for a code: case and leading zeros don't matter (`TH07`, `th7` → 'th7'). */
+export function mapToCodeKey(code) {
+  return String(code).toLowerCase().replace(/^([a-z]+)0+(?=\d)/, '$1');
+}
+
+/**
+ * The section a URL hash points at: its anchor id, else its section code
+ * (`#th07`, `#th7` — the short link the codes exist for), else the slug of its
+ * heading text (an uncoded chapter whose section carries its own id).
+ * @param {string} hash `#…` or the bare fragment
+ * @param {ReturnType<typeof ensureSectionAnchors>} sections
+ */
+export function findSectionByHash(hash, sections) {
+  let fragment = String(hash).replace(/^#/, '');
+  try {
+    fragment = decodeURIComponent(fragment);
+  } catch {
+    // a malformed escape — match it as written
+  }
+  if (!fragment) return null;
+  const fragmentKey = mapToCodeKey(fragment);
+  return (
+    sections.find((section) => section.id === fragment) ??
+    sections.find((section) => {
+      const code = getChapterCode(section.label);
+      return code !== null && mapToCodeKey(code) === fragmentKey;
+    }) ??
+    sections.find((section) => generateSlug(section.label) === fragment.toLowerCase()) ??
+    null
+  );
 }

@@ -16,6 +16,7 @@ export function getPageConfig() {
     mode: injectedConfig.mode || 'dev',
     canonicalOrigin: injectedConfig.canonicalOrigin || '',
     storagePrefix: injectedConfig.storagePrefix || injectedConfig.id || 'component',
+    isSpotlightEnabled: injectedConfig.isSpotlightEnabled ?? true,
     repository: injectedConfig.repository || '',
     homepage: injectedConfig.homepage || '',
     devkitVersion: injectedConfig.devkitVersion || '',

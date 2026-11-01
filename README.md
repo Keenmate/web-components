@@ -278,6 +278,22 @@ doctor` lists the ones still repeating the head/header boilerplate.
 - **Chapter nav and copy-link** share one section/slug algorithm, so the
   jump-list hashes and copied links always match. Floating UI is bundled (no
   CDN). At the bottom of a short page, the last chapter gets highlighted.
+- **Spotlight (Ctrl/⌘+K)** searches every chapter of every example page: a
+  chapter matches when its section code or heading text contains the query
+  (`th7` finds `TH07`; uncoded `Summary` / reference sections are found by
+  title), results are grouped by page with the current page first, ↑↓ / PgUp
+  / PgDn / Home / End pick, Enter jumps, Ctrl/⌘+Enter opens a new tab. The
+  Vite plugin builds the index from every page's `<h2>`s (includes resolved)
+  as `virtual:kmwc-chapters`; the current page's chapters are read live, so
+  script-rendered sections count too. Off with
+  `kmwc.examples.isSpotlightEnabled: false` (a component that owns Ctrl+K
+  itself; a page handler calling `preventDefault()` also keeps the key). It
+  **mirrors** [web-commandpalette](https://github.com/keenmate/web-commandpalette)
+  — markup, matching, keyboard map, open/close, CSS — without depending on it;
+  see *Developing the devkit*.
+- **Short chapter links**: `examples-theming.html#th07` (or `#th7`, or the
+  slug of an uncoded heading, `#summary`) scrolls to that chapter on arrival
+  — the codes from the rulebook's `example-pages.md` work as URLs.
 - **Version badge**: any `[data-kmwc-version]` (or legacy `#version-badge`)
   shows `v1.2.3`, or `v1.2.3 (built …)` in a built site.
 - **Landing page**: `renderExamplesIndex({ pages })` renders the header, cards,
@@ -421,7 +437,17 @@ npm install
 npm test                 # unit tests (config, registry, templates, sync, checks, intake, plugin, kit)
 npm run test:e2e         # playground: the kit + scaffold in a real browser, dev server AND built site
 npm run readme           # regenerate the catalogue
+npm run check:spotlight-mirror   # what changed in web-commandpalette since the spotlight was aligned
+make dev                 # the playground's dev server
 ```
+
+**The spotlight mirrors web-commandpalette.** `src/examples/spotlight.js`,
+`chapter-search.js` and `css/spotlight.css` keep wcp's structure block for
+block (devkit naming), each marked `mirrors <file> <function>`;
+[`scripts/spotlight-mirror.json`](scripts/spotlight-mirror.json) lists every
+pair and the wcp / core commit they're aligned to. A bug fixed in one gets
+ported to the other: run `npm run check:spotlight-mirror` (add `-- --diff`
+for the patches), port what applies, bump `alignedCommit`.
 
 [`playground/`](playground) is a real component scaffolded with `kmwc new` and
 linked to this checkout. It's the reference for "what a component looks like",

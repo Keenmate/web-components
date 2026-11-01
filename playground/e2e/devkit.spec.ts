@@ -65,6 +65,79 @@ test.describe('examples kit', () => {
     expect(copiedUrl).toMatch(/\/examples-basic\.html#bu01-label-active-state$/);
   });
 
+  test('spotlight searches every page by code or title and jumps (wcp keyboard map)', async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 500 }); // short: a jump must scroll
+    await page.goto('/examples-basic.html');
+    await expect(page.locator('.kmwc-spotlight__trigger')).toBeVisible(); // kit mounted
+    const container = page.locator('.kmwc-spotlight__container');
+    const input = page.locator('.kmwc-spotlight__input');
+    const items = page.locator('.kmwc-spotlight__item');
+    const activeItem = page.locator('.kmwc-spotlight__item--active');
+
+    // Ctrl+K opens; the empty query lists this page first, then every other page.
+    await page.keyboard.press('Control+k');
+    await expect(container).toBeVisible();
+    await expect(input).toBeFocused();
+    await expect(page.locator('.kmwc-spotlight__home-heading').first()).toHaveText('Basic Usage · this page');
+    await expect(items).toHaveCount(12);
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden'); // body scroll locked
+
+    // wcp keys: ↑ wraps to the end, PgDn steps 8, Home back to the top.
+    await page.keyboard.press('ArrowUp');
+    await expect(activeItem).toHaveAttribute('data-index', '11');
+    await page.keyboard.press('Home');
+    await page.keyboard.press('PageDown');
+    await expect(activeItem).toHaveAttribute('data-index', '8');
+
+    // An exact code ranks first, padding optional; text hits come from other pages too.
+    await input.fill('th2');
+    await expect(items.first()).toContainText('TH02');
+    await input.fill('summary');
+    await expect(items).toHaveCount(1);
+    await expect(items.first()).toHaveAttribute('href', 'examples-devkit.html#summary');
+    await expect(items.first().locator('mark')).toHaveText('Summary');
+    await input.fill('no such chapter');
+    await expect(page.locator('.kmwc-spotlight__empty')).toBeVisible();
+
+    // Same page: Enter scrolls to the chapter by its short code link; focus and scroll come back.
+    await input.fill('bu03');
+    await page.keyboard.press('Enter');
+    await expect(container).toBeHidden();
+    await expect(page).toHaveURL(/examples-basic.html#bu03$/);
+    await expect(page.locator('.kmwc-chapter-nav__item', { hasText: 'BU03' })).toHaveClass(/kmwc-chapter-nav__item--active/);
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
+
+    // Another page: the trigger button opens, ↓ picks, Enter navigates — the short link resolves on arrival.
+    await page.locator('.kmwc-spotlight__trigger').click();
+    await input.fill('dk');
+    await page.keyboard.press('ArrowDown');
+    await expect(items.nth(1)).toHaveClass(/kmwc-spotlight__item--active/);
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/examples-devkit.html#dk02$/);
+    await expect(page.locator('.kmwc-spotlight__trigger')).toBeVisible(); // the new page's kit mounted
+    await expect(page.locator('h2', { hasText: 'DK02' })).toBeInViewport();
+
+    // Esc and a backdrop click close; Ctrl+K toggles.
+    await page.keyboard.press('Control+k');
+    await page.keyboard.press('Escape');
+    await expect(container).toBeHidden();
+    await page.keyboard.press('Control+k');
+    await page.locator('.kmwc-spotlight__backdrop').click({ position: { x: 10, y: 10 } });
+    await expect(container).toBeHidden();
+    await page.keyboard.press('Control+k');
+    await expect(container).toBeVisible();
+    await page.keyboard.press('Control+k');
+    await expect(container).toBeHidden();
+  });
+
+  test('a short code link resolves on arrival (#th2 → TH02)', async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 500 });
+    await page.goto('/examples-devkit.html#summary');
+    await expect(page.locator('h2', { hasText: 'Summary' })).toBeInViewport();
+    await page.goto('/examples-theming.html#th2');
+    await expect(page.locator('h2', { hasText: 'TH02' })).toBeInViewport();
+  });
+
   test('controls persistence restores and re-applies across reloads', async ({ page }) => {
     await page.goto('/examples-basic.html');
     await page.evaluate(() => localStorage.clear());

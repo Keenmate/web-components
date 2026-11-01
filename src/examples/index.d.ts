@@ -8,6 +8,7 @@ export interface KmwcPageConfig {
   mode: 'dev' | 'build';
   canonicalOrigin: string;
   storagePrefix: string;
+  isSpotlightEnabled: boolean;
   repository: string;
   homepage: string;
   /** The @keenmate/web-components-devkit version that built the page (shown in the index footer). */
@@ -40,6 +41,20 @@ export interface ChapterNavConfig {
   indexHref?: string;
 }
 
+/** One entry of the spotlight's chapter index (virtual:kmwc-chapters). */
+export interface Chapter {
+  /** Section code (`TH07`), null for an uncoded heading (`Summary`). */
+  code: string | null;
+  /** Heading text without the code. */
+  title: string;
+  /** Heading text as shown (`TH07 · Title`). */
+  label: string;
+  pageHref: string;
+  pageTitle: string;
+  /** `examples-theming.html#th07` — by code, else by the heading slug. */
+  href: string;
+}
+
 export interface Section {
   heading: HTMLElement;
   section: HTMLElement;
@@ -58,6 +73,18 @@ export function renderExamplesIndex(indexConfig: ExamplesIndexConfig): HTMLEleme
 export function mountExamplesKit(): void;
 export function mountChapterNav(navConfig?: ChapterNavConfig): { unmount(): void } | null;
 
+/** Ctrl/Cmd+K chapter search across every example page (mirrors web-commandpalette); null when `isSpotlightEnabled` is false. */
+export function mountSpotlight(): { open(): void; close(): void; toggle(): void; unmount(): void } | null;
+/** Resolve the URL hash (`#th07`, an anchor id or a heading slug) now and on every hash change. */
+export function attachChapterLinks(): void;
+export function scrollToChapterHash(hash?: string): boolean;
+/** Chapters whose code or title contains the query; exact code (`th7` = TH07) first, then code prefix, then the rest. */
+export function searchChapters<T extends Pick<Chapter, 'code' | 'title'>>(chapters: T[], query: string): T[];
+/** Substring match of `needle` against any field (web-commandpalette matchesAny). */
+export function checkMatchesAny(fields: readonly unknown[], needle: string): boolean;
+/** Escaped `text` with the occurrences of `needle` in <mark> (web-commandpalette highlight). */
+export function renderHighlightedText(text: string, needle: string): string;
+
 export function attachCopyLinks(): void;
 export function copyText(text: string): Promise<boolean>;
 export function getSectionUrl(sectionId: string, canonicalOrigin?: string): string;
@@ -73,11 +100,22 @@ export function getSavedTheme(): Theme;
 export function ensureSectionAnchors(root?: Document): Section[];
 export function generateSlug(text: string): string;
 export function getHeadingLabel(heading: Element, fallbackLabel: string): string;
+export function getChapterCode(label: string): string | null;
+export function mapToCodeKey(code: string): string;
+export function findSectionByHash(hash: string, sections: Section[]): Section | null;
 
 export function getPageConfig(): KmwcPageConfig;
 export function attachDomReadyHandler(handler: () => void): void;
 
 export const CHAPTER_NAV_CLASSES: Record<string, string>;
+export const SPOTLIGHT_CLASSES: Record<string, string>;
+export const SPOTLIGHT_RESULTS_ID: string;
+export const SPOTLIGHT_ITEM_ID_PREFIX: string;
+export const SPOTLIGHT_OPEN_KEY: string;
+export const SPOTLIGHT_PAGE_STEP: number;
+export const SPOTLIGHT_FULLSCREEN_MEDIA: string;
+/** `TH07 · Title` → group 1 is the section code. */
+export const CHAPTER_CODE_PATTERN: RegExp;
 export const COPY_LINK_CLASSES: Record<string, string>;
 export const INDEX_PAGE_CLASSES: Record<string, string>;
 export const THEME_SWITCH_CLASSES: Record<string, string>;

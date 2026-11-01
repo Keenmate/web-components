@@ -20,6 +20,57 @@ export const CHAPTER_NAV_CLASSES = {
 
 export const CHAPTER_NAV_PANEL_ID = 'kmwc-chapter-nav-panel';
 
+/**
+ * Spotlight: the cross-page chapter search (spotlight.js). Element names
+ * mirror web-commandpalette's `pa-command-palette__*` shell (pure-admin's
+ * canonical command-palette snippet) under the kit prefix; `trigger` and
+ * `itemCode` are the spotlight's own.
+ */
+export const SPOTLIGHT_CLASSES = {
+  root: 'kmwc-spotlight',
+  rootActive: 'kmwc-spotlight--active',
+  rootFullscreen: 'kmwc-spotlight--fullscreen',
+  backdrop: 'kmwc-spotlight__backdrop',
+  container: 'kmwc-spotlight__container',
+  fullscreenBar: 'kmwc-spotlight__fullscreen-bar',
+  fullscreenTitle: 'kmwc-spotlight__fullscreen-title',
+  close: 'kmwc-spotlight__close',
+  search: 'kmwc-spotlight__search',
+  inputWrapper: 'kmwc-spotlight__input-wrapper',
+  input: 'kmwc-spotlight__input',
+  results: 'kmwc-spotlight__results',
+  homeSection: 'kmwc-spotlight__home-section',
+  homeHeading: 'kmwc-spotlight__home-heading',
+  item: 'kmwc-spotlight__item',
+  itemActive: 'kmwc-spotlight__item--active',
+  itemCode: 'kmwc-spotlight__item-code',
+  itemContent: 'kmwc-spotlight__item-content',
+  itemTitle: 'kmwc-spotlight__item-title',
+  empty: 'kmwc-spotlight__empty',
+  footer: 'kmwc-spotlight__footer',
+  hint: 'kmwc-spotlight__hint',
+  key: 'kmwc-spotlight__key',
+  live: 'kmwc-spotlight__live',
+  trigger: 'kmwc-spotlight__trigger',
+  triggerKey: 'kmwc-spotlight__trigger-key',
+};
+
+export const SPOTLIGHT_RESULTS_ID = 'kmwc-spotlight-results';
+export const SPOTLIGHT_ITEM_ID_PREFIX = 'kmwc-spotlight-item-';
+/** The Ctrl/⌘ + letter that toggles the spotlight (wcp: `openKey`, default `k`). */
+export const SPOTLIGHT_OPEN_KEY = 'k';
+/** PgUp / PgDn step (wcp palette.ts PAGE_STEP). */
+export const SPOTLIGHT_PAGE_STEP = 8;
+/** Touch phone → fullscreen sheet (wcp: core's device classification, approximated in CSS terms). */
+export const SPOTLIGHT_FULLSCREEN_MEDIA = '(pointer: coarse) and (max-width: 768px)';
+
+/**
+ * A section code at the start of a heading label: `TH07 · Title` (rulebook
+ * example-pages.md). Forgiving on purpose — `EV4b` counts; enforcing the
+ * format is the rulebook check's job.
+ */
+export const CHAPTER_CODE_PATTERN = /^([A-Z]{2,3}\d+[a-z]?)\s*·\s*/;
+
 export const COPY_LINK_CLASSES = {
   root: 'kmwc-copy-link',
   rootCopied: 'kmwc-copy-link--copied',

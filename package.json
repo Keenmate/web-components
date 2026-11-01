@@ -48,6 +48,7 @@
     "test": "node --test \"test/**/*.test.js\"",
     "test:e2e": "cd playground && npx playwright test",
     "check:contract": "base-contract-check src templates playground",
+    "check:spotlight-mirror": "node scripts/check-spotlight-mirror.js",
     "playground": "cd playground && vite",
     "playground:build": "cd playground && vite build --mode examples",
     "playground:lib": "cd playground && vite build"

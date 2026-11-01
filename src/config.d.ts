@@ -38,6 +38,8 @@ export interface KmwcPackageConfig {
     excludedPages?: string[];
     /** localStorage namespace for the controls persistence; defaults to `id`. */
     storagePrefix?: string;
+    /** The Ctrl/Cmd+K chapter spotlight (search every page's chapters); default true. */
+    isSpotlightEnabled?: boolean;
   };
   analytics?: { plausibleSiteId?: string; plausibleHostUrl?: string };
   image?: {
@@ -101,6 +103,7 @@ export interface KmwcConfig {
     staticPaths: string[];
     excludedPages: string[];
     storagePrefix: string;
+    isSpotlightEnabled: boolean;
   };
   analytics: { plausibleSiteId: string; plausibleHostUrl: string };
   image: {

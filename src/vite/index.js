@@ -21,9 +21,13 @@ import { join, resolve } from 'node:path';
 import { getKmwcConfig, getDevkitPackageJson, generateBuildDefines, loadPeerModule, DEVKIT_ROOT, NON_PAGE_HTML_FILES } from '../config.js';
 import { renderThemeBootstrapScript } from '../examples/theme-switch.js';
 import { composePage } from './page-composer.js';
+import { generateChapterIndex } from './chapter-index.js';
 
 const AUTO_ENTRY_PATH = join(DEVKIT_ROOT, 'src', 'examples', 'auto.js');
 const VIRTUAL_AUTO_ID = 'virtual:kmwc-examples';
+// The spotlight's chapter index (chapter-index.js); spotlight.js imports it by this literal id.
+const VIRTUAL_CHAPTERS_ID = 'virtual:kmwc-chapters';
+const RESOLVED_CHAPTERS_ID = '\0' + VIRTUAL_CHAPTERS_ID;
 const KIT_STYLESHEET_PATH = join(DEVKIT_ROOT, 'src', 'examples', 'css', 'style.css').replace(/\\/g, '/');
 // Vite's dev-server URL for a file outside the project root.
 const KIT_STYLESHEET_DEV_URL = `/@fs/${KIT_STYLESHEET_PATH.replace(/^\//, '')}`;
@@ -79,13 +83,26 @@ export function createExamplesPlugin(pluginConfig = {}) {
     },
 
     resolveId(moduleId) {
-      return moduleId === VIRTUAL_AUTO_ID ? AUTO_ENTRY_PATH : null;
+      if (moduleId === VIRTUAL_AUTO_ID) return AUTO_ENTRY_PATH;
+      if (moduleId === VIRTUAL_CHAPTERS_ID) return RESOLVED_CHAPTERS_ID;
+      return null;
+    },
+
+    load(moduleId) {
+      if (moduleId !== RESOLVED_CHAPTERS_ID) return null;
+      const chapters = config.examples.isSpotlightEnabled ? generateChapterIndex(config, getExamplePages(config)) : [];
+      return `export default ${JSON.stringify(chapters)};`;
     },
 
     // A partial isn't a module, so Vite doesn't know which pages use it —
     // reload the page on any non-root HTML change (partials/…).
     handleHotUpdate({ file, server }) {
       const relativePath = file.replace(/\\/g, '/').replace(config.root.replace(/\\/g, '/') + '/', '');
+      // Any page or partial may change a heading — rebuild the chapter index on its next import.
+      if (relativePath.endsWith('.html')) {
+        const chaptersModule = server.moduleGraph.getModuleById(RESOLVED_CHAPTERS_ID);
+        if (chaptersModule) server.moduleGraph.invalidateModule(chaptersModule);
+      }
       if (relativePath.endsWith('.html') && relativePath.includes('/') && !relativePath.startsWith('test/')) {
         server.ws.send({ type: 'full-reload' });
         return [];
@@ -118,6 +135,7 @@ export function createExamplesPlugin(pluginConfig = {}) {
           mode: isBuild ? 'build' : 'dev',
           canonicalOrigin: config.examples.canonicalOrigin,
           storagePrefix: config.examples.storagePrefix,
+          isSpotlightEnabled: config.examples.isSpotlightEnabled,
           repository: config.repository,
           homepage: config.homepage,
           devkitVersion: devkitPackageJson.version,
