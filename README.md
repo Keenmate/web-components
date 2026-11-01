@@ -19,20 +19,18 @@ them in the same shape: `@keenmate/web-components-devkit`.
 > positioning) lives in [`@keenmate/web-components-core`](../web-components-core).
 > Nothing here ships inside a component's bundle.
 
+## What's New in v1.0.0-rc05
+
+- **Log panels — one tone set for every log line** — web-components-core's example pages each coloured their log lines with their own classes (`.warn`, `.lv-error`, `data-kind="hook"` …), four schemes mixing severity with "what happened". A `.log-line` now takes one of five tones — `--ok`, `--info`, `--warn`, `--err`, `--muted`, the same names as `.pill` and `.status-dot` (which gain `--info` / `--muted`) — and `--action` marks a "▶ you clicked X" line. Kinds such as hook or callback map onto those tones; the kind itself goes in a cell as text. On `.log-panel--dark` the tones switch to fixed light tints (`--kmwc-console-ok|info|warn|err-color`), so they stay readable on the console in both themes, while a light `.log-panel` follows the page theme. Every line keeps its line breaks and indentation.
+- **Log panels — timeline columns, text logs and an empty placeholder** — The cells `.log-line__seq`, `__time`, `__source` and `__name` turn a line into aligned columns, with the detail after them wrapping in its own column; the name takes the line's tone. A log fed by `textContent` is a `<pre class="log-panel">`, `data-empty="(nothing yet)"` shows while a panel is empty, and `--log-max-height: none` lets a log grow. This replaces the page-local timeline CSS core's Lifecycle and Interaction pages carried.
+- **`.event-log` — the legacy console now renders as `.log-panel--dark`** — Many component pages (web-grid, web-dropzone, web-treeview, the showcases) still use `.event-log` / `.event-entry` / `.event-time` / `.event-name`, which differed slightly from the newer panel (grey base text, 0.8rem, a 200px cap, no columns). It is now the same panel, and an `.event-entry` holding `.event-time` / `.event-name` is a timeline row with an aligned time column and tones, so old and new logs look the same. Other `.event-log` markup — lines without `.event-entry`, page-own classes — only gets the panel look, so existing layouts don't break.
+- **Small helpers — `.mono`, `td.is-highlight`, `.check-list`** — `.mono` sets the monospace font without the code chip, and `textarea.mono` makes a JSON or config editor. `td.is-highlight` (or `th`) tints one table cell, where only whole rows could be highlighted before. `.check-list` stacks checkbox / radio options one per line, a long label wrapping beside its box, with room for a trailing `.pill`. The playground shows everything on the Widgets (WG01–WG07), Form controls (FC11) and Tables (TB06) pages.
+
 ## What's New in v1.0.0-rc04
 
 - **Example-page grids — wide content scrolls instead of widening the page** — A `<pre>` or table inside a `.grid`, `.grid-2` or `.card-grid` item still pushed the page wider than a phone: grid items default to `min-width: auto` (their min-content), so the single `1fr` column at ≤ 768 px grew to fit the content instead of letting it scroll. Every item of the three grids now gets `min-width: 0`, the same rule pure-css puts on its `.pc-col-*` columns. Found by two agents migrating web-components-core's example pages, which drop their page-local workaround with this release.
 - **`.controls` — long `<code>` in a button wraps on a phone** — rc03 wrapped `<code>` only inside `.controls` labels, so a button whose label was an unbroken API name (`setAttribute("…")`) still overflowed the row. The wrap rule (`overflow-wrap: anywhere`) now covers any `<code>` in a `.controls` row, and a `.controls` button is capped at the row width. An e2e spec injects both cases at 390 px and checks that the page stays inside the screen.
 - **Playground — a Widgets page for the kit's opt-in helpers** — `.log-panel` (light and `--dark`), the legacy `.event-log`, `.pill` / `.status-dot` tones, `.display-sliders` and `.css-readout` had no demo, so their look was only checked on component pages. The new `examples-widgets.html` (WG01–WG04) shows them as they are today, including the gaps the coming log-tone work fixes (no line tones, leading spaces collapsing in a log line), and gets its own e2e spec.
-
-## What's New in v1.0.0-rc03
-
-- **Spotlight — Ctrl/⌘+K chapter search across every example page** — Example sites grew to dozens of chapters over several pages, and the per-page chapter nav only knew its own page. The Vite plugin now builds an index of every page's `<h2>`s (`virtual:kmwc-chapters`), coded and uncoded, and Ctrl/⌘+K opens a search that matches the section code or the heading text (`th7` finds `TH07`), grouped by page with the current one first. Enter jumps, Ctrl/⌘+Enter opens a new tab. It mirrors web-commandpalette's markup, matching, keyboard map and CSS without depending on it; `npm run check:spotlight-mirror` lists what changed there since the last alignment. Turn it off with `kmwc.examples.isSpotlightEnabled: false`.
-- **Form controls — one look for native inputs on every example page** — Pages styled their own selects and inputs, or got the browser default, so a select next to the kit's buttons came out shorter and in the platform's style (a `.controls` row was the only place the kit reached). Text fields, selects and list boxes, textareas, checkboxes, radios, `role="switch"` switches, ranges, colour and file inputs are now styled with no class, modelled on pure-admin's forms. Inputs, selects and buttons share `--kmwc-control-height`, so a mixed row lines up in any container. Focus, placeholder, disabled tone, checkbox size and the tick read the `--base-*` contract. The rules are zero-specificity, and `kmwc-native` opts an element out.
-- **Tables — every table styled, `.reference-table` plus modifiers** — Only `.reference-table` had a look; a bare table was unstyled and pages wrote their own table CSS with fixed light colours that break in dark mode. Any `<table>` now gets a header fill, row lines and a hover tint, and modifiers combine: `.table-full`, `.table-bordered`, `.table-striped`, and `.table-compact`, whose inputs and buttons shrink with the rows. Add `tr.is-highlight` and `.num` (tabular figures). Every wide table scrolls inside its card on a phone.
-- **Scaffold — component CSS no longer restyles the host page** — The `*, *::before, *::after { box-sizing: inherit }` reset in the `kmwc new` and `--minimal` templates also reached the page through the component's light-DOM stylesheet, in a layer that beats `@layer kmwc`, so page controls rendered content-box (a 36 px input came out 38 px). It is scoped to `:host *` now, and a unit test rejects any universal or bare-element selector in scaffold CSS. Components scaffolded on rc01/rc02 should make the same one-line change in `src/css/base.css`.
-- **Example pages — short chapter links, phones and the example-pages suite** — `#th07`, `#th7` or an uncoded heading's slug now scroll to that chapter on arrival. On a phone, example pages no longer grow wider than the screen, which made mobile browsers report a wrong viewport to pages that demo breakpoints. `kmwc doctor` runs the rulebook's new `example-pages` suite: every example `<h2>` carries a permanent section code.
-- **`make dev` at the devkit root** — the standard `dev` / `kill-port` / `build-examples` / `preview-examples` targets, run against the playground.
 
 ## Catalogue
 
@@ -285,9 +283,15 @@ doctor` lists the ones still repeating the head/header boilerplate.
   (tighter cells; the controls in it shrink via `--kmwc-control-height`) — plus
   `tr.is-highlight` and a `.num` cell (right-aligned, tabular figures). On a phone
   a wide table scrolls inside its card. See the playground's `examples-tables.html`.
-- **Widgets** (`.log-panel` / `--dark`, `.event-log`, `.pill`, `.status-dot`,
-  `.display-sliders`, `.css-readout`) are shown in the playground's
-  `examples-widgets.html`.
+- **Widgets:** `.log-panel` (light, following the theme; `--dark` for a console
+  stream; the legacy `.event-log` / `.event-entry` markup renders the same). Lines keep their indentation; a
+  `.log-line` takes one tone — `--ok`, `--info`, `--warn`, `--err`, `--muted`,
+  the same five as `.pill` / `.status-dot` — and `--action` marks a "you clicked
+  X" line. Timeline cells (`.log-line__seq`, `__time`, `__source`, `__name`)
+  turn a line into aligned columns. A `<pre class="log-panel">` is a text-fed
+  log; `data-empty` shows while a panel is empty. Also `.mono`, `.check-list`
+  (options one per line), `td.is-highlight`, `.display-sliders` and
+  `.css-readout`. The playground's `examples-widgets.html` shows them all.
 - **Theme switch** (top right) cycles light → dark → auto and sets
   `data-theme` on `<html>` — the same signal components react to via
   `:host-context([data-theme])`, so every example page is a dark-mode smoke

@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.0.0-rc05] - 2026-11-01 [PUBLISHED]
+
+### Changed
+
+- **`.event-log` is now the same panel as `.log-panel--dark`** — the legacy console differed
+  in small ways (grey base text, 0.8rem, 200px cap, no columns), so old and new logs looked
+  slightly different. It now renders exactly as `.log-panel--dark` (light base text,
+  0.85rem, `--log-max-height`, default 220px), and an `.event-entry` holding `.event-time`
+  / `.event-name` is a timeline row: aligned time column, the detail wrapping in its own
+  column, tones via `.log-line--*`. Other `.event-log` markup (lines without
+  `.event-entry`, page-own classes) just gets the panel look.
+
+### Added
+
+- **Log lines: one tone set, timeline columns, text logs, empty placeholder** —
+  web-components-core's pages each coloured their log lines (four schemes mixing severity
+  with "what happened"). A `.log-line` now takes one of the pill tones — `--ok`, `--info`,
+  `--warn`, `--err`, `--muted` — and `--action` marks a "you clicked X" line. On
+  `.log-panel--dark` and `.event-log` the tones switch to fixed light tints
+  (`--kmwc-console-ok|info|warn|err-color`), so they stay readable on the console in both
+  themes. Every line in a log keeps its line breaks and indentation. The cells
+  `.log-line__seq`, `__time`, `__source`, `__name` turn a line into aligned columns, with
+  the detail wrapping in its own column. `<pre class="log-panel">` is a log fed by
+  `textContent`; `data-empty` is shown while a panel is empty.
+- **`.pill--info` / `--muted` and `.status-dot--info` / `--muted`**, so pills, dots and log
+  lines share the same five tones.
+- **`.mono`** (monospace text without the code chip; `textarea.mono` for a JSON editor),
+  **`td.is-highlight`** (one highlighted cell) and **`.check-list`** (checkbox / radio
+  options one per line, a long label wrapping beside its box).
+- Playground: WG01 and WG03 show the tones, new WG05 (timeline), WG06 (text log, empty
+  placeholder), WG07 (`.mono`), FC11 (check list), TB06 (highlighted cell); e2e specs.
+
 ## [1.0.0-rc04] - 2026-11-01 [PUBLISHED]
 
 ### Fixed
