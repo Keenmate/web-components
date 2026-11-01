@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.0.0-rc06] - 2026-11-01 [PUBLISHED]
+
+### Added
+
+- **`<kbd>` and `<mark>`** — every component documents a keyboard map and most highlight
+  search matches, and pages either left them in the browser's look (core's Interaction page:
+  18 bare `<kbd>`s) or styled them locally (core's Search page). A `<kbd>` now looks like the
+  spotlight's key hints and a `<mark>` like its match highlight. Widgets page WG08.
+- **Field widths** — a native field is ~20 characters wide, so pages set inline widths (core:
+  14). A number field is now 7rem (six digits and the spin buttons; a `.form-group` still
+  stretches it), and `.w-xs` / `.w-sm` / `.w-md` / `.w-lg` (4 / 6 / 9 / 12rem) size a short
+  field. `.push-end` moves an item to the end of a `.controls` row. Form controls page FC12.
+- **`kmwc.library: false`** — for a repo that builds its package itself (core: `tsc`) or ships
+  none. Plain `vite build`, the devkit's library mode, refuses to run instead of emptying
+  `dist/`; `vite build --mode examples` still builds the site, and sync no longer proposes a
+  `build: vite build` script. `{ "shouldBuild": false, "entry": … }` keeps the pages' entry.
+- **`kmwc.cssVariables: false`** (or `checkMode: "off"`) — sync stopped re-adding `check:vars`
+  only when there was no manifest; now it can be switched off (core builds its variable names
+  by interpolation, which the checker can't see). `kmwc check-vars` then skips.
+- **Doctor knows libraries** — a repo whose registry entry (or `kmwc.kind`) is `library` runs
+  only the rulebook suites that apply to it: naming-conventions, readme-structure,
+  publish-command, example-pages. The CSS, Custom Elements Manifest, overlay and
+  component-structure suites check what a custom element ships; on core they gave 12 errors
+  and 4 "suite could not run" warnings. No prefix warning for a library.
+
+### Fixed
+
+- **`kmwc <command> --help` ran the command** — only a top-level `--help` was handled and
+  unknown flags were ignored, so `kmwc sync --help` did a full sync (it overwrote core's
+  Makefile). `--help` / `-h` after any command now prints that command's usage and exits 0,
+  and an unknown option is an error (exit 2). Every command declares its flags; a boolean
+  flag no longer swallows the next word as its value.
+- **Inline `<code>` widened a phone page** — a long identifier has no break opportunity, so
+  `resolvePresentation(mode, env, map)` in a heading made core's page 350px wide at 320px.
+  Inline code now breaks anywhere; code in a `<pre>` keeps its lines.
+- **Muted log text failed contrast on the light panel** — `--muted` lines, the seq / time /
+  source cells and the empty placeholder used `--kmwc-text-color-3`: 2.83:1 on the light
+  `.log-panel` in the light theme (WCAG AA wants 4.5:1). They now use `--kmwc-text-color-2`.
+  A spec checks every tone on both panels in both themes.
+- **`.css-readout` sat on the demo above it** — it had no top margin (core carried 8 inline
+  margins); it now has 0.75rem.
+
+- **Timeline log lines on a phone** — the cells (`.log-line__seq`, `__time`, `__source`,
+  `__name`) never shrink and the row never wrapped, so on a narrow panel, or with a long
+  source name, the detail got the few pixels left over: one letter per line. The row now
+  wraps, and the detail wants ~14rem beside the cells; with less room it drops under them at
+  full width. Wide panels are unchanged. A cell is capped at the panel width.
+
 ## [1.0.0-rc05] - 2026-11-01 [PUBLISHED]
 
 ### Changed

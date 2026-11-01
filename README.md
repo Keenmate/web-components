@@ -19,18 +19,19 @@ them in the same shape: `@keenmate/web-components-devkit`.
 > positioning) lives in [`@keenmate/web-components-core`](../web-components-core).
 > Nothing here ships inside a component's bundle.
 
+## What's New in v1.0.0-rc06
+
+- **Example pages — `<kbd>`, `<mark>`, field widths and `.push-end`** — Every component documents a keyboard map and most highlight search matches. Pages either left `<kbd>` in the browser's look (core's Interaction page had 18 bare keys) or styled `<mark>` themselves. A `<kbd>` now looks like the spotlight's key hints and a `<mark>` like its match highlight. Native fields are about 20 characters wide, so pages set inline widths; core had 14. A number field is now 7rem by default. `.w-xs` / `.w-sm` / `.w-md` / `.w-lg` (4 / 6 / 9 / 12rem) size a short field, and a `.form-group` still stretches it to the row. `.push-end` moves an item to the end of a `.controls` row. See the playground's WG08 and FC12.
+- **Example pages — phone and contrast fixes** — Inline `<code>` now breaks anywhere. Before, a long identifier such as `resolvePresentation(mode, env, map)` in a heading made a page 350px wide on a 320px screen; code inside a `<pre>` keeps its lines. Muted log text on the light `.log-panel` (`--muted` lines, the seq / time / source cells, the empty placeholder) measured 2.83:1 in the light theme. It now uses `--kmwc-text-color-2`, and a spec checks every tone on both panels in both themes against WCAG AA's 4.5:1. Timeline rows wrap, so on a phone or with a long source name the detail drops under the cells instead of showing one letter per line. `.css-readout` gets a top margin after the demo it measures.
+- **CLI — `kmwc <command> --help` no longer runs the command** — Only a top-level `--help` was handled, and unknown flags were silently ignored, so `kmwc sync --help` did a full sync and overwrote core's hand-written Makefile. Every command now lists the flags it accepts. `--help` / `-h` after any command prints that command's usage and exits 0, and an unknown option is an error (exit 2). A boolean flag no longer takes the next word as its value.
+- **Libraries — `library: false`, `cssVariables: false`, and a doctor that knows the kind** — A repo like web-components-core builds its package with `tsc`. A plain `vite build` (the devkit's library mode) would empty its `dist/`, so `"kmwc": { "library": false }` now makes it refuse to run, while `vite build --mode examples` still builds the site. `"cssVariables": false` turns off the variables-manifest check, so sync stops re-adding `check:vars`. Doctor reads the registry kind (or `kmwc.kind`): a `library` runs only naming-conventions, readme-structure, publish-command and example-pages. On core that drops 12 errors and 4 "suite could not run" warnings that didn't apply to a library.
+
 ## What's New in v1.0.0-rc05
 
 - **Log panels — one tone set for every log line** — web-components-core's example pages each coloured their log lines with their own classes (`.warn`, `.lv-error`, `data-kind="hook"` …), four schemes mixing severity with "what happened". A `.log-line` now takes one of five tones — `--ok`, `--info`, `--warn`, `--err`, `--muted`, the same names as `.pill` and `.status-dot` (which gain `--info` / `--muted`) — and `--action` marks a "▶ you clicked X" line. Kinds such as hook or callback map onto those tones; the kind itself goes in a cell as text. On `.log-panel--dark` the tones switch to fixed light tints (`--kmwc-console-ok|info|warn|err-color`), so they stay readable on the console in both themes, while a light `.log-panel` follows the page theme. Every line keeps its line breaks and indentation.
 - **Log panels — timeline columns, text logs and an empty placeholder** — The cells `.log-line__seq`, `__time`, `__source` and `__name` turn a line into aligned columns, with the detail after them wrapping in its own column; the name takes the line's tone. A log fed by `textContent` is a `<pre class="log-panel">`, `data-empty="(nothing yet)"` shows while a panel is empty, and `--log-max-height: none` lets a log grow. This replaces the page-local timeline CSS core's Lifecycle and Interaction pages carried.
 - **`.event-log` — the legacy console now renders as `.log-panel--dark`** — Many component pages (web-grid, web-dropzone, web-treeview, the showcases) still use `.event-log` / `.event-entry` / `.event-time` / `.event-name`, which differed slightly from the newer panel (grey base text, 0.8rem, a 200px cap, no columns). It is now the same panel, and an `.event-entry` holding `.event-time` / `.event-name` is a timeline row with an aligned time column and tones, so old and new logs look the same. Other `.event-log` markup — lines without `.event-entry`, page-own classes — only gets the panel look, so existing layouts don't break.
 - **Small helpers — `.mono`, `td.is-highlight`, `.check-list`** — `.mono` sets the monospace font without the code chip, and `textarea.mono` makes a JSON or config editor. `td.is-highlight` (or `th`) tints one table cell, where only whole rows could be highlighted before. `.check-list` stacks checkbox / radio options one per line, a long label wrapping beside its box, with room for a trailing `.pill`. The playground shows everything on the Widgets (WG01–WG07), Form controls (FC11) and Tables (TB06) pages.
-
-## What's New in v1.0.0-rc04
-
-- **Example-page grids — wide content scrolls instead of widening the page** — A `<pre>` or table inside a `.grid`, `.grid-2` or `.card-grid` item still pushed the page wider than a phone: grid items default to `min-width: auto` (their min-content), so the single `1fr` column at ≤ 768 px grew to fit the content instead of letting it scroll. Every item of the three grids now gets `min-width: 0`, the same rule pure-css puts on its `.pc-col-*` columns. Found by two agents migrating web-components-core's example pages, which drop their page-local workaround with this release.
-- **`.controls` — long `<code>` in a button wraps on a phone** — rc03 wrapped `<code>` only inside `.controls` labels, so a button whose label was an unbroken API name (`setAttribute("…")`) still overflowed the row. The wrap rule (`overflow-wrap: anywhere`) now covers any `<code>` in a `.controls` row, and a `.controls` button is capped at the row width. An e2e spec injects both cases at 390 px and checks that the page stays inside the screen.
-- **Playground — a Widgets page for the kit's opt-in helpers** — `.log-panel` (light and `--dark`), the legacy `.event-log`, `.pill` / `.status-dot` tones, `.display-sliders` and `.css-readout` had no demo, so their look was only checked on component pages. The new `examples-widgets.html` (WG01–WG04) shows them as they are today, including the gaps the coming log-tone work fixes (no line tones, leading spaces collapsing in a log line), and gets its own e2e spec.
 
 ## Catalogue
 
@@ -142,7 +143,8 @@ Every field is optional. Defaults are derived from the package.
   "tagline": "Feature-rich multiselect …",       // default: package.json description
   "tag": "web-multiselect",
   "prefix": "ms",                                // reserved CSS prefix (rulebook base-variables.md)
-  "library": {
+  "kind": "component",                           // default: the components.json entry's kind
+  "library": {                                   // false: no library build (see below)
     "entry": "src/index.ts",                     // default
     "globalName": "MultiSelect",                 // UMD global
     "fileName": "multiselect",                   // → dist/multiselect.js + .umd.js
@@ -165,7 +167,7 @@ Every field is optional. Defaults are derived from the package.
     "runner": "podman",
     "packageJsonPaths": ["package.json"]         // monorepos: list workspace package.jsons too
   },
-  "cssVariables": {
+  "cssVariables": {                              // false: no variables manifest, no check:vars
     "sources": ["src/css"],                      // dirs (stylesheets) or explicit files (any type)
     "internalVariables": ["ms-input-current-width"], // runtime internals, not theming knobs
     "checkMode": "declared"                      // or "consumed" (var() reads)
@@ -178,6 +180,16 @@ Every field is optional. Defaults are derived from the package.
   "sync": { "skippedFiles": [] }                 // e.g. ["Makefile"] to opt a file out
 }
 ```
+
+**A library** (registry `kind: "library"`, e.g. web-components-core) builds its
+package itself (`tsc`) or ships none. `"library": false` (or `{ "shouldBuild":
+false, "entry": … }` to keep the pages' entry script) makes plain `vite build`
+refuse to run — it is the devkit's library mode and would empty `dist/` — while
+`vite build --mode examples` still builds the site, and `kmwc sync` no longer
+proposes a `build: vite build` script. `"cssVariables": false` turns off the
+manifest check (no `check:vars` script, `kmwc check-vars` skips), for variables
+the checker can't see, such as names built by string interpolation. Doctor runs
+only the rulebook suites that apply to a library (see below).
 
 ### Vite preset
 
@@ -265,7 +277,8 @@ doctor` lists the ones still repeating the head/header boilerplate.
   `.demo-area`, `.demo-card`, `.code-block`, `.note(.warning|.info|.success|.error)`,
   `.grid`/`.card-grid`, `.reference-table` (+ `.table-*` modifiers), `.log-panel`, `.pill`,
   `.status-dot`, `.control-group`, buttons (`.btn-secondary`, `.btn-outline`,
-  `.btn-danger`) — while everything the kit **generates** is prefixed BEM
+  `.btn-danger`), `<kbd>` keys and `<mark>` search matches (the spotlight's look),
+  `.push-end` (to the end of a flex row) — while everything the kit **generates** is prefixed BEM
   (`kmwc-chapter-nav__item--active`, `kmwc-copy-link--copied`, …).
 - **Form controls** look the same on every page without a class: text fields,
   selects and list boxes (`multiple` / `size`), textareas, checkboxes, radios,
@@ -275,7 +288,9 @@ doctor` lists the ones still repeating the head/header boilerplate.
   selects and buttons share `--kmwc-control-height`, so a row of them lines up
   in any container, not only `.controls`. The rules are zero-specificity
   (`:where()`); `kmwc-native` on an element or an ancestor keeps the browser's
-  own controls (a light-DOM component that draws its own inputs). The
+  own controls (a light-DOM component that draws its own inputs). A number field
+  is 7rem wide; `.w-xs` / `.w-sm` / `.w-md` / `.w-lg` (4 / 6 / 9 / 12rem) size a
+  short field without an inline style. The
   playground's `examples-forms.html` shows them all.
 - **Tables:** any `<table>` gets a header fill, row lines and a hover tint;
   `.reference-table` is the full-width, fully bordered API table. Modifiers
@@ -351,7 +366,11 @@ kmwc check-release --tag t    latest ⇔ release version, rc ⇔ -rcN, version n
 kmwc new web-<name>           scaffold a component (--prefix, --title, --tag, --dir, --port, --minimal, --register)
                               --adopt: scaffold an ALREADY registered component (its port/prefix) to migrate into
 kmwc readme [--check]         regenerate this README's catalogue (devkit repo only)
+kmwc <command> --help         that command's usage — never runs the command
 ```
+
+An unknown option is an error (exit 2), never ignored — a typo can't run a
+command with its defaults.
 
 Generated files start with a `GENERATED by kmwc sync` header. Repo-specific
 make targets go in `Makefile.local`, which the generated Makefile includes at
@@ -364,6 +383,9 @@ and the e2e suite before building and publishing.
 base-variables, color-scheme, readme-structure, custom-elements-manifest,
 responsive-overlay, publish-command, example-pages) with `bash`, passing `kmwc.prefix`, and
 reports each `FAIL` as an error pointing at the matching `.checks.md` entry.
+A `library` runs only naming-conventions, readme-structure, publish-command
+and example-pages; the others check what a custom element ships (its CSS,
+manifest, overlay).
 When the rulebook isn't checked out (or there's no bash) the suites are
 skipped with a warning — the rulebook stays the single source of truth; the
 devkit never copies its rules.
