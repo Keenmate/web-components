@@ -7,11 +7,31 @@
     /* ==========================================================================
        LOG PANELS
        ==========================================================================
-       `.log-panel` — monospace, scrollable box for streaming output; light by
-       default, `.log-panel--dark` for the console look; height cap via
-       `--log-max-height`. `.event-log` is the legacy dark console with
-       `.event-*` entries — prefer `.log-panel` for new pages. */
-    .log-panel {
+       `.log-panel` — monospace, scrollable box for streaming output. Light by
+       default (it follows the page theme); `.log-panel--dark` for a console
+       stream (always dark). `--log-max-height` caps the height (`none` lets it
+       grow).
+
+       Lines: any child keeps its line breaks and indentation. `.log-line` takes
+       one tone — `--ok`, `--info`, `--warn`, `--err`, `--muted` (the pill
+       tones) — and `--action` marks a "you clicked X" line. Timeline cells
+       `.log-line__seq`, `__time`, `__source`, `__name` turn a line into columns;
+       the element after them is the detail. A panel fed by textContent is a
+       `<pre class="log-panel">`. `data-empty="(nothing yet)"` shows while the
+       panel is empty.
+
+       Legacy markup: `.event-log` is a `.log-panel--dark`, an `.event-entry`
+       holding `.event-time` / `.event-name` is a timeline line with those two
+       cells. Prefer the `.log-*` classes in new pages. */
+    .log-panel,
+    .event-log {
+        --kmwc-log-ok-color: var(--kmwc-success-color);
+        --kmwc-log-info-color: var(--kmwc-info-color);
+        --kmwc-log-warn-color: var(--kmwc-warning-color);
+        --kmwc-log-err-color: var(--kmwc-danger-color);
+        --kmwc-log-muted-color: var(--kmwc-text-color-3);
+        --kmwc-log-name-color: var(--kmwc-accent-color);
+        --kmwc-log-rule-color: var(--kmwc-border-color);
         font-family: var(--kmwc-mono-font-family);
         font-size: 0.85rem;
         line-height: 1.5;
@@ -24,31 +44,101 @@
         border: 1px solid var(--kmwc-border-color);
     }
 
-    .log-panel--dark {
+    .log-panel--dark,
+    .event-log {
+        --kmwc-log-ok-color: var(--kmwc-console-ok-color);
+        --kmwc-log-info-color: var(--kmwc-console-info-color);
+        --kmwc-log-warn-color: var(--kmwc-console-warn-color);
+        --kmwc-log-err-color: var(--kmwc-console-err-color);
+        --kmwc-log-muted-color: var(--kmwc-console-muted-color);
+        --kmwc-log-name-color: var(--kmwc-console-highlight-color);
+        --kmwc-log-rule-color: color-mix(in srgb, var(--kmwc-console-text-color) 12%, transparent);
         background: var(--kmwc-console-bg);
         color: var(--kmwc-console-text-color);
         border-color: transparent;
     }
 
-    .event-log {
-        background: var(--kmwc-console-bg);
-        color: var(--kmwc-console-muted-color);
-        padding: 1rem;
-        border-radius: var(--kmwc-radius-md);
-        font-family: var(--kmwc-mono-font-family);
-        font-size: 0.8rem;
-        max-height: 200px;
-        overflow-y: auto;
-        line-height: 1.5;
+    pre.log-panel {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
     }
 
-    .event-log .event-entry {
-        padding: 0.15rem 0;
-        border-bottom: 1px solid color-mix(in srgb, var(--kmwc-console-text-color) 6%, transparent);
+    :is(.log-panel, .event-log) > * {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
     }
 
-    .event-log .event-time { color: var(--kmwc-console-muted-color); }
-    .event-log .event-name { color: var(--kmwc-console-highlight-color); font-weight: 600; }
+    :is(.log-panel, .event-log)[data-empty]:empty::before {
+        content: attr(data-empty);
+        color: var(--kmwc-log-muted-color);
+    }
+
+    .log-line,
+    .event-entry {
+        color: var(--kmwc-log-tone, currentColor);
+    }
+
+    .log-line--ok { --kmwc-log-tone: var(--kmwc-log-ok-color); }
+    .log-line--info { --kmwc-log-tone: var(--kmwc-log-info-color); }
+    .log-line--warn { --kmwc-log-tone: var(--kmwc-log-warn-color); }
+    .log-line--err { --kmwc-log-tone: var(--kmwc-log-err-color); }
+    .log-line--muted { --kmwc-log-tone: var(--kmwc-log-muted-color); }
+
+    .log-line--action {
+        font-weight: 600;
+    }
+
+    .log-line--action:not(:first-child) {
+        margin-top: 0.35rem;
+    }
+
+    /* Timeline: a line with cells is a row; the cells keep their width and the
+       detail after them wraps in its own column. */
+    .log-line:has(> :is(.log-line__seq, .log-line__time, .log-line__source, .log-line__name)),
+    .event-entry:has(> :is(.event-time, .event-name)) {
+        display: flex;
+        column-gap: 0.6rem;
+        padding: 0.1rem 0;
+        border-bottom: 1px solid var(--kmwc-log-rule-color);
+    }
+
+    .log-line:has(> :is(.log-line__seq, .log-line__time, .log-line__source, .log-line__name)) > :last-child:not(.log-line__name) {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .log-line__seq,
+    .log-line__time,
+    .log-line__source,
+    .log-line__name,
+    .event-time,
+    .event-name {
+        flex: none;
+    }
+
+    .log-line__seq,
+    .log-line__time,
+    .event-time {
+        text-align: end;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .log-line__seq { min-width: 2.2rem; }
+    .log-line__time { min-width: 4.6rem; }
+
+    .log-line__seq,
+    .log-line__time,
+    .log-line__source,
+    .event-time {
+        color: var(--kmwc-log-muted-color);
+    }
+
+    .log-line__name,
+    .event-name {
+        color: var(--kmwc-log-tone, var(--kmwc-log-name-color));
+        font-weight: 600;
+    }
 
     /* ==========================================================================
        CSS-VARIABLE DEMO HELPERS
@@ -98,7 +188,9 @@
 
     /* ==========================================================================
        STATUS DOTS & PILLS
-       ========================================================================== */
+       ==========================================================================
+       One tone set with the log lines: --ok, --info, --warn, --err, --muted
+       (= the neutral default). */
     .status-dot {
         --kmwc-status-color: var(--kmwc-neutral-color);
         display: inline-block;
@@ -113,6 +205,8 @@
     .status-dot--ok { --kmwc-status-color: var(--kmwc-success-color); }
     .status-dot--warn { --kmwc-status-color: var(--kmwc-warning-color); }
     .status-dot--err { --kmwc-status-color: var(--kmwc-danger-color); }
+    .status-dot--info { --kmwc-status-color: var(--kmwc-info-color); }
+    .status-dot--muted { --kmwc-status-color: var(--kmwc-neutral-color); }
 
     .pill {
         --kmwc-status-color: var(--kmwc-neutral-color);
@@ -130,4 +224,6 @@
     .pill--ok { --kmwc-status-color: var(--kmwc-success-color); }
     .pill--warn { --kmwc-status-color: var(--kmwc-warning-color); }
     .pill--err { --kmwc-status-color: var(--kmwc-danger-color); }
+    .pill--info { --kmwc-status-color: var(--kmwc-info-color); }
+    .pill--muted { --kmwc-status-color: var(--kmwc-neutral-color); }
 }

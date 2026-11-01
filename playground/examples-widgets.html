@@ -1,64 +1,77 @@
 <meta name="kmwc:title" content="Widgets">
-<meta name="kmwc:subtitle" content="The kit's opt-in helpers: log panels, the event log, pills, status dots and CSS-variable readouts.">
+<meta name="kmwc:subtitle" content="The kit's opt-in helpers: log panels with line tones and timelines, pills, status dots, monospace text and CSS-variable readouts.">
 
 <link rel="stylesheet" href="examples-local.css">
 
 <div class="card">
-    <h2>WG01 · Log panels</h2>
-    <p><code>.log-panel</code> is a monospace, scrollable box for streaming output: light by default,
-        <code>.log-panel--dark</code> for the console look. <code>--log-max-height</code> caps the height
-        (220px by default). Lines have no tones yet, so every page colours its own, and a line's
-        leading spaces collapse (see the third line).</p>
+    <h2>WG01 · Log panels and line tones</h2>
+    <p><code>.log-panel</code> is a monospace, scrollable box for streaming output. It is light by default and
+        follows the page theme; use <code>.log-panel--dark</code> for a console stream, which stays dark.
+        <code>--log-max-height</code> caps the height (220px by default; <code>none</code> lets it grow).</p>
+    <p>A <code>.log-line</code> takes one tone, the same five as the pills: <code>--ok</code>,
+        <code>--info</code>, <code>--warn</code>, <code>--err</code>, <code>--muted</code>. <code>--action</code>
+        marks a "you clicked X" line. Every line keeps its line breaks and indentation. On the dark panel the
+        tones switch to light tints.</p>
     <kmwc-demo>
         <div class="grid" style="--grid-min: 260px; --grid-gap: 1rem">
             <div class="log-panel" id="wg-log-light">
-                <div>▶ clicked "Open"</div>
-                <div>open → isOpen: true</div>
-                <div>  focus moved to the input</div>
-                <div>warn: no items for "zz"</div>
-                <div>close → reason: escape</div>
+                <div class="log-line log-line--action">▶ clicked "Open"</div>
+                <div class="log-line log-line--info">open → isOpen: true</div>
+                <div class="log-line">  focus moved to the input</div>
+                <div class="log-line log-line--warn">warn: no items for "zz"</div>
+                <div class="log-line log-line--err">error: fetch failed (503)</div>
+                <div class="log-line log-line--ok">ok: retry succeeded</div>
+                <div class="log-line log-line--muted">note: the menu stays open</div>
             </div>
             <div class="log-panel log-panel--dark" id="wg-log-dark">
-                <div>▶ clicked "Open"</div>
-                <div>open → isOpen: true</div>
-                <div>  focus moved to the input</div>
-                <div>warn: no items for "zz"</div>
-                <div>close → reason: escape</div>
+                <div class="log-line log-line--action">▶ clicked "Open"</div>
+                <div class="log-line log-line--info">open → isOpen: true</div>
+                <div class="log-line">  focus moved to the input</div>
+                <div class="log-line log-line--warn">warn: no items for "zz"</div>
+                <div class="log-line log-line--err">error: fetch failed (503)</div>
+                <div class="log-line log-line--ok">ok: retry succeeded</div>
+                <div class="log-line log-line--muted">note: the menu stays open</div>
             </div>
         </div>
     </kmwc-demo>
 </div>
 
 <div class="card">
-    <h2>WG02 · Event log</h2>
-    <p><code>.event-log</code> is the older dark console with <code>.event-entry</code> lines, an
-        <code>.event-time</code> and an <code>.event-name</code>. Its height is fixed at 200px. New pages should
-        use <code>.log-panel</code>.</p>
+    <h2>WG02 · Event log (legacy markup)</h2>
+    <p><code>.event-log</code> is older markup many component pages still use. It renders as a
+        <code>.log-panel--dark</code>, and an <code>.event-entry</code> holding an <code>.event-time</code> and an
+        <code>.event-name</code> is a timeline line with those two cells, so old and new logs look the same.
+        Tones work here too. New pages should use the <code>.log-*</code> classes (WG01, WG05).</p>
     <kmwc-demo>
         <div class="event-log" id="wg-event-log">
-            <div class="event-entry"><span class="event-time">12:04:01.120</span> <span class="event-name">open</span> {"isOpen":true}</div>
-            <div class="event-entry"><span class="event-time">12:04:02.480</span> <span class="event-name">select</span> {"value":"apple"}</div>
-            <div class="event-entry"><span class="event-time">12:04:03.015</span> <span class="event-name">close</span> {"reason":"select"}</div>
+            <div class="event-entry"><span class="event-time">12:04:01.120</span><span class="event-name">open</span>{"isOpen":true}</div>
+            <div class="event-entry"><span class="event-time">12:04:02.480</span><span class="event-name">select</span>{"value":"apple"}</div>
+            <div class="event-entry log-line--warn"><span class="event-time">12:04:03.015</span><span class="event-name">close</span>{"reason":"select","warning":"the value was cleared by the page before the close event fired"}</div>
         </div>
     </kmwc-demo>
 </div>
 
 <div class="card">
     <h2>WG03 · Pills and status dots</h2>
-    <p><code>.pill</code> and <code>.status-dot</code> share three tones (<code>--ok</code>, <code>--warn</code>,
-        <code>--err</code>) and a neutral default.</p>
+    <p><code>.pill</code> and <code>.status-dot</code> share the log-line tones: <code>--ok</code>,
+        <code>--info</code>, <code>--warn</code>, <code>--err</code> and <code>--muted</code>, which is the neutral
+        default.</p>
     <kmwc-demo>
         <p id="wg-pills">
             <span class="pill">neutral</span>
             <span class="pill pill--ok">ok</span>
             <span class="pill pill--warn">warn</span>
             <span class="pill pill--err">err</span>
+            <span class="pill pill--info">info</span>
+            <span class="pill pill--muted">muted</span>
         </p>
         <p id="wg-dots">
             <span class="status-dot"></span>idle
             <span class="status-dot status-dot--ok"></span>connected
             <span class="status-dot status-dot--warn"></span>retrying
             <span class="status-dot status-dot--err"></span>offline
+            <span class="status-dot status-dot--info"></span>syncing
+            <span class="status-dot status-dot--muted"></span>paused
         </p>
     </kmwc-demo>
 </div>
@@ -102,5 +115,57 @@
             }
             renderReadout();
         </script>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>WG05 · Timeline log</h2>
+    <p>The cells <code>.log-line__seq</code>, <code>__time</code>, <code>__source</code> and <code>__name</code>
+        turn a line into columns, and whatever follows them is the detail, which wraps in its own column. A
+        tone colours the line and its name. Kinds such as hook, callback or note map onto the tones (here: hook
+        → <code>--info</code>, note → <code>--muted</code>); the kind itself goes in a cell as text.</p>
+    <kmwc-demo>
+        <div class="log-panel log-panel--dark" id="wg-timeline" style="--log-max-height: none">
+            <div class="log-line log-line--action">▶ clicked "Add item"</div>
+            <div class="log-line"><span class="log-line__seq">1</span><span class="log-line__time">+0 ms</span><span class="log-line__source">list</span><span class="log-line__name">update</span><span>items: 3 → 4</span></div>
+            <div class="log-line log-line--info"><span class="log-line__seq">2</span><span class="log-line__time">+2 ms</span><span class="log-line__source">list</span><span class="log-line__name">hook</span><span>onRender — the new row is measured before paint, then the scroll position is restored so the list does not jump under the pointer</span></div>
+            <div class="log-line log-line--muted"><span class="log-line__seq">3</span><span class="log-line__time">+2 ms</span><span class="log-line__source">page</span><span class="log-line__name">note</span><span>nothing re-rendered outside the list</span></div>
+            <div class="log-line log-line--err"><span class="log-line__seq">4</span><span class="log-line__time">+40 ms</span><span class="log-line__source">list</span><span class="log-line__name">error</span><span>save failed: 409 conflict</span></div>
+        </div>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>WG06 · A text log and the empty placeholder</h2>
+    <p>A log fed by <code>textContent</code> is a <code>&lt;pre class="log-panel"&gt;</code>: it keeps the
+        line breaks of the text. <code>data-empty</code> on any log panel is shown while the panel is empty.</p>
+    <div class="controls">
+        <button type="button" id="wg-text-append">Append a line</button>
+        <button type="button" class="btn-outline" id="wg-text-clear">Clear</button>
+    </div>
+    <kmwc-demo>
+        <pre class="log-panel" id="wg-text-log" data-empty="(nothing yet)"></pre>
+        <script type="module" data-kmwc-show>
+            const log = document.getElementById('wg-text-log');
+            let count = 0;
+            document.getElementById('wg-text-append').addEventListener('click', () => {
+                count += 1;
+                log.textContent += `${count > 1 ? '\n' : ''}resize #${count}\n  width: ${window.innerWidth}px`;
+            });
+            document.getElementById('wg-text-clear').addEventListener('click', () => {
+                count = 0;
+                log.textContent = '';
+            });
+        </script>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>WG07 · Monospace text</h2>
+    <p><code>.mono</code> sets the monospace font without the code chip, for values that are not code. On a
+        <code>&lt;textarea&gt;</code> it makes a JSON or config editor.</p>
+    <kmwc-demo>
+        <p>Folded: <span class="mono" id="wg-mono">strasse → STRASSE</span></p>
+        <textarea class="mono" id="wg-json" rows="4">{ "layers": ["base", "touch"], "rank": 2 }</textarea>
     </kmwc-demo>
 </div>

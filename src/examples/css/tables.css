@@ -9,7 +9,7 @@
      .table-striped    zebra rows
      .table-compact    tighter cells; controls inside shrink with them
      .table-full       full width
-     tr.is-highlight   an accent-tinted row
+     tr.is-highlight   an accent-tinted row (td.is-highlight: one cell)
      .num              a right-aligned, tabular-figure cell
 
    The base is zero-specificity (:where()), so a page or component rule wins;
@@ -103,7 +103,8 @@
     }
 
     tr.is-highlight,
-    tr.is-highlight:hover {
+    tr.is-highlight:hover,
+    :is(th, td).is-highlight {
         background: var(--kmwc-accent-light-bg);
     }
 

@@ -113,6 +113,11 @@
         --kmwc-console-text-color: #e2e8f0;
         --kmwc-console-muted-color: #94a3b8;
         --kmwc-console-highlight-color: #68d391;
+        /* Log-line tones on the console (always dark, so fixed light tints). */
+        --kmwc-console-ok-color: #68d391;
+        --kmwc-console-info-color: #7dd3fc;
+        --kmwc-console-warn-color: #fcd34d;
+        --kmwc-console-err-color: #fca5a5;
         --kmwc-inline-code-bg: light-dark(#edf2f7, #2b2b2b);
 
         /* ======================================================================

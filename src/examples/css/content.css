@@ -214,6 +214,16 @@
         color: var(--kmwc-text-color-3);
     }
 
+    /* Monospace text that isn't code (folded values, code-unit dumps); on a
+       textarea, a JSON / config editor. */
+    .mono {
+        font-family: var(--kmwc-mono-font-family);
+    }
+
+    textarea.mono {
+        font-size: 0.8125rem;
+    }
+
     .mt-1 {
         margin-top: 1rem;
     }

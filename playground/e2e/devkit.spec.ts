@@ -79,12 +79,12 @@ test.describe('examples kit', () => {
     await expect(container).toBeVisible();
     await expect(input).toBeFocused();
     await expect(page.locator('.kmwc-spotlight__home-heading').first()).toHaveText('Basic Usage · this page');
-    await expect(items).toHaveCount(31);
+    await expect(items).toHaveCount(36);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden'); // body scroll locked
 
     // wcp keys: ↑ wraps to the end, PgDn steps 8, Home back to the top.
     await page.keyboard.press('ArrowUp');
-    await expect(activeItem).toHaveAttribute('data-index', '30');
+    await expect(activeItem).toHaveAttribute('data-index', '35');
     await page.keyboard.press('Home');
     await page.keyboard.press('PageDown');
     await expect(activeItem).toHaveAttribute('data-index', '8');
@@ -214,18 +214,85 @@ test.describe('examples kit', () => {
       getComputedStyle(document.getElementById(id)!).backgroundColor));
     expect(backgrounds[0]).not.toBe(backgrounds[1]);
     expect(backgrounds[2]).toBe(backgrounds[1]);
+    // The legacy .event-log is a .log-panel--dark: same text colour, size and timeline rows.
+    for (const property of ['color', 'font-size', 'padding-left'] as const) {
+      const [panelValue, eventLogValue] = await page.evaluate((name) => ['wg-log-dark', 'wg-event-log'].map((id) =>
+        getComputedStyle(document.getElementById(id)!)[name]), property);
+      expect(eventLogValue, property).toBe(panelValue);
+    }
+    await expect(page.locator('#wg-event-log .event-entry').first()).toHaveCSS('display', 'flex');
+    const detailLefts = await page.locator('#wg-event-log .event-name').evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().left));
+    expect(new Set(detailLefts).size).toBe(1); // the time column has one width
+    // A wrapped detail stays in its column: the warn entry is taller, the time cell keeps one line.
+    const warnEntry = page.locator('#wg-event-log .event-entry.log-line--warn');
+    const timeHeight = await warnEntry.locator('.event-time').evaluate((cell) => cell.getBoundingClientRect().height);
+    expect(timeHeight).toBeLessThan(25);
+    await expect(warnEntry.locator('.event-name')).toHaveCSS('color', 'rgb(252, 211, 77)');
     await expect(page.locator('#wg-log-light')).toHaveCSS('overflow-y', 'auto');
     // Each pill / dot tone is its own colour.
     const pillColors = await page.locator('#wg-pills .pill').evaluateAll((pills) => pills.map((pill) => getComputedStyle(pill).color));
-    expect(new Set(pillColors).size).toBe(4);
+    expect(new Set(pillColors).size).toBe(5); // --muted is the neutral default
     const dotColors = await page.locator('#wg-dots .status-dot').evaluateAll((dots) => dots.map((dot) => getComputedStyle(dot).backgroundColor));
-    expect(new Set(dotColors).size).toBe(4);
+    expect(new Set(dotColors).size).toBe(5);
     // The sliders restyle the box and the readout follows.
     await expect(page.locator('#wg-sliders')).toHaveCSS('display', 'grid');
     await page.locator('#wg-padding').fill('30');
     await expect(page.locator('#wg-padding-value')).toHaveText('30px');
     await expect(page.locator('#wg-box')).toHaveCSS('padding-left', '30px');
     await expect(page.locator('#wg-inner')).toHaveText(/^\d+px$/);
+  });
+
+  test('log lines: tones per theme, indentation, timeline columns, text log and empty placeholder', async ({ page }) => {
+    await page.goto('/examples-widgets.html');
+    const toneColors = (panelId: string) => page.locator(`#${panelId} .log-line`).evaluateAll((lines) =>
+      lines.map((line) => getComputedStyle(line).color));
+    // Five tones plus the untoned lines: every tone its own colour, on both panels.
+    for (const panelId of ['wg-log-light', 'wg-log-dark']) {
+      expect(new Set(await toneColors(panelId)).size).toBe(6);
+    }
+    // The dark panel uses the console tints, not the light theme's dark text.
+    const [lightWarn, darkWarn] = await Promise.all(['wg-log-light', 'wg-log-dark'].map((panelId) =>
+      page.locator(`#${panelId} .log-line--warn`).evaluate((line) => getComputedStyle(line).color)));
+    expect(lightWarn).not.toBe(darkWarn);
+    expect(darkWarn).toBe('rgb(252, 211, 77)');
+    // Indentation survives; the action line is bold.
+    await expect(page.locator('#wg-log-light .log-line').nth(2)).toHaveCSS('white-space', 'pre-wrap');
+    await expect(page.locator('#wg-log-light .log-line--action')).toHaveCSS('font-weight', '600');
+    // Timeline: a line with cells is a row; the name takes the line's tone; the panel grows.
+    const timelineLine = page.locator('#wg-timeline .log-line').nth(2);
+    await expect(timelineLine).toHaveCSS('display', 'flex');
+    await expect(page.locator('#wg-timeline .log-line--action')).toHaveCSS('display', 'block');
+    const nameColor = await timelineLine.locator('.log-line__name').evaluate((cell) => getComputedStyle(cell).color);
+    expect(nameColor).toBe(await timelineLine.evaluate((line) => getComputedStyle(line).color));
+    await expect(page.locator('#wg-timeline')).toHaveCSS('max-height', 'none');
+    const seqLefts = await page.locator('#wg-timeline .log-line__time').evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().left));
+    expect(new Set(seqLefts).size).toBe(1); // the columns line up
+    // A text log keeps its line breaks; the placeholder shows only while empty.
+    const textLog = page.locator('#wg-text-log');
+    const placeholder = () => textLog.evaluate((log) => getComputedStyle(log, '::before').content);
+    expect(await placeholder()).toBe('"(nothing yet)"');
+    await page.locator('#wg-text-append').click();
+    await expect(textLog).toContainText('  width:');
+    expect(await placeholder()).toBe('none');
+    const lineHeight = await textLog.evaluate((log) => parseFloat(getComputedStyle(log).lineHeight));
+    const textHeight = await textLog.evaluate((log) => log.scrollHeight - parseFloat(getComputedStyle(log).paddingTop) * 2);
+    expect(Math.round(textHeight / lineHeight)).toBe(2);
+    // .mono: the monospace font without the code chip.
+    const monoFont = await page.locator('#wg-mono').evaluate((element) => getComputedStyle(element).fontFamily);
+    expect(monoFont).toBe(await page.locator('#wg-json').evaluate((element) => getComputedStyle(element).fontFamily));
+    expect(monoFont).not.toBe(await page.locator('h1').evaluate((element) => getComputedStyle(element).fontFamily));
+  });
+
+  test('check list and a highlighted table cell', async ({ page }) => {
+    await page.goto('/examples-forms.html');
+    const boxes = await page.locator('#fc-check-list input').evaluateAll((inputs) => inputs.map((input) => input.getBoundingClientRect().left));
+    expect(new Set(boxes).size).toBe(1); // one per line, aligned
+    const rows = await page.locator('#fc-check-list > label').evaluateAll((labels) => labels.map((label) => label.getBoundingClientRect().top));
+    expect(rows[0]).toBeLessThan(rows[1]);
+    await page.goto('/examples-tables.html');
+    const highlighted = await page.locator('#tb-cell td.is-highlight').first().evaluate((cell) => getComputedStyle(cell).backgroundColor);
+    const plain = await page.locator('#tb-cell td:not(.is-highlight)').nth(1).evaluate((cell) => getComputedStyle(cell).backgroundColor);
+    expect(highlighted).not.toBe(plain);
   });
 
   test('on a phone no example page is wider than the screen (tables scroll in their card)', async ({ page }) => {
