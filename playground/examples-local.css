@@ -16,3 +16,12 @@
     align-items: center;
     gap: 0.5rem;
 }
+
+/* WG04: the box the sliders restyle. */
+.wg-box {
+    padding: var(--box-padding, 12px);
+    border-radius: var(--box-radius, 6px);
+    border: 1px solid var(--kmwc-border-color);
+    background: var(--kmwc-elevated-bg);
+    margin-bottom: 0.75rem;
+}

@@ -79,12 +79,12 @@ test.describe('examples kit', () => {
     await expect(container).toBeVisible();
     await expect(input).toBeFocused();
     await expect(page.locator('.kmwc-spotlight__home-heading').first()).toHaveText('Basic Usage · this page');
-    await expect(items).toHaveCount(27);
+    await expect(items).toHaveCount(31);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden'); // body scroll locked
 
     // wcp keys: ↑ wraps to the end, PgDn steps 8, Home back to the top.
     await page.keyboard.press('ArrowUp');
-    await expect(activeItem).toHaveAttribute('data-index', '26');
+    await expect(activeItem).toHaveAttribute('data-index', '30');
     await page.keyboard.press('Home');
     await page.keyboard.press('PageDown');
     await expect(activeItem).toHaveAttribute('data-index', '8');
@@ -155,13 +155,13 @@ test.describe('examples kit', () => {
   test('index page renders from the registry, with cross-page nav', async ({ page }) => {
     await page.goto('/index.html');
     await expect(page.locator('.kmwc-index__header h1')).toHaveText('Web Playground');
-    await expect(page.locator('.kmwc-index__card')).toHaveCount(5);
+    await expect(page.locator('.kmwc-index__card')).toHaveCount(6);
     await expect(page.locator('.kmwc-index__version')).toHaveText(/^v0\.1\.0/);
     // Footer: the devkit that built the page, next to the Keenmate / GitHub links.
     const devkitLink = page.locator('.kmwc-index__footer .kmwc-index__devkit');
     await expect(devkitLink).toHaveText(`web-components-devkit v${DEVKIT_VERSION}`);
     await expect(devkitLink).toHaveAttribute('href', 'https://github.com/keenmate/web-components');
-    await expect(page.locator('.kmwc-chapter-nav__item')).toHaveCount(5);
+    await expect(page.locator('.kmwc-chapter-nav__item')).toHaveCount(6);
     await expect(page.locator('.kmwc-copy-link')).toHaveCount(0);
   });
 
@@ -171,6 +171,7 @@ test.describe('examples kit', () => {
     const heights = await page.locator('#fc-row').evaluate((row) =>
       [...row.querySelectorAll('button, select, input')].map((element) => element.getBoundingClientRect().height));
     expect(new Set(heights)).toEqual(new Set([36]));
+    await expect(page.locator('#fc-row')).toHaveCSS('display', 'flex'); // examples-local.css is linked
     // Checked checkbox / switch fill with the accent (kmwc.theme.accentColor #059669).
     await expect(page.locator('.card').nth(3).locator('input:checked:not(:disabled)')).toHaveCSS('background-color', 'rgb(5, 150, 105)');
     await expect(page.locator('#fc-indeterminate')).toHaveCSS('background-color', 'rgb(5, 150, 105)');
@@ -206,9 +207,30 @@ test.describe('examples kit', () => {
     await expect(page.locator('table.kmwc-native th').first()).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   });
 
+  test('widgets: log panels, event log, pills, status dots, CSS-variable readout', async ({ page }) => {
+    await page.goto('/examples-widgets.html');
+    // Light and dark log panels differ; the dark one is the console background.
+    const backgrounds = await page.evaluate(() => ['wg-log-light', 'wg-log-dark', 'wg-event-log'].map((id) =>
+      getComputedStyle(document.getElementById(id)!).backgroundColor));
+    expect(backgrounds[0]).not.toBe(backgrounds[1]);
+    expect(backgrounds[2]).toBe(backgrounds[1]);
+    await expect(page.locator('#wg-log-light')).toHaveCSS('overflow-y', 'auto');
+    // Each pill / dot tone is its own colour.
+    const pillColors = await page.locator('#wg-pills .pill').evaluateAll((pills) => pills.map((pill) => getComputedStyle(pill).color));
+    expect(new Set(pillColors).size).toBe(4);
+    const dotColors = await page.locator('#wg-dots .status-dot').evaluateAll((dots) => dots.map((dot) => getComputedStyle(dot).backgroundColor));
+    expect(new Set(dotColors).size).toBe(4);
+    // The sliders restyle the box and the readout follows.
+    await expect(page.locator('#wg-sliders')).toHaveCSS('display', 'grid');
+    await page.locator('#wg-padding').fill('30');
+    await expect(page.locator('#wg-padding-value')).toHaveText('30px');
+    await expect(page.locator('#wg-box')).toHaveCSS('padding-left', '30px');
+    await expect(page.locator('#wg-inner')).toHaveText(/^\d+px$/);
+  });
+
   test('on a phone no example page is wider than the screen (tables scroll in their card)', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
-    for (const pageName of ['examples-basic', 'examples-theming', 'examples-devkit', 'examples-forms', 'examples-tables']) {
+    for (const pageName of ['examples-basic', 'examples-theming', 'examples-devkit', 'examples-forms', 'examples-tables', 'examples-widgets']) {
       await page.goto(`/${pageName}.html`);
       await expect(page.locator('.kmwc-spotlight__trigger')).toBeVisible();
       const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
@@ -216,6 +238,22 @@ test.describe('examples kit', () => {
     }
     await page.goto('/examples-tables.html');
     await expect(page.locator('#tb-striped')).toHaveCSS('overflow-x', 'auto');
+  });
+
+  test('on a phone a wide pre in a grid item and long code in a .controls button stay inside the screen', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto('/examples-basic.html');
+    await expect(page.locator('.kmwc-spotlight__trigger')).toBeVisible();
+    const longCode = 'element.setAttribute("a-very-long-attribute-name", "a-very-long-attribute-value")';
+    await page.evaluate((code) => {
+      const card = document.querySelector('.card')!;
+      for (const gridClass of ['grid', 'grid-2', 'card-grid']) {
+        card.insertAdjacentHTML('beforeend', `<div class="${gridClass}"><div><pre>${code} ${code}</pre></div></div>`);
+      }
+      card.insertAdjacentHTML('beforeend', `<div class="controls"><button type="button"><code>${code.replaceAll(' ', '')}</code></button></div>`);
+    }, longCode);
+    const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+    expect(widths[0]).toBeLessThanOrEqual(widths[1]);
   });
 
   test('the control height leaves the kit copy buttons small', async ({ page }) => {

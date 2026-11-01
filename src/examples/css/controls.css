@@ -67,9 +67,14 @@
         max-width: 100%;
     }
 
-    .controls label code,
+    /* Long code in a label or button breaks instead of widening the row. */
+    .controls code,
     .toggle-label code {
         overflow-wrap: anywhere;
+    }
+
+    .controls button {
+        max-width: 100%;
     }
 
     /* A select is as wide as its longest option — cap it at the row. */

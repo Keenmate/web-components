@@ -177,6 +177,13 @@
         gap: var(--grid-gap, 2rem);
     }
 
+    /* A grid item's min-width defaults to its min-content, so a wide <pre> or
+       table would widen the column (and the page on a phone) instead of
+       scrolling inside the item. */
+    :is(.grid, .grid-2, .card-grid) > * {
+        min-width: 0;
+    }
+
     .grid-2 {
         --grid-min: 400px;
     }

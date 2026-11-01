@@ -1,0 +1,106 @@
+<meta name="kmwc:title" content="Widgets">
+<meta name="kmwc:subtitle" content="The kit's opt-in helpers: log panels, the event log, pills, status dots and CSS-variable readouts.">
+
+<link rel="stylesheet" href="examples-local.css">
+
+<div class="card">
+    <h2>WG01 · Log panels</h2>
+    <p><code>.log-panel</code> is a monospace, scrollable box for streaming output: light by default,
+        <code>.log-panel--dark</code> for the console look. <code>--log-max-height</code> caps the height
+        (220px by default). Lines have no tones yet, so every page colours its own, and a line's
+        leading spaces collapse (see the third line).</p>
+    <kmwc-demo>
+        <div class="grid" style="--grid-min: 260px; --grid-gap: 1rem">
+            <div class="log-panel" id="wg-log-light">
+                <div>▶ clicked "Open"</div>
+                <div>open → isOpen: true</div>
+                <div>  focus moved to the input</div>
+                <div>warn: no items for "zz"</div>
+                <div>close → reason: escape</div>
+            </div>
+            <div class="log-panel log-panel--dark" id="wg-log-dark">
+                <div>▶ clicked "Open"</div>
+                <div>open → isOpen: true</div>
+                <div>  focus moved to the input</div>
+                <div>warn: no items for "zz"</div>
+                <div>close → reason: escape</div>
+            </div>
+        </div>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>WG02 · Event log</h2>
+    <p><code>.event-log</code> is the older dark console with <code>.event-entry</code> lines, an
+        <code>.event-time</code> and an <code>.event-name</code>. Its height is fixed at 200px. New pages should
+        use <code>.log-panel</code>.</p>
+    <kmwc-demo>
+        <div class="event-log" id="wg-event-log">
+            <div class="event-entry"><span class="event-time">12:04:01.120</span> <span class="event-name">open</span> {"isOpen":true}</div>
+            <div class="event-entry"><span class="event-time">12:04:02.480</span> <span class="event-name">select</span> {"value":"apple"}</div>
+            <div class="event-entry"><span class="event-time">12:04:03.015</span> <span class="event-name">close</span> {"reason":"select"}</div>
+        </div>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>WG03 · Pills and status dots</h2>
+    <p><code>.pill</code> and <code>.status-dot</code> share three tones (<code>--ok</code>, <code>--warn</code>,
+        <code>--err</code>) and a neutral default.</p>
+    <kmwc-demo>
+        <p id="wg-pills">
+            <span class="pill">neutral</span>
+            <span class="pill pill--ok">ok</span>
+            <span class="pill pill--warn">warn</span>
+            <span class="pill pill--err">err</span>
+        </p>
+        <p id="wg-dots">
+            <span class="status-dot"></span>idle
+            <span class="status-dot status-dot--ok"></span>connected
+            <span class="status-dot status-dot--warn"></span>retrying
+            <span class="status-dot status-dot--err"></span>offline
+        </p>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>WG04 · CSS-variable sliders and readout</h2>
+    <p><code>.display-sliders</code> lays out (name, range, value) rows for a live CSS-variable demo.
+        <code>.css-readout</code> shows measured values as chips; <code>code.is-gap</code> marks a derived
+        figure.</p>
+    <kmwc-demo>
+        <div class="display-sliders" id="wg-sliders">
+            <label for="wg-padding">--box-padding</label>
+            <input id="wg-padding" type="range" min="0" max="32" value="12">
+            <output for="wg-padding" id="wg-padding-value">12px</output>
+            <label for="wg-radius">--box-radius</label>
+            <input id="wg-radius" type="range" min="0" max="24" value="6">
+            <output for="wg-radius" id="wg-radius-value">6px</output>
+        </div>
+        <div class="wg-box" id="wg-box">A box styled by the two variables</div>
+        <div class="css-readout" id="wg-readout">
+            <code>width <b id="wg-width">–</b></code>
+            <code>height <b id="wg-height">–</b></code>
+            <code class="is-gap">inner width <b id="wg-inner">–</b></code>
+        </div>
+        <script type="module" data-kmwc-show>
+            const box = document.getElementById('wg-box');
+            const renderReadout = () => {
+                const style = getComputedStyle(box);
+                const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+                document.getElementById('wg-width').textContent = `${Math.round(box.offsetWidth)}px`;
+                document.getElementById('wg-height').textContent = `${Math.round(box.offsetHeight)}px`;
+                document.getElementById('wg-inner').textContent = `${Math.round(box.clientWidth - padding)}px`;
+            };
+            for (const name of ['padding', 'radius']) {
+                const slider = document.getElementById(`wg-${name}`);
+                slider.addEventListener('input', () => {
+                    box.style.setProperty(`--box-${name}`, `${slider.value}px`);
+                    document.getElementById(`wg-${name}-value`).textContent = `${slider.value}px`;
+                    renderReadout();
+                });
+            }
+            renderReadout();
+        </script>
+    </kmwc-demo>
+</div>

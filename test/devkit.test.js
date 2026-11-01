@@ -448,7 +448,7 @@ test('chapter index: headings → code, title, page, link (coded by code, uncode
   const config = getPlaygroundConfig();
   const playgroundChapters = generateChapterIndex(config, getExamplePages(config));
   assert.ok(!playgroundChapters.some((chapter) => chapter.pageHref === 'index.html'));
-  assert.deepEqual([...new Set(playgroundChapters.map((chapter) => chapter.pageTitle))], ['Basic Usage', 'Devkit kit', 'Form controls', 'Tables', 'Theming']);
+  assert.deepEqual([...new Set(playgroundChapters.map((chapter) => chapter.pageTitle))], ['Basic Usage', 'Devkit kit', 'Form controls', 'Tables', 'Theming', 'Widgets']);
   assert.ok(playgroundChapters.some((chapter) => chapter.code === null && chapter.title === 'Summary'));
 });
 
