@@ -37,6 +37,7 @@ export const RULEBOOK_SUITES = [
   { name: 'custom-elements-manifest', isPrefixed: false },
   { name: 'responsive-overlay', isPrefixed: true },
   { name: 'publish-command', isPrefixed: false },
+  { name: 'example-pages', isPrefixed: false },
 ];
 
 function getMajorVersion(versionRange) {

@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **`kmwc doctor` runs the rulebook's new `example-pages` suite** — every example `<h2>`
+  carries a permanent section code (`TH07 · Title`), a prefix belongs to one page, no code
+  is used twice. The generated CLAUDE.md block points at the rule. The convention was
+  already in the scaffold and the playground but written down nowhere, so sessions
+  building new pages didn't know it.
+
 ## [1.0.0-rc02] - 2026-10-31 [PUBLISHED]
 
 ### Added

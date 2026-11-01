@@ -191,6 +191,7 @@ test('doctor: rulebook suite output is parsed into failures', () => {
   const suiteOutput = '\x1b[32m✅ PASS\x1b[0m C-CSS-1 ok\n\x1b[31m❌ FAIL\x1b[0m C-CSS-7 — 2 class(es) not BEM\n⏭  SKIP C-CSS-9 — n/a';
   assert.deepEqual(getSuiteFailures(suiteOutput), [{ checkId: 'C-CSS-7', reason: '2 class(es) not BEM' }]);
   assert.ok(RULEBOOK_SUITES.some((suite) => suite.name === 'publish-command'));
+  assert.ok(RULEBOOK_SUITES.some((suite) => suite.name === 'example-pages'));
 });
 
 test('doctor: packed dev-only files are leaks; the scaffold excludes AI guidance', () => {

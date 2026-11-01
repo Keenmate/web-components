@@ -27,6 +27,10 @@ locally — every local fork is how they drifted apart.
   `<meta name="kmwc:title" content="…">`, the devkit layout adds the rest. Shared text
   goes in `partials/` via `<kmwc-include>`; show code with `<kmwc-demo>` (the live
   markup IS the snippet) — never hand-copy a demo into a `.code-block`.
+- **Every example has a permanent code:** each `<h2>` starts `TH07 · Title`
+  (page prefix + number; a plain `Summary` is exempt). New examples take the
+  next free number; never renumber or reuse one — the rules are the rulebook's
+  `example-pages.md`.
 - **Controls persistence:**
   `import { attachControlsPersistence } from '@keenmate/web-components-devkit/examples'`.
   **Landing page:** `renderExamplesIndex({ pages })` from the same module.

@@ -325,7 +325,7 @@ and the e2e suite before building and publishing.
 **`kmwc doctor` and the rulebook.** Doctor runs every suite in the rulebook
 (component-structure, naming-conventions, css-structure, theme-container,
 base-variables, color-scheme, readme-structure, custom-elements-manifest,
-responsive-overlay, publish-command) with `bash`, passing `kmwc.prefix`, and
+responsive-overlay, publish-command, example-pages) with `bash`, passing `kmwc.prefix`, and
 reports each `FAIL` as an error pointing at the matching `.checks.md` entry.
 When the rulebook isn't checked out (or there's no bash) the suites are
 skipped with a warning — the rulebook stays the single source of truth; the
