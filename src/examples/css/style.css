@@ -20,8 +20,10 @@
 
 @import './tokens.css';
 @import './base.css';
+@import './form-controls.css';
 @import './controls.css';
 @import './content.css';
+@import './tables.css';
 @import './widgets.css';
 @import './demo.css';
 @import './copy-link.css';

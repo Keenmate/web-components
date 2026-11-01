@@ -21,8 +21,11 @@ locally — every local fork is how they drifted apart.
 - **Example page styles:** shared rules are in `@layer kmwc` and read
   `--base-*` tokens (pages support light / dark / auto via the theme switch), so
   any unlayered rule wins. Put component-only rules in `examples-local.css`.
-  Re-theme with `kmwc.theme.accentColor`, never by copying CSS. If a second
-  component needs a pattern, it belongs in the devkit.
+  Re-theme with `kmwc.theme.accentColor`, never by copying CSS. Native form
+  controls (inputs, selects, checkboxes, radios, `role="switch"`, buttons) and
+  tables are already styled by the kit (`.reference-table`, `.table-striped`,
+  `.table-compact`, …) — don't restyle them per page; `kmwc-native` opts an
+  element out. If a second component needs a pattern, it belongs in the devkit.
 - **Example pages are fragments:** no `<html>`/`<head>`/`<header>` — start with
   `<meta name="kmwc:title" content="…">`, the devkit layout adds the rest. Shared text
   goes in `partials/` via `<kmwc-include>`; show code with `<kmwc-demo>` (the live

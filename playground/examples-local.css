@@ -2,3 +2,17 @@
 .card p.local-override {
     color: rgb(200, 0, 0);
 }
+
+/* FC08: a page's own control row (like web-components-core's animation player). */
+.fc-player {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.fc-player label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}

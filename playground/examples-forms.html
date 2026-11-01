@@ -1,0 +1,221 @@
+<meta name="kmwc:title" content="Form controls">
+<meta name="kmwc:subtitle" content="The kit's one look for native inputs, selects, checkboxes, radios, switches and buttons — no classes needed.">
+
+<div class="card">
+    <h2>FC01 · Text fields</h2>
+    <p>Every text-like <code>&lt;input&gt;</code> has the control height, the input border and an accent
+        focus border with a halo. A required field turns red once the user has left it invalid
+        (<code>:user-invalid</code>), not while it starts empty.</p>
+    <div class="control-row">
+        <div class="control-group">
+            <label for="fc-text">Text</label>
+            <input id="fc-text" type="text" placeholder="Placeholder">
+        </div>
+        <div class="control-group">
+            <label for="fc-search">Search</label>
+            <input id="fc-search" type="search" placeholder="Search chapters…">
+        </div>
+        <div class="control-group">
+            <label for="fc-email">Email (required)</label>
+            <input id="fc-email" type="email" required placeholder="name@example.com">
+        </div>
+        <div class="control-group">
+            <label for="fc-password">Password</label>
+            <input id="fc-password" type="password" value="secret">
+        </div>
+        <div class="control-group">
+            <label for="fc-number">Number</label>
+            <input id="fc-number" type="number" value="42" min="0" max="100">
+        </div>
+        <div class="control-group">
+            <label for="fc-date">Date</label>
+            <input id="fc-date" type="date" value="2026-11-01">
+        </div>
+        <div class="control-group">
+            <label for="fc-time">Time</label>
+            <input id="fc-time" type="time" value="09:30">
+        </div>
+        <div class="control-group">
+            <label for="fc-disabled">Disabled</label>
+            <input id="fc-disabled" type="text" value="Can't touch this" disabled>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>FC02 · Selects and list boxes</h2>
+    <p>A single <code>&lt;select&gt;</code> gets the kit's caret, drawn in the input icon colour so it follows
+        the theme. <code>multiple</code> or <code>size</code> makes a list box: it grows with its rows and a selected
+        option is tinted with the accent.</p>
+    <div class="control-row">
+        <div class="control-group">
+            <label for="fc-select">Select</label>
+            <select id="fc-select">
+                <option>Light</option>
+                <option selected>Dark</option>
+                <option>Auto</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="fc-select-groups">With groups</label>
+            <select id="fc-select-groups">
+                <optgroup label="Components">
+                    <option>web-multiselect</option>
+                    <option>web-treeview</option>
+                </optgroup>
+                <optgroup label="Libraries">
+                    <option>pure-css</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="fc-select-disabled">Disabled</label>
+            <select id="fc-select-disabled" disabled>
+                <option>Locked</option>
+            </select>
+        </div>
+    </div>
+    <div class="control-row">
+        <div class="control-group">
+            <label for="fc-multiple">Multiple (Ctrl/⌘+click)</label>
+            <select id="fc-multiple" multiple size="5">
+                <option selected>Prague</option>
+                <option>Brno</option>
+                <option selected>Ostrava</option>
+                <option>Plzeň</option>
+                <option>Olomouc</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="fc-listbox">List box (size="4")</label>
+            <select id="fc-listbox" size="4">
+                <option>Daily</option>
+                <option selected>Weekly</option>
+                <option>Monthly</option>
+                <option>Yearly</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2>FC03 · Textarea</h2>
+    <div class="form-group">
+        <label for="fc-textarea">Notes</label>
+        <textarea id="fc-textarea" rows="4" placeholder="Resizes vertically…"></textarea>
+    </div>
+</div>
+
+<div class="card">
+    <h2>FC04 · Checkboxes</h2>
+    <p>The native checkbox, redrawn with the contract's checkbox render method: the box scales with
+        <code>--base-checkbox-scale</code>, the tick and the dash are <code>--base-icon-check</code> /
+        <code>--base-icon-indeterminate</code> — the same glyph every Keenmate component draws.</p>
+    <div class="controls">
+        <label><input type="checkbox"> Unchecked</label>
+        <label><input type="checkbox" checked> Checked</label>
+        <label><input type="checkbox" id="fc-indeterminate"> Indeterminate</label>
+        <label><input type="checkbox" disabled> Disabled</label>
+        <label><input type="checkbox" checked disabled> Checked, disabled</label>
+    </div>
+    <script type="module">
+        // Indeterminate is a property, not an attribute.
+        document.getElementById('fc-indeterminate').indeterminate = true;
+    </script>
+</div>
+
+<div class="card">
+    <h2>FC05 · Radios</h2>
+    <fieldset>
+        <legend>Delivery</legend>
+        <div class="controls">
+            <label><input type="radio" name="fc-delivery" checked> Standard</label>
+            <label><input type="radio" name="fc-delivery"> Express</label>
+            <label><input type="radio" name="fc-delivery" disabled> Drone (soon)</label>
+        </div>
+    </fieldset>
+</div>
+
+<div class="card">
+    <h2>FC06 · Switches</h2>
+    <p>A switch is a checkbox with <code>role="switch"</code> — screen readers announce it as on / off.</p>
+    <kmwc-demo>
+        <div class="controls">
+            <label><input type="checkbox" role="switch" checked> Notifications</label>
+            <label><input type="checkbox" role="switch"> Compact mode</label>
+            <label><input type="checkbox" role="switch" disabled> Beta features</label>
+        </div>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>FC07 · Range, colour, file, progress</h2>
+    <div class="controls">
+        <label>Volume <input type="range" min="0" max="100" value="60"></label>
+        <label>Accent <input type="color" value="#3b82f6"></label>
+        <label>Progress <progress max="100" value="70">70 %</progress></label>
+    </div>
+    <div class="form-group">
+        <label for="fc-file">Attachment</label>
+        <input id="fc-file" type="file">
+    </div>
+</div>
+
+<div class="card">
+    <h2>FC08 · Buttons and fields in one row</h2>
+    <p>Buttons, inputs and selects share <code>--kmwc-control-height</code>, so a row of them lines up —
+        also in a page's own container, not just a <code>.controls</code> row.</p>
+    <div class="fc-player" id="fc-row">
+        <button type="button">▶ Play</button>
+        <button type="button" disabled>Step ›</button>
+        <button type="button">↺ Restart</button>
+        <label>Speed
+            <select>
+                <option>1×</option>
+                <option selected>2×</option>
+                <option>4×</option>
+            </select>
+        </label>
+        <input type="search" placeholder="Filter…">
+        <button type="button" class="btn-secondary">Secondary</button>
+        <button type="button" class="btn-outline">Outline</button>
+        <button type="button" class="btn-danger">Danger</button>
+    </div>
+</div>
+
+<div class="card">
+    <h2>FC09 · A demo form</h2>
+    <form id="fc-form" onsubmit="event.preventDefault()">
+        <div class="form-group">
+            <label for="fc-name">Name</label>
+            <input id="fc-name" type="text" required placeholder="Ada Lovelace">
+            <small class="form-text">Inside a <code>.form-group</code> a field takes the full row.</small>
+        </div>
+        <div class="form-group">
+            <label for="fc-role">Role</label>
+            <select id="fc-role">
+                <option>Developer</option>
+                <option>Designer</option>
+            </select>
+        </div>
+        <label class="toggle-label"><input type="checkbox" required> I accept the terms</label>
+        <div class="form-actions">
+            <button type="submit">Submit</button>
+            <button type="reset" class="btn-outline">Reset</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>FC10 · Opting out</h2>
+    <p>Every rule is zero-specificity (<code>:where()</code>), so any page or component rule wins. A light-DOM
+        component that draws its own inputs, or a demo that needs the browser's controls, puts
+        <code>kmwc-native</code> on the element or an ancestor.</p>
+    <kmwc-demo>
+        <div class="controls kmwc-native">
+            <label><input type="checkbox" checked> Native checkbox</label>
+            <select><option>Native select</option></select>
+            <input type="text" placeholder="Native input">
+        </div>
+    </kmwc-demo>
+</div>

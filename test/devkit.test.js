@@ -243,6 +243,45 @@ test('kit CSS: colour literals live only in tokens.css', () => {
   }
 });
 
+test('kit never sets a --base-* variable: components on example pages keep their defaults', () => {
+  // kmwc.theme and the kit tokens style the demo UI only (--kmwc-*); the kit may
+  // read --base-*, never declare or set one, or every component would be themed.
+  const kitFiles = [
+    ...readdirSync(join(DEVKIT_ROOT, 'src', 'examples', 'css')).map((name) => join('src', 'examples', 'css', name)),
+    ...readdirSync(join(DEVKIT_ROOT, 'src', 'examples')).filter((name) => name.endsWith('.js')).map((name) => join('src', 'examples', name)),
+    ...readdirSync(join(DEVKIT_ROOT, 'src', 'vite')).filter((name) => name.endsWith('.js')).map((name) => join('src', 'vite', name)),
+    join('templates', 'examples-layout.html'),
+  ];
+  for (const filePath of kitFiles) {
+    const fileText = readFileSync(join(DEVKIT_ROOT, filePath), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.ok(!/(^|[{;\s])--base-[a-z0-9-]+\s*:/m.test(fileText), `${filePath} declares a --base-* variable`);
+    assert.ok(!/setProperty\(\s*['"`]--base-/.test(fileText), `${filePath} sets a --base-* variable`);
+  }
+});
+
+test('scaffold CSS never selects the host page: no universal or bare element selectors', () => {
+  // The component stylesheet also reaches the page (index.ts imports it for the
+  // FOUC rule), in a layer that beats @layer kmwc — an unscoped `*` or `input`
+  // rule restyles every page. Allowed: :host…, the component tag, prefixed classes.
+  const cssDirectories = ['templates/new/src/css', 'templates/new-minimal/src/css', 'playground/src/css'];
+  for (const directory of cssDirectories) {
+    for (const fileName of readdirSync(join(DEVKIT_ROOT, directory))) {
+      const cssText = readFileSync(join(DEVKIT_ROOT, directory, fileName), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replaceAll('{{TAG}}', 'web-tag')
+        .replace(/\{\{[A-Z_]+\}\}/g, 'x');
+      for (const [, prelude] of cssText.matchAll(/([^{};]+)\{/g)) {
+        const selectorList = prelude.trim();
+        if (/^@|^(from|to|\d+%)/.test(selectorList)) continue;
+        for (const selector of selectorList.split(',').map((part) => part.trim())) {
+          const isPageWide = /^(\*|[a-z][a-z0-9]*)(?![-a-z0-9])/.test(selector);
+          assert.ok(!isPageWide, `${directory}/${fileName}: "${selector}" reaches the host page`);
+        }
+      }
+    }
+  }
+});
+
 function getHtmlTransformer(pluginConfig, { command = 'serve', mode = 'development' } = {}) {
   const plugin = createExamplesPlugin(pluginConfig);
   plugin.configResolved({ command, mode, build: { outDir: 'dist-examples' } });
@@ -409,7 +448,7 @@ test('chapter index: headings → code, title, page, link (coded by code, uncode
   const config = getPlaygroundConfig();
   const playgroundChapters = generateChapterIndex(config, getExamplePages(config));
   assert.ok(!playgroundChapters.some((chapter) => chapter.pageHref === 'index.html'));
-  assert.deepEqual([...new Set(playgroundChapters.map((chapter) => chapter.pageTitle))], ['Basic Usage', 'Devkit kit', 'Theming']);
+  assert.deepEqual([...new Set(playgroundChapters.map((chapter) => chapter.pageTitle))], ['Basic Usage', 'Devkit kit', 'Form controls', 'Tables', 'Theming']);
   assert.ok(playgroundChapters.some((chapter) => chapter.code === null && chapter.title === 'Summary'));
 });
 

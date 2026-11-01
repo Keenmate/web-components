@@ -9,6 +9,7 @@
         align-items: center;
         gap: 0.35rem;
         font-size: 0.8rem;
+        min-height: 0;  /* not the control height (button rule) */
         line-height: 1;
         padding: 0.25rem 0.4rem;
         margin-inline-start: 0.15rem;

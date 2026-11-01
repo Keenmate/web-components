@@ -79,12 +79,12 @@ test.describe('examples kit', () => {
     await expect(container).toBeVisible();
     await expect(input).toBeFocused();
     await expect(page.locator('.kmwc-spotlight__home-heading').first()).toHaveText('Basic Usage · this page');
-    await expect(items).toHaveCount(12);
+    await expect(items).toHaveCount(27);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden'); // body scroll locked
 
     // wcp keys: ↑ wraps to the end, PgDn steps 8, Home back to the top.
     await page.keyboard.press('ArrowUp');
-    await expect(activeItem).toHaveAttribute('data-index', '11');
+    await expect(activeItem).toHaveAttribute('data-index', '26');
     await page.keyboard.press('Home');
     await page.keyboard.press('PageDown');
     await expect(activeItem).toHaveAttribute('data-index', '8');
@@ -155,14 +155,93 @@ test.describe('examples kit', () => {
   test('index page renders from the registry, with cross-page nav', async ({ page }) => {
     await page.goto('/index.html');
     await expect(page.locator('.kmwc-index__header h1')).toHaveText('Web Playground');
-    await expect(page.locator('.kmwc-index__card')).toHaveCount(3);
+    await expect(page.locator('.kmwc-index__card')).toHaveCount(5);
     await expect(page.locator('.kmwc-index__version')).toHaveText(/^v0\.1\.0/);
     // Footer: the devkit that built the page, next to the Keenmate / GitHub links.
     const devkitLink = page.locator('.kmwc-index__footer .kmwc-index__devkit');
     await expect(devkitLink).toHaveText(`web-components-devkit v${DEVKIT_VERSION}`);
     await expect(devkitLink).toHaveAttribute('href', 'https://github.com/keenmate/web-components');
-    await expect(page.locator('.kmwc-chapter-nav__item')).toHaveCount(3);
+    await expect(page.locator('.kmwc-chapter-nav__item')).toHaveCount(5);
     await expect(page.locator('.kmwc-copy-link')).toHaveCount(0);
+  });
+
+  test('form controls: one height, accent states, opt-out with .kmwc-native', async ({ page }) => {
+    await page.goto('/examples-forms.html');
+    // A page's own row (no .controls): buttons, select and input line up at --kmwc-control-height.
+    const heights = await page.locator('#fc-row').evaluate((row) =>
+      [...row.querySelectorAll('button, select, input')].map((element) => element.getBoundingClientRect().height));
+    expect(new Set(heights)).toEqual(new Set([36]));
+    // Checked checkbox / switch fill with the accent (kmwc.theme.accentColor #059669).
+    await expect(page.locator('.card').nth(3).locator('input:checked:not(:disabled)')).toHaveCSS('background-color', 'rgb(5, 150, 105)');
+    await expect(page.locator('#fc-indeterminate')).toHaveCSS('background-color', 'rgb(5, 150, 105)');
+    await expect(page.locator('input[role="switch"]:checked')).toHaveCSS('background-color', 'rgb(5, 150, 105)');
+    // Focus: accent border.
+    await page.locator('#fc-text').focus();
+    await expect(page.locator('#fc-text')).toHaveCSS('border-top-color', 'rgb(5, 150, 105)');
+    // .kmwc-native keeps the browser's controls.
+    await expect(page.locator('.kmwc-native input[type="checkbox"]')).toHaveCSS('appearance', 'auto');
+    await expect(page.locator('.kmwc-native select')).not.toHaveCSS('height', '36px');
+    // The scaffold component's CSS no longer resets box-sizing on the page.
+    await expect(page.locator('.card').first()).toHaveCSS('box-sizing', 'border-box');
+  });
+
+  test('tables: any table styled, modifiers, compact controls, opt-out', async ({ page }) => {
+    await page.goto('/examples-tables.html');
+    const headerFill = await page.locator('#tb-bare th').first().evaluate((element) => getComputedStyle(element).backgroundColor);
+    expect(headerFill).not.toBe('rgba(0, 0, 0, 0)');
+    await expect(page.locator('#tb-bare td').first()).toHaveCSS('border-bottom-style', 'solid');
+    await expect(page.locator('#tb-bare td.num').first()).toHaveCSS('text-align', 'end');
+    // .reference-table keeps its full width and boxed cells.
+    const widths = await page.locator('#tb-reference').evaluate((table) => {
+      const style = getComputedStyle(table.parentElement!);
+      return [table.getBoundingClientRect().width, table.parentElement!.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)];
+    });
+    expect(Math.abs(widths[0] - widths[1])).toBeLessThan(1);
+    await expect(page.locator('#tb-reference td').first()).toHaveCSS('border-left-style', 'solid');
+    // .table-compact lowers the control height for the controls in it.
+    for (const selector of ['input[type="text"]', 'select', 'button']) {
+      await expect(page.locator(`#tb-compact ${selector}`).first()).toHaveCSS('height', '28px');
+    }
+    // kmwc-native: no kit fill.
+    await expect(page.locator('table.kmwc-native th').first()).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  });
+
+  test('on a phone no example page is wider than the screen (tables scroll in their card)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    for (const pageName of ['examples-basic', 'examples-theming', 'examples-devkit', 'examples-forms', 'examples-tables']) {
+      await page.goto(`/${pageName}.html`);
+      await expect(page.locator('.kmwc-spotlight__trigger')).toBeVisible();
+      const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+      expect(widths[0], `${pageName} is wider than the phone`).toBeLessThanOrEqual(widths[1]);
+    }
+    await page.goto('/examples-tables.html');
+    await expect(page.locator('#tb-striped')).toHaveCSS('overflow-x', 'auto');
+  });
+
+  test('the control height leaves the kit copy buttons small', async ({ page }) => {
+    await page.goto('/examples-devkit.html');
+    const copyLinkHeight = await page.locator('.kmwc-copy-link').first().evaluate((element) => element.getBoundingClientRect().height);
+    const demoCopyHeight = await page.locator('.kmwc-demo__copy').first().evaluate((element) => element.getBoundingClientRect().height);
+    expect(copyLinkHeight).toBeLessThan(30);
+    expect(demoCopyHeight).toBeLessThan(30);
+  });
+
+  test('form controls and tables follow a --base-* theme', async ({ page }) => {
+    await page.goto('/examples-forms.html');
+    await page.evaluate(() => {
+      const rootStyle = document.documentElement.style;
+      rootStyle.setProperty('--base-input-border-color', '#ff8800');
+      rootStyle.setProperty('--base-input-bg', '#fffbeb');
+    });
+    await expect(page.locator('#fc-search')).toHaveCSS('border-top-color', 'rgb(255, 136, 0)');
+    await expect(page.locator('#fc-search')).toHaveCSS('background-color', 'rgb(255, 251, 235)');
+    // (The accent is the site's kmwc.theme.accentColor here, which wins over --base-primary-color.)
+    // Dark mode: fields sit on the dark input surface, not the light default.
+    await page.evaluate(() => {
+      document.documentElement.removeAttribute('style');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    });
+    await expect(page.locator('#fc-search')).toHaveCSS('background-color', 'rgb(30, 41, 59)');
   });
 
   test('theme tokens, local overrides and version badge', async ({ page }) => {
@@ -176,6 +255,9 @@ test.describe('examples kit', () => {
     // Badge is stripped from the chapter label.
     await expect(page.locator('.kmwc-chapter-nav__item').first()).toHaveText('DK01 · Accent tokens');
     await expect(page.locator('#page-version')).toHaveText(/^v0\.1\.0/);
+    // kmwc.theme styles the demo UI only: the component keeps the contract's default accent.
+    const componentAccent = await page.locator('#dk-component').evaluate((element) => getComputedStyle(element).getPropertyValue('--pg-accent-color').trim());
+    expect(componentAccent).toBe('#3b82f6');
   });
 
   test('neutral fills keep their own text colour under a light primary', async ({ page }) => {

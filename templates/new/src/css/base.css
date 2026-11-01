@@ -36,8 +36,10 @@
     display: none;
 }
 
-*,
-*::before,
-*::after {
+/* Scoped to :host — the whole file also reaches the page through index.ts's
+   CSS import, and a bare `*` would reset box-sizing on the host page too. */
+:host *,
+:host *::before,
+:host *::after {
     box-sizing: inherit;
 }

@@ -1,0 +1,141 @@
+/* ==============================================================================
+   EXAMPLES KIT — TABLES
+   ==============================================================================
+   Any <table> on a page gets the base look (header fill, row lines, hover),
+   modelled on pure-admin's .pa-table. `.reference-table` is the full-width,
+   fully bordered API / option table most pages use. Modifiers combine:
+
+     .table-bordered   every cell boxed (what .reference-table has)
+     .table-striped    zebra rows
+     .table-compact    tighter cells; controls inside shrink with them
+     .table-full       full width
+     tr.is-highlight   an accent-tinted row
+     .num              a right-aligned, tabular-figure cell
+
+   The base is zero-specificity (:where()), so a page or component rule wins;
+   `kmwc-native` on the table (or an ancestor) leaves it unstyled. */
+@layer kmwc {
+    /* ==========================================================================
+       BASE — every table
+       ========================================================================== */
+    :where(table):not(:where(.kmwc-native, .kmwc-native *)) {
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+
+    :where(table):not(:where(.kmwc-native, .kmwc-native *)) :where(th, td) {
+        padding: 0.6rem 0.9rem;
+        text-align: start;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--kmwc-border-color);
+    }
+
+    :where(table):not(:where(.kmwc-native, .kmwc-native *)) :where(th) {
+        background: var(--kmwc-elevated-bg);
+        color: var(--kmwc-text-color-1);
+        font-weight: 600;
+    }
+
+    :where(table):not(:where(.kmwc-native, .kmwc-native *)) :where(thead th) {
+        border-bottom: 2px solid var(--kmwc-border-color);
+    }
+
+    :where(table):not(:where(.kmwc-native, .kmwc-native *)) :where(tbody tr:hover) {
+        background: var(--kmwc-hover-bg);
+    }
+
+    :where(table):not(:where(.kmwc-native, .kmwc-native *)) :where(tfoot td, tfoot th) {
+        border-top: 2px solid var(--kmwc-border-color);
+        border-bottom: none;
+        font-weight: 600;
+    }
+
+    :where(table):not(:where(.kmwc-native, .kmwc-native *)) :where(caption) {
+        caption-side: top;
+        padding-bottom: 0.5rem;
+        text-align: start;
+        font-size: 0.8rem;
+        color: var(--kmwc-text-color-2);
+    }
+
+    :where(table):not(:where(.kmwc-native, .kmwc-native *)) :where(code) {
+        padding: 0.125rem 0.375rem;
+        font-size: 0.75rem;
+    }
+
+    /* ==========================================================================
+       MODIFIERS
+       ========================================================================== */
+    .table-full {
+        width: 100%;
+    }
+
+    .table-bordered :is(th, td) {
+        border: 1px solid var(--kmwc-border-color);
+    }
+
+    .table-striped tbody tr:nth-child(even) {
+        background: var(--kmwc-table-stripe-bg);
+    }
+
+    .table-striped tbody tr:nth-child(even):hover {
+        background: var(--kmwc-hover-bg);
+    }
+
+    /* Tighter cells, and the controls in them shrink too: buttons, inputs and
+       selects read --kmwc-control-height (form-controls.css). */
+    .table-compact {
+        --kmwc-control-height: 1.75rem;
+        font-size: 0.8125rem;
+    }
+
+    .table-compact :is(th, td) {
+        padding: 0.3rem 0.55rem;
+    }
+
+    .table-compact :is(button, input, select) {
+        font-size: 0.8125rem;
+    }
+
+    .table-compact button {
+        padding-inline: 0.6rem;
+    }
+
+    tr.is-highlight,
+    tr.is-highlight:hover {
+        background: var(--kmwc-accent-light-bg);
+    }
+
+    :is(th, td).num {
+        text-align: end;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       REFERENCE TABLE — the API / option table (full width, every cell boxed)
+       ========================================================================== */
+    .reference-table {
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    .reference-table th,
+    .reference-table td {
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--kmwc-border-color);
+    }
+
+    /* A wide table scrolls inside its card instead of widening the page.
+       Widening matters beyond looks: mobile browsers grow the layout viewport
+       to fit, so a 390 px phone reports ~600 px and the page's own device /
+       breakpoint detection lies. */
+    @media (max-width: 768px) {
+        :where(table):not(:where(.kmwc-native, .kmwc-native *)) {
+            display: block;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+    }
+}

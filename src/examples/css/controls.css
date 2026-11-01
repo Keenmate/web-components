@@ -1,7 +1,8 @@
 /* ==============================================================================
    EXAMPLES KIT — CONTROLS
    ==============================================================================
-   Demo forms, the `.controls` switch rows, demo areas and buttons. */
+   Demo forms, the `.controls` switch rows, demo areas and buttons. How the
+   native controls themselves look is form-controls.css. */
 @layer kmwc {
     /* ==========================================================================
        FORMS
@@ -80,26 +81,6 @@
         margin-bottom: 0.75rem;
     }
 
-    .controls input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-        accent-color: var(--kmwc-accent-color);
-    }
-
-    .controls select,
-    .controls input[type="text"],
-    .controls input[type="number"],
-    .controls input[type="search"],
-    .control-group input,
-    .control-group select {
-        padding: 0.4rem 0.6rem;
-        border: var(--kmwc-input-border);
-        border-radius: var(--kmwc-radius-sm);
-        font-size: 0.875rem;
-        background: var(--kmwc-input-bg);
-        color: var(--kmwc-input-color);
-    }
-
     /* Control group — a label stacked over an input/select; rows of them wrap
        via `.control-row`. */
     .control-row {
@@ -168,11 +149,22 @@
         cursor: pointer;
         background: var(--kmwc-accent-color);
         color: var(--kmwc-text-color-on-accent);
-        border: none;
-        padding: 0.5rem 1rem;
+        /* The control height (form-controls.css): a transparent border, so an
+           outline button is as tall as a filled one, and a fixed line box. */
+        border: 1px solid transparent;
+        min-height: var(--kmwc-control-height);
+        padding: calc((var(--kmwc-control-height) - 1.25rem - 2px) / 2) 1rem;
         border-radius: var(--kmwc-radius-sm);
+        font: inherit;
         font-size: 0.875rem;
+        line-height: 1.25rem;
+        vertical-align: middle;
         transition: background 0.2s;
+    }
+
+    button:focus-visible {
+        outline: 2px solid var(--kmwc-accent-color);
+        outline-offset: 2px;
     }
 
     button:hover,

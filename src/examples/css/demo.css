@@ -32,8 +32,10 @@
         position: absolute;
         top: 0.5rem;
         right: 0.5rem;
+        min-height: 0;  /* not the control height (button rule) */
         padding: 0.25rem 0.75rem;
         font-size: 0.75rem;
+        line-height: normal;
         background: color-mix(in srgb, var(--kmwc-code-text-color) 10%, transparent);
         color: var(--kmwc-code-text-color);
         border: 1px solid color-mix(in srgb, var(--kmwc-code-text-color) 20%, transparent);

@@ -72,6 +72,7 @@
         --kmwc-border-color: var(--base-border-color, light-dark(oklch(from var(--kmwc-main-bg) calc(l - 0.096) c h), oklch(from var(--kmwc-main-bg) calc(l + 0.192) c h)));
         --kmwc-border-color-strong: var(--base-input-border-color, light-dark(color-mix(in srgb, var(--kmwc-text-color-1) 45%, var(--kmwc-main-bg)), color-mix(in srgb, var(--kmwc-text-color-1) 35%, var(--kmwc-main-bg))));  /* control outline */
         --kmwc-shadow-color: var(--base-shadow-color, light-dark(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.4)));
+        --kmwc-table-stripe-bg: color-mix(in srgb, var(--kmwc-elevated-bg) 55%, transparent);  /* zebra rows */
         --kmwc-overlay-bg: var(--base-overlay-bg, rgba(30, 41, 59, 0.5));  /* behind a modal (spotlight) */
 
         /* ======================================================================
@@ -89,6 +90,18 @@
         --kmwc-input-bg: var(--base-input-bg, var(--kmwc-main-bg));
         --kmwc-input-color: var(--base-input-text-color, var(--kmwc-text-color-1));
         --kmwc-input-border: var(--base-input-border, 1px solid var(--kmwc-border-color-strong));
+        --kmwc-input-border-hover: var(--base-input-border-hover, 1px solid var(--kmwc-accent-color));
+        --kmwc-input-border-focus: var(--base-input-border-focus, 1px solid var(--kmwc-accent-color));
+        --kmwc-input-shadow-color-focus: var(--base-input-shadow-color-focus, color-mix(in srgb, var(--kmwc-accent-color) 5%, transparent));
+        --kmwc-input-box-shadow-focus: var(--base-input-box-shadow-focus, 0 0 0 3px var(--kmwc-input-shadow-color-focus));
+        --kmwc-input-placeholder-color: var(--base-input-placeholder-color, var(--kmwc-text-color-3));
+        --kmwc-input-icon-color: var(--base-input-icon-color, var(--kmwc-text-color-3));  /* select caret */
+        --kmwc-input-disabled-bg: var(--base-input-bg-disabled, var(--base-disabled-bg, light-dark(oklch(from var(--kmwc-main-bg) calc(l - 0.024) c h), oklch(from var(--kmwc-main-bg) calc(l + 0.048) c h))));
+        --kmwc-disabled-opacity: var(--base-disabled-opacity, 0.65);
+        --kmwc-checkbox-border-color: var(--base-checkbox-border-color, var(--kmwc-border-color-strong));
+        --kmwc-icon-check: var(--base-icon-check, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M20 6 9 17l-5-5%22/%3E%3C/svg%3E"));
+        --kmwc-icon-indeterminate: var(--base-icon-indeterminate, url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M5 12h14%22/%3E%3C/svg%3E"));
+        --kmwc-icon-check-size: var(--base-icon-check-size, 68%);
         --kmwc-code-bg: light-dark(#2d3748, #0d1117);
         --kmwc-code-text-color: #e2e8f0;
         --kmwc-code-comment-color: #8b949e;
@@ -129,6 +142,11 @@
         --kmwc-radius-lg: 12px;
         --kmwc-radius-md: 8px;
         --kmwc-radius-sm: 6px;
+        /* One height for inputs, selects and buttons, so a control row lines up.
+           A kit size, not --base-input-size-md-height: the contract's unitless
+           heights assume a 10px rem, the example pages keep the browser's 16px. */
+        --kmwc-control-height: 2.25rem;
+        --kmwc-checkbox-size: calc(1rem * var(--base-checkbox-scale, 1));
         --kmwc-max-width: 1400px;
     }
 }

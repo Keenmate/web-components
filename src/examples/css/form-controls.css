@@ -1,0 +1,285 @@
+/* ==============================================================================
+   EXAMPLES KIT — FORM CONTROLS
+   ==============================================================================
+   One look for the native controls a demo page uses — text fields, selects
+   (single and multiple), textareas, checkboxes, radios, switches, ranges,
+   colour and file inputs — wherever the page puts them, not only in a
+   `.controls` row. Modelled on pure-admin's forms (fixed control height,
+   accent focus border + halo, the shared --base-icon-check tick) and read
+   through the --base-* contract, so a theme restyles them with the component.
+
+   Every selector is wrapped in :where() — zero specificity — so any page or
+   component rule wins. `.kmwc-native` on an element (or an ancestor) keeps
+   the browser's own controls, e.g. for a light-DOM component that draws its
+   own inputs. A switch is `<input type="checkbox" role="switch">`. */
+@layer kmwc {
+    /* ==========================================================================
+       TEXT FIELDS & SELECT
+       ==========================================================================
+       A fixed height and no vertical padding: the browser centres the text. */
+    :where(
+        input:not([type]),
+        input[type="text"], input[type="search"], input[type="email"], input[type="url"],
+        input[type="tel"], input[type="password"], input[type="number"], input[type="date"],
+        input[type="time"], input[type="datetime-local"], input[type="month"], input[type="week"],
+        select, textarea
+    ):not(:where(.kmwc-native, .kmwc-native *)) {
+        box-sizing: border-box;
+        height: var(--kmwc-control-height);
+        padding: 0 0.625rem;
+        border: var(--kmwc-input-border);
+        border-radius: var(--kmwc-radius-sm);
+        background-color: var(--kmwc-input-bg);
+        color: var(--kmwc-input-color);
+        font: inherit;
+        font-size: 0.875rem;
+        transition: border-color 0.15s ease-out, box-shadow 0.15s ease-out;
+    }
+
+    :where(input, select, textarea):not(:where(.kmwc-native, .kmwc-native *))::placeholder {
+        color: var(--kmwc-input-placeholder-color);
+        opacity: 1;
+    }
+
+    :where(
+        input:not([type]),
+        input[type="text"], input[type="search"], input[type="email"], input[type="url"],
+        input[type="tel"], input[type="password"], input[type="number"], input[type="date"],
+        input[type="time"], input[type="datetime-local"], input[type="month"], input[type="week"],
+        select, textarea
+    ):not(:where(.kmwc-native, .kmwc-native *)):hover {
+        border: var(--kmwc-input-border-hover);
+    }
+
+    :where(
+        input:not([type]),
+        input[type="text"], input[type="search"], input[type="email"], input[type="url"],
+        input[type="tel"], input[type="password"], input[type="number"], input[type="date"],
+        input[type="time"], input[type="datetime-local"], input[type="month"], input[type="week"],
+        select, textarea
+    ):not(:where(.kmwc-native, .kmwc-native *)):focus {
+        outline: none;
+        border: var(--kmwc-input-border-focus);
+        box-shadow: var(--kmwc-input-box-shadow-focus);
+    }
+
+    /* A field the user has left invalid (not one that starts empty). */
+    :where(input, select, textarea):not(:where(.kmwc-native, .kmwc-native *)):user-invalid {
+        border-color: var(--kmwc-danger-fill-color);
+    }
+
+    :where(input, select, textarea):not(:where(.kmwc-native, .kmwc-native *)):disabled {
+        background-color: var(--kmwc-input-disabled-bg);
+        opacity: var(--kmwc-disabled-opacity);
+        cursor: not-allowed;
+    }
+
+    :where(input[type="number"]):not(:where(.kmwc-native, .kmwc-native *)) {
+        padding-inline-end: 0.25rem;  /* room for the spin buttons */
+    }
+
+    /* Single select: the kit's caret (drawn from the input icon colour, so it
+       follows the theme) instead of the platform's. */
+    :where(select:not([multiple], [size])):not(:where(.kmwc-native, .kmwc-native *)) {
+        appearance: none;
+        padding-inline-end: 2rem;
+        background-image:
+            linear-gradient(45deg, transparent 50%, var(--kmwc-input-icon-color) 50%),
+            linear-gradient(135deg, var(--kmwc-input-icon-color) 50%, transparent 50%);
+        background-position:
+            right 0.95rem center,
+            right 0.65rem center;
+        background-size: 0.3rem 0.3rem;
+        background-repeat: no-repeat;
+        cursor: pointer;
+    }
+
+    /* Multiple select / list box: grows with its rows; options are rows. */
+    :where(select[multiple], select[size]):not(:where(.kmwc-native, .kmwc-native *)) {
+        height: auto;
+        padding: 0.25rem;
+    }
+
+    :where(select[multiple], select[size]):not(:where(.kmwc-native, .kmwc-native *)) option {
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--kmwc-radius-sm);
+    }
+
+    :where(select[multiple], select[size]):not(:where(.kmwc-native, .kmwc-native *)) option:checked {
+        background: var(--kmwc-accent-light-bg-hover);
+        color: var(--kmwc-text-color-1);
+    }
+
+    :where(textarea):not(:where(.kmwc-native, .kmwc-native *)) {
+        height: auto;
+        min-height: 5rem;
+        padding: 0.5rem 0.625rem;
+        line-height: 1.5;
+        resize: vertical;
+    }
+
+    /* Inside a form group a field takes the row (pure-admin .pa-input). */
+    :where(.form-group) :where(
+        input:not([type]),
+        input[type="text"], input[type="search"], input[type="email"], input[type="url"],
+        input[type="tel"], input[type="password"], input[type="number"], input[type="date"],
+        input[type="time"], input[type="datetime-local"], input[type="month"], input[type="week"],
+        select, textarea
+    ) {
+        width: 100%;
+    }
+
+    /* ==========================================================================
+       CHECKBOX & RADIO
+       ==========================================================================
+       The native input, redrawn: the contract's checkbox render method — a
+       border-box square sized by --base-checkbox-scale, the tick / dash masked
+       from --base-icon-check / --base-icon-indeterminate (the glyph every
+       Keenmate component draws). Radios get a dot from the same tokens. */
+    :where(input[type="checkbox"], input[type="radio"]):not(:where(.kmwc-native, .kmwc-native *)) {
+        appearance: none;
+        box-sizing: border-box;
+        position: relative;
+        flex-shrink: 0;
+        display: inline-block;
+        width: var(--kmwc-checkbox-size);
+        height: var(--kmwc-checkbox-size);
+        margin: 0;
+        vertical-align: -0.15em;
+        border: calc(1px * var(--base-checkbox-scale, 1)) solid var(--kmwc-checkbox-border-color);
+        border-radius: calc(4px * var(--base-checkbox-scale, 1));
+        background-color: var(--kmwc-input-bg);
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    :where(input[type="radio"]):not(:where(.kmwc-native, .kmwc-native *)) {
+        border-radius: 50%;
+    }
+
+    :where(input[type="checkbox"], input[type="radio"]):not(:where(.kmwc-native, .kmwc-native *)):hover:not(:checked, :indeterminate, :disabled) {
+        border-color: var(--kmwc-accent-color);
+    }
+
+    :where(input[type="checkbox"], input[type="radio"]):not(:where(.kmwc-native, .kmwc-native *)):focus-visible {
+        outline: none;
+        border-color: var(--kmwc-accent-color);
+        box-shadow: 0 0 0 3px var(--kmwc-accent-light-bg-hover);
+    }
+
+    :where(input[type="checkbox"]):not(:where(.kmwc-native, .kmwc-native *)):is(:checked, :indeterminate) {
+        background-color: var(--kmwc-accent-color);
+        border-color: var(--kmwc-accent-color);
+    }
+
+    :where(input[type="checkbox"]):not(:where(.kmwc-native, .kmwc-native *, [role="switch"])):is(:checked, :indeterminate)::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: var(--kmwc-text-color-on-accent);
+        mask: var(--kmwc-icon-check) center / var(--kmwc-icon-check-size) no-repeat;
+    }
+
+    :where(input[type="checkbox"]):not(:where(.kmwc-native, .kmwc-native *, [role="switch"])):indeterminate::before {
+        mask-image: var(--kmwc-icon-indeterminate);
+    }
+
+    :where(input[type="radio"]):not(:where(.kmwc-native, .kmwc-native *)):checked {
+        border-color: var(--kmwc-accent-color);
+        background: radial-gradient(circle, var(--kmwc-text-color-on-accent) 0 30%, var(--kmwc-accent-color) 34%);
+    }
+
+    :where(input[type="checkbox"], input[type="radio"]):not(:where(.kmwc-native, .kmwc-native *)):disabled {
+        opacity: var(--kmwc-disabled-opacity);
+        cursor: not-allowed;
+    }
+
+    /* The option's label fades with it. */
+    :where(label):has(> :is(input, select, textarea):disabled) {
+        color: var(--kmwc-text-color-3);
+        cursor: not-allowed;
+    }
+
+    /* ==========================================================================
+       SWITCH — <input type="checkbox" role="switch">
+       ========================================================================== */
+    :where(input[type="checkbox"][role="switch"]):not(:where(.kmwc-native, .kmwc-native *)) {
+        width: calc(var(--kmwc-checkbox-size) * 1.9);
+        border-radius: 999px;
+        background-color: var(--kmwc-checkbox-border-color);
+        border-color: var(--kmwc-checkbox-border-color);
+    }
+
+    :where(input[type="checkbox"][role="switch"]):not(:where(.kmwc-native, .kmwc-native *))::before {
+        content: '';
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        width: calc(var(--kmwc-checkbox-size) - 4px);
+        height: calc(var(--kmwc-checkbox-size) - 4px);
+        border-radius: 50%;
+        background-color: var(--kmwc-main-bg);
+        transition: translate 0.15s ease;
+    }
+
+    :where(input[type="checkbox"][role="switch"]):not(:where(.kmwc-native, .kmwc-native *)):checked::before {
+        translate: calc(var(--kmwc-checkbox-size) * 0.9) 0;
+    }
+
+    /* ==========================================================================
+       RANGE, COLOUR, FILE
+       ========================================================================== */
+    :where(input[type="range"], progress, meter):not(:where(.kmwc-native, .kmwc-native *)) {
+        accent-color: var(--kmwc-accent-color);
+        vertical-align: middle;
+    }
+
+    :where(input[type="color"]):not(:where(.kmwc-native, .kmwc-native *)) {
+        box-sizing: border-box;
+        width: var(--kmwc-control-height);
+        height: var(--kmwc-control-height);
+        padding: 0.2rem;
+        border: var(--kmwc-input-border);
+        border-radius: var(--kmwc-radius-sm);
+        background-color: var(--kmwc-input-bg);
+        cursor: pointer;
+    }
+
+    :where(input[type="file"]):not(:where(.kmwc-native, .kmwc-native *)) {
+        font: inherit;
+        font-size: 0.875rem;
+        color: var(--kmwc-text-color-2);
+    }
+
+    :where(input[type="file"]):not(:where(.kmwc-native, .kmwc-native *))::file-selector-button {
+        height: var(--kmwc-control-height);
+        margin-inline-end: 0.75rem;
+        padding: 0 1rem;
+        border: 1px solid var(--kmwc-border-color-strong);
+        border-radius: var(--kmwc-radius-sm);
+        background: var(--kmwc-main-bg);
+        color: var(--kmwc-text-color-1);
+        font: inherit;
+        cursor: pointer;
+    }
+
+    :where(input[type="file"]):not(:where(.kmwc-native, .kmwc-native *))::file-selector-button:hover {
+        background: var(--kmwc-hover-bg);
+    }
+
+    /* ==========================================================================
+       FIELDSET
+       ========================================================================== */
+    :where(fieldset):not(:where(.kmwc-native, .kmwc-native *)) {
+        border: 1px solid var(--kmwc-border-color);
+        border-radius: var(--kmwc-radius-md);
+        padding: 0.75rem 1rem 1rem;
+    }
+
+    :where(legend):not(:where(.kmwc-native, .kmwc-native *)) {
+        padding: 0 0.375rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--kmwc-text-color-2);
+    }
+}

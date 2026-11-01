@@ -1,0 +1,103 @@
+<meta name="kmwc:title" content="Tables">
+<meta name="kmwc:subtitle" content="Any table gets the kit's look; .reference-table and a few modifiers cover the rest.">
+
+<div class="card">
+    <h2>TB01 · A bare table</h2>
+    <p>No class: a header fill, row lines and a hover tint, as wide as its content. A
+        <code>&lt;caption&gt;</code> sits above it, a <code>&lt;tfoot&gt;</code> closes it.</p>
+    <kmwc-demo>
+        <table id="tb-bare">
+            <caption>Bundle size per entry</caption>
+            <thead>
+                <tr><th>Entry</th><th>Format</th><th class="num">Size</th><th class="num">Gzip</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>index.js</code></td><td>ES module</td><td class="num">48.2 kB</td><td class="num">14.1 kB</td></tr>
+                <tr><td><code>index.umd.js</code></td><td>UMD</td><td class="num">51.7 kB</td><td class="num">15.0 kB</td></tr>
+                <tr><td><code>style.css</code></td><td>CSS</td><td class="num">9.4 kB</td><td class="num">2.3 kB</td></tr>
+            </tbody>
+            <tfoot>
+                <tr><td colspan="2">Total</td><td class="num">109.3 kB</td><td class="num">31.4 kB</td></tr>
+            </tfoot>
+        </table>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>TB02 · Reference table</h2>
+    <p><code>.reference-table</code> — the API / option table most example pages use: full width, every
+        cell boxed. <code>tr.is-highlight</code> tints a row with the accent.</p>
+    <kmwc-demo>
+        <table class="reference-table" id="tb-reference">
+            <thead>
+                <tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>label</code></td><td>string</td><td><code>''</code></td><td>Text next to the toggle.</td></tr>
+                <tr class="is-highlight"><td><code>active</code></td><td>boolean</td><td><code>false</code></td><td>Whether the toggle is on — the one to read first.</td></tr>
+                <tr><td><code>disabled</code></td><td>boolean</td><td><code>false</code></td><td>Blocks interaction and fades the control.</td></tr>
+            </tbody>
+        </table>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>TB03 · Striped and bordered</h2>
+    <p>Modifiers combine: <code>.table-full</code> (full width), <code>.table-bordered</code> (every cell
+        boxed), <code>.table-striped</code> (zebra rows). <code>.num</code> right-aligns a cell with tabular figures.</p>
+    <kmwc-demo>
+        <table class="table-full table-striped table-bordered" id="tb-striped">
+            <thead>
+                <tr><th>Month</th><th>Region</th><th class="num">Orders</th><th class="num">Revenue</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>January</td><td>North</td><td class="num">1,204</td><td class="num">€ 48,160</td></tr>
+                <tr><td>February</td><td>North</td><td class="num">987</td><td class="num">€ 39,480</td></tr>
+                <tr><td>March</td><td>South</td><td class="num">1,532</td><td class="num">€ 61,280</td></tr>
+                <tr><td>April</td><td>South</td><td class="num">1,108</td><td class="num">€ 44,320</td></tr>
+                <tr><td>May</td><td>West</td><td class="num">846</td><td class="num">€ 33,840</td></tr>
+            </tbody>
+        </table>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>TB04 · Compact, with controls in the cells</h2>
+    <p><code>.table-compact</code> tightens the cells and lowers <code>--kmwc-control-height</code> inside the
+        table, so the buttons, inputs and selects in it shrink with the rows.</p>
+    <kmwc-demo>
+        <table class="table-full table-compact" id="tb-compact">
+            <thead>
+                <tr><th>Field</th><th>Value</th><th>Mode</th><th>Visible</th><th></th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Title</td>
+                    <td><input type="text" value="Quarterly report"></td>
+                    <td><select><option>Edit</option><option>Read-only</option></select></td>
+                    <td><input type="checkbox" role="switch" checked aria-label="Visible"></td>
+                    <td class="num"><button type="button" class="btn-outline">Reset</button></td>
+                </tr>
+                <tr>
+                    <td>Owner</td>
+                    <td><input type="text" value="Ada Lovelace"></td>
+                    <td><select><option>Read-only</option><option>Edit</option></select></td>
+                    <td><input type="checkbox" role="switch" aria-label="Visible"></td>
+                    <td class="num"><button type="button" class="btn-outline">Reset</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>TB05 · Opting out</h2>
+    <p><code>kmwc-native</code> on the table (or an ancestor) leaves it as the browser draws it — for a table a
+        component renders in the light DOM with its own styles.</p>
+    <kmwc-demo>
+        <table class="kmwc-native">
+            <tr><th>Native</th><th>Table</th></tr>
+            <tr><td>no</td><td>kit styles</td></tr>
+        </table>
+    </kmwc-demo>
+</div>
