@@ -25,20 +25,32 @@ const LEGACY_PAGE_REFERENCES = ['examples-shared.css', 'examples-chapter-nav.js'
 const VITE_CONFIG_FILES = ['vite.config.ts', 'vite.config.mjs', 'vite.config.js'];
 const PLAYWRIGHT_CONFIG_FILES = ['playwright.config.ts', 'playwright.config.mjs', 'playwright.config.js'];
 
-/** Rulebook suites in the rulebook's canonical reading order; the prefix is passed where the script takes one. */
+/**
+ * Rulebook suites in the rulebook's canonical reading order; the prefix is
+ * passed where the script takes one. `isComponentOnly` suites check what a
+ * custom element ships (its CSS, manifest, overlay) — a `library` (registry
+ * kind, or kmwc.kind) skips them.
+ */
 export const RULEBOOK_SUITES = [
-  { name: 'component-structure', isPrefixed: false },
-  { name: 'naming-conventions', isPrefixed: true },
-  { name: 'css-structure', isPrefixed: true },
-  { name: 'theme-container', isPrefixed: true },
-  { name: 'base-variables', isPrefixed: true },
-  { name: 'color-scheme', isPrefixed: true },
-  { name: 'readme-structure', isPrefixed: false },
-  { name: 'custom-elements-manifest', isPrefixed: false },
-  { name: 'responsive-overlay', isPrefixed: true },
-  { name: 'publish-command', isPrefixed: false },
-  { name: 'example-pages', isPrefixed: false },
+  { name: 'component-structure', isPrefixed: false, isComponentOnly: true },
+  { name: 'naming-conventions', isPrefixed: true, isComponentOnly: false },
+  { name: 'css-structure', isPrefixed: true, isComponentOnly: true },
+  { name: 'theme-container', isPrefixed: true, isComponentOnly: true },
+  { name: 'base-variables', isPrefixed: true, isComponentOnly: true },
+  { name: 'color-scheme', isPrefixed: true, isComponentOnly: true },
+  { name: 'readme-structure', isPrefixed: false, isComponentOnly: false },
+  { name: 'custom-elements-manifest', isPrefixed: false, isComponentOnly: true },
+  { name: 'responsive-overlay', isPrefixed: true, isComponentOnly: true },
+  { name: 'publish-command', isPrefixed: false, isComponentOnly: false },
+  { name: 'example-pages', isPrefixed: false, isComponentOnly: false },
 ];
+
+const LIBRARY_KIND = 'library';
+
+/** The suites that apply to a repo of `kind`. Pure — exported for tests. */
+export function getRulebookSuites(kind) {
+  return RULEBOOK_SUITES.filter((suite) => kind !== LIBRARY_KIND || !suite.isComponentOnly);
+}
 
 function getMajorVersion(versionRange) {
   const match = String(versionRange || '').match(/(\d+)/);
@@ -85,7 +97,7 @@ export function checkComponent(config, doctorConfig = {}) {
   } else {
     addPass('config', 'package.json#kmwc present');
     if (!config.packageJson.kmwc.title) addWarning('config', 'kmwc.title not set (falls back to a title-cased id)', 'set kmwc.title');
-    if (!config.prefix) addWarning('config', 'kmwc.prefix not set — rulebook suites run without a CSS prefix', 'set kmwc.prefix to the prefix reserved in base-variables.md');
+    if (!config.prefix && config.kind !== LIBRARY_KIND) addWarning('config', 'kmwc.prefix not set — rulebook suites run without a CSS prefix', 'set kmwc.prefix to the prefix reserved in base-variables.md');
     if (!config.packageJson.kmwc.ports?.dev) addWarning('config', 'kmwc.ports.dev not set (falls back to 5173)', 'take the port from the devkit components.json');
   }
 
@@ -248,7 +260,12 @@ function checkRulebook(config, { addPass, addWarning, addError }) {
     return;
   }
   const skippedSuites = new Set(config.rulebook.skippedChecks);
-  for (const suite of RULEBOOK_SUITES) {
+  const suites = getRulebookSuites(config.kind);
+  if (suites.length < RULEBOOK_SUITES.length) {
+    const componentOnlySuiteNames = RULEBOOK_SUITES.filter((suite) => !suites.includes(suite)).map((suite) => suite.name);
+    addPass('rulebook', `${config.kind}: component-only suites not run (${componentOnlySuiteNames.join(', ')})`);
+  }
+  for (const suite of suites) {
     if (skippedSuites.has(suite.name)) continue;
     if (!existsSync(join(config.rulebook.path, `${suite.name}.checks.sh`))) continue;
     const suiteResult = runRulebookSuite(config, suite);
@@ -280,7 +297,7 @@ export async function run(args) {
   }
 
   const LEVEL_ICONS = { pass: '✓', warning: '⚠', error: '✗' };
-  console.log(`kmwc doctor — ${config.packageName} (${config.root})\n`);
+  console.log(`kmwc doctor — ${config.packageName}${config.kind === 'component' ? '' : ` [${config.kind}]`} (${config.root})\n`);
   for (const result of results) {
     if (result.level === 'pass' && !args.verbose) continue;
     console.log(`${LEVEL_ICONS[result.level]} [${result.checkName}] ${result.message}${result.fixHint ? `\n    → ${result.fixHint}` : ''}`);

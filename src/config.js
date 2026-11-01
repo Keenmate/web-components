@@ -139,6 +139,11 @@ export function getRegistry() {
   return getJsonFile(join(DEVKIT_ROOT, 'components.json'));
 }
 
+/** The registry kind of `id` (`component`, `library` …); `component` when it isn't registered. */
+export function getRegistryKind(id, registry = getRegistry()) {
+  return registry.components.find((entry) => entry.id === id)?.kind || 'component';
+}
+
 /** Strip the npm scope: `@keenmate/web-multiselect` → `web-multiselect`. */
 export function getUnscopedName(packageName) {
   return String(packageName || '').replace(/^@[^/]+\//, '');
@@ -182,13 +187,16 @@ export function getKmwcConfig(root = process.cwd()) {
 export function mapKmwcConfig(packageJson, root = process.cwd()) {
   const packageConfig = packageJson.kmwc || {};
   const id = packageConfig.id || getUnscopedName(packageJson.name) || 'component';
-  const library = packageConfig.library || {};
+  // `library: false` — the repo builds its package itself (tsc …) or ships none;
+  // Vite serves and builds only the examples site.
+  const library = packageConfig.library === false ? { shouldBuild: false } : packageConfig.library || {};
   const examples = packageConfig.examples || {};
   const ports = packageConfig.ports || {};
   const image = packageConfig.image || {};
   const theme = packageConfig.theme || {};
   const analytics = packageConfig.analytics || {};
-  const cssVariables = packageConfig.cssVariables || {};
+  // `cssVariables: false` — no variables manifest to check (no check:vars script).
+  const cssVariables = packageConfig.cssVariables === false ? { checkMode: 'off' } : packageConfig.cssVariables || {};
   const rulebook = packageConfig.rulebook || {};
   const devPort = ports.dev ?? 5173;
 
@@ -198,6 +206,7 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
     packageJson,
     id,
     packageName: packageJson.name || id,
+    kind: packageConfig.kind || getRegistryKind(id),
     version: packageJson.version || '0.1.0',
     title: packageConfig.title || mapToTitleCase(id),
     tagline: packageConfig.tagline || packageJson.description || '',
@@ -208,6 +217,7 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
     author: typeof packageJson.author === 'string' ? packageJson.author : packageJson.author?.name || 'Keenmate s.r.o.',
     license: packageJson.license || 'MIT',
     library: {
+      shouldBuild: library.shouldBuild ?? true,
       entry: library.entry || 'src/index.ts',
       globalName: library.globalName || mapToPascalCase(id),
       fileName: library.fileName || id,
@@ -254,6 +264,7 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
       sources: cssVariables.sources || ['src/css'],
       internalVariables: cssVariables.internalVariables || [],
       checkMode: cssVariables.checkMode || 'declared',
+      isEnabled: cssVariables.checkMode !== 'off',
     },
     rulebook: {
       path:

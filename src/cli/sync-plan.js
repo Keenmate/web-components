@@ -69,14 +69,14 @@ const hasAnyFile = (root, fileNames) => fileNames.some((fileName) => existsSync(
 export function getStandardScripts(config) {
   const scripts = {
     dev: 'vite',
-    build: 'vite build',
+    ...(config.library.shouldBuild ? { build: 'vite build' } : {}),
     'build:examples': 'vite build --mode examples',
     'preview:examples': 'vite preview --mode examples',
     'clean:dist': generateRemoveCommand(['dist']),
     clean: generateRemoveCommand(['dist', config.examples.outDir]),
     doctor: 'kmwc doctor',
   };
-  if (existsSync(join(config.root, config.cssVariables.manifest))) scripts['check:vars'] = 'kmwc check-vars';
+  if (config.cssVariables.isEnabled && existsSync(join(config.root, config.cssVariables.manifest))) scripts['check:vars'] = 'kmwc check-vars';
   if (existsSync(join(config.root, CEM_CONFIG_FILE))) scripts.analyze = 'cem analyze';
   if (hasAnyFile(config.root, PLAYWRIGHT_CONFIG_FILES)) {
     Object.assign(scripts, {

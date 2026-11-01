@@ -234,3 +234,21 @@
         </div>
     </kmwc-demo>
 </div>
+
+<div class="card">
+    <h2>FC12 · Field widths</h2>
+    <p>A native field is about 20 characters wide. A number field is 7rem by default (six digits and the spin
+        buttons); <code>.w-xs</code> (4rem), <code>.w-sm</code> (6rem), <code>.w-md</code> (9rem) and
+        <code>.w-lg</code> (12rem) size a short field without an inline style. In a <code>.form-group</code> a
+        field still takes the row. <code>.push-end</code> moves an item to the end of a <code>.controls</code>
+        row.</p>
+    <kmwc-demo>
+        <div class="controls" id="fc-widths">
+            <label>Page size <input type="number" id="fc-width-number" value="25" min="1"></label>
+            <label>Rank <input type="number" class="w-xs" id="fc-width-xs" value="2"></label>
+            <label>Caption <input type="text" class="w-md" id="fc-width-md" value="Quarterly"></label>
+            <select class="w-sm" id="fc-width-select"><option>left</option><option>right</option></select>
+            <button type="button" class="btn-outline push-end" id="fc-push-end">Reset</button>
+        </div>
+    </kmwc-demo>
+</div>

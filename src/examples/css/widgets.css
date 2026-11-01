@@ -29,7 +29,8 @@
         --kmwc-log-info-color: var(--kmwc-info-color);
         --kmwc-log-warn-color: var(--kmwc-warning-color);
         --kmwc-log-err-color: var(--kmwc-danger-color);
-        --kmwc-log-muted-color: var(--kmwc-text-color-3);
+        /* text-color-3 is 2.8:1 on the light panel — under WCAG AA's 4.5. */
+        --kmwc-log-muted-color: var(--kmwc-text-color-2);
         --kmwc-log-name-color: var(--kmwc-accent-color);
         --kmwc-log-rule-color: var(--kmwc-border-color);
         font-family: var(--kmwc-mono-font-family);
@@ -94,7 +95,9 @@
     }
 
     /* Timeline: a line with cells is a row; the cells keep their width and the
-       detail after them wraps in its own column. */
+       detail after them wraps in its own column. When the cells leave the detail
+       less than ~14rem (a phone, a long source name) it drops under them at full
+       width instead of being squeezed to a letter per line. */
     .log-line:has(> :is(.log-line__seq, .log-line__time, .log-line__source, .log-line__name)),
     .event-entry:has(> :is(.event-time, .event-name)) {
         display: flex;
@@ -103,8 +106,12 @@
         border-bottom: 1px solid var(--kmwc-log-rule-color);
     }
 
+    .log-line:has(> :is(.log-line__seq, .log-line__time, .log-line__source, .log-line__name)) {
+        flex-wrap: wrap;
+    }
+
     .log-line:has(> :is(.log-line__seq, .log-line__time, .log-line__source, .log-line__name)) > :last-child:not(.log-line__name) {
-        flex: 1 1 0;
+        flex: 1 1 14rem;
         min-width: 0;
     }
 
@@ -115,6 +122,7 @@
     .event-time,
     .event-name {
         flex: none;
+        max-width: 100%;
     }
 
     .log-line__seq,
@@ -179,7 +187,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 0.4rem;
-        margin: 0.25rem 0 1rem;
+        margin: 0.75rem 0 1rem;  /* it follows the demo it measures */
     }
 
     .css-readout code { font-size: 0.78rem; }

@@ -27,6 +27,8 @@ locally — every local fork is how they drifted apart.
   `.table-compact`, …) — don't restyle them per page; `kmwc-native` opts an
   element out. Log lines take the kit tones (`.log-line--ok|info|warn|err|muted`,
   `--action`, timeline cells `.log-line__time` …) — don't colour them per page.
+  `<kbd>`, `<mark>`, field widths (`.w-xs` … `.w-lg`) and `.push-end` are kit
+  too — no inline styles for them.
   If a second component needs a pattern, it belongs in the devkit.
 - **Example pages are fragments:** no `<html>`/`<head>`/`<header>` — start with
   `<meta name="kmwc:title" content="…">`, the devkit layout adds the rest. Shared text

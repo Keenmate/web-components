@@ -68,6 +68,10 @@ export function checkManifestVariables({ cssText, manifest, prefix, internalVari
 export async function run(args) {
   const config = getKmwcConfig(args.root);
   const isStrict = !!args.strict;
+  if (!config.cssVariables.isEnabled) {
+    console.log('kmwc check-vars: off (kmwc.cssVariables is false) — nothing to check.');
+    return 0;
+  }
   const manifestPath = resolve(config.root, config.cssVariables.manifest);
   if (!existsSync(manifestPath)) {
     console.log(`kmwc check-vars: no ${config.cssVariables.manifest} — nothing to check.`);

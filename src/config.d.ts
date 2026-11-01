@@ -10,7 +10,12 @@ export interface KmwcPackageConfig {
   tag?: string;
   /** Reserved CSS prefix (base-variables.md "Existing prefixes"), e.g. `ms`. */
   prefix?: string;
-  library?: {
+  /** Registry kind; defaults to the components.json entry's kind (else `component`). A `library` runs only the doctor checks that apply to it. */
+  kind?: 'component' | 'library' | 'showcase' | 'docs' | 'test';
+  /** The library build (`vite build`). `false` = the repo builds its package itself or ships none: plain `vite build` refuses to run, only `--mode examples` builds. */
+  library?: false | {
+    /** `false` = same as `library: false`, keeping `entry` for the example pages. */
+    shouldBuild?: boolean;
     entry?: string;
     /** UMD global name. */
     globalName?: string;
@@ -51,14 +56,15 @@ export interface KmwcPackageConfig {
     packageJsonPaths?: string[];
     installCommand?: string;
   };
-  cssVariables?: {
+  /** `false` (or `checkMode: 'off'`): no variables manifest check — sync adds no `check:vars`, `kmwc check-vars` skips. */
+  cssVariables?: false | {
     manifest?: string;
     /** Directories (stylesheets scanned) or explicit files (any type, e.g. a built bundle). */
     sources?: string[];
     /** Prefixed names (without `--`) that are runtime internals, not theming knobs. */
     internalVariables?: string[];
     /** `declared`: manifest ⇔ `--x:` declarations; `consumed`: manifest ⇔ `var(--x)` reads. */
-    checkMode?: 'declared' | 'consumed';
+    checkMode?: 'declared' | 'consumed' | 'off';
   };
   rulebook?: {
     /** Path to BlissFramework `guidelines/web-components` (env KMWC_RULEBOOK_PATH wins). */
@@ -75,6 +81,7 @@ export interface KmwcConfig {
   packageJson: Record<string, any>;
   id: string;
   packageName: string;
+  kind: string;
   version: string;
   title: string;
   tagline: string;
@@ -85,6 +92,7 @@ export interface KmwcConfig {
   author: string;
   license: string;
   library: {
+    shouldBuild: boolean;
     entry: string;
     globalName: string;
     fileName: string;
@@ -118,7 +126,8 @@ export interface KmwcConfig {
     manifest: string;
     sources: string[];
     internalVariables: string[];
-    checkMode: 'declared' | 'consumed';
+    checkMode: 'declared' | 'consumed' | 'off';
+    isEnabled: boolean;
   };
   rulebook: { path: string; skippedChecks: string[] };
   sync: { skippedFiles: string[] };
@@ -137,6 +146,7 @@ export const PORT_RANGES: Array<{ kinds: string[]; firstBlock: number; lastBlock
 export const PREVIEW_PORT_OFFSET: number;
 export const IMAGE_PORT_OFFSET: number;
 export function getPortsForBlock(portBlock: number): { dev: number; preview: number; image: number };
+export function getRegistryKind(id: string, registry?: { components: Array<{ id: string; kind: string }> }): string;
 export function getPortRange(kind: string): { kinds: string[]; firstBlock: number; lastBlock: number };
 export function getNextPortBlock(registry?: { components: Array<Record<string, any>> }, kind?: string): number;
 export function getPeerModule(root: string, moduleId: string): any;

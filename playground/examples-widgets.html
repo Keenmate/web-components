@@ -1,5 +1,5 @@
 <meta name="kmwc:title" content="Widgets">
-<meta name="kmwc:subtitle" content="The kit's opt-in helpers: log panels with line tones and timelines, pills, status dots, monospace text and CSS-variable readouts.">
+<meta name="kmwc:subtitle" content="The kit's opt-in helpers: log panels with line tones and timelines, pills, status dots, monospace text, CSS-variable readouts, keys and search matches.">
 
 <link rel="stylesheet" href="examples-local.css">
 
@@ -121,14 +121,15 @@
 <div class="card">
     <h2>WG05 · Timeline log</h2>
     <p>The cells <code>.log-line__seq</code>, <code>__time</code>, <code>__source</code> and <code>__name</code>
-        turn a line into columns, and whatever follows them is the detail, which wraps in its own column. A
+        turn a line into columns, and whatever follows them is the detail, which wraps in its own column — or,
+        when the cells leave it too little room (a phone, a long source name), drops under them. A
         tone colours the line and its name. Kinds such as hook, callback or note map onto the tones (here: hook
         → <code>--info</code>, note → <code>--muted</code>); the kind itself goes in a cell as text.</p>
     <kmwc-demo>
         <div class="log-panel log-panel--dark" id="wg-timeline" style="--log-max-height: none">
             <div class="log-line log-line--action">▶ clicked "Add item"</div>
             <div class="log-line"><span class="log-line__seq">1</span><span class="log-line__time">+0 ms</span><span class="log-line__source">list</span><span class="log-line__name">update</span><span>items: 3 → 4</span></div>
-            <div class="log-line log-line--info"><span class="log-line__seq">2</span><span class="log-line__time">+2 ms</span><span class="log-line__source">list</span><span class="log-line__name">hook</span><span>onRender — the new row is measured before paint, then the scroll position is restored so the list does not jump under the pointer</span></div>
+            <div class="log-line log-line--info"><span class="log-line__seq">2</span><span class="log-line__time">+2 ms</span><span class="log-line__source">list-virtual-scroller</span><span class="log-line__name">hook</span><span>onRender — the new row is measured before paint, then the scroll position is restored so the list does not jump under the pointer</span></div>
             <div class="log-line log-line--muted"><span class="log-line__seq">3</span><span class="log-line__time">+2 ms</span><span class="log-line__source">page</span><span class="log-line__name">note</span><span>nothing re-rendered outside the list</span></div>
             <div class="log-line log-line--err"><span class="log-line__seq">4</span><span class="log-line__time">+40 ms</span><span class="log-line__source">list</span><span class="log-line__name">error</span><span>save failed: 409 conflict</span></div>
         </div>
@@ -167,5 +168,24 @@
     <kmwc-demo>
         <p>Folded: <span class="mono" id="wg-mono">strasse → STRASSE</span></p>
         <textarea class="mono" id="wg-json" rows="4">{ "layers": ["base", "touch"], "rank": 2 }</textarea>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>WG08 · Keys, search matches and long code</h2>
+    <p><code>&lt;kbd&gt;</code> is a key in a keyboard map and <code>&lt;mark&gt;</code> a search match, both in
+        the spotlight's look. Inline <code>&lt;code&gt;</code> breaks anywhere, so a long identifier such as
+        <code>window.components.renderLoaderCallback</code> doesn't widen a phone page.</p>
+    <kmwc-demo>
+        <table class="reference-table" id="wg-keys">
+            <thead><tr><th>Key</th><th>Action</th></tr></thead>
+            <tbody>
+                <tr><td><kbd>↓</kbd> / <kbd>↑</kbd></td><td>Move to the next / previous item</td></tr>
+                <tr><td><kbd>Ctrl</kbd> + <kbd>K</kbd></td><td>Open the search</td></tr>
+                <tr><td><kbd>Esc</kbd></td><td>Close the menu</td></tr>
+            </tbody>
+        </table>
+        <p id="wg-mark">Results for "lay": base <mark>lay</mark>er, touch <mark>lay</mark>er, re<mark>lay</mark>out.</p>
+        <p id="wg-long-code">Call <code>resolvePresentation(mode, environment, presentationMap)</code> once per render.</p>
     </kmwc-demo>
 </div>

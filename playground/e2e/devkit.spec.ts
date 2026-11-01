@@ -79,12 +79,12 @@ test.describe('examples kit', () => {
     await expect(container).toBeVisible();
     await expect(input).toBeFocused();
     await expect(page.locator('.kmwc-spotlight__home-heading').first()).toHaveText('Basic Usage · this page');
-    await expect(items).toHaveCount(36);
+    await expect(items).toHaveCount(38);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden'); // body scroll locked
 
     // wcp keys: ↑ wraps to the end, PgDn steps 8, Home back to the top.
     await page.keyboard.press('ArrowUp');
-    await expect(activeItem).toHaveAttribute('data-index', '35');
+    await expect(activeItem).toHaveAttribute('data-index', '37');
     await page.keyboard.press('Home');
     await page.keyboard.press('PageDown');
     await expect(activeItem).toHaveAttribute('data-index', '8');
@@ -267,6 +267,10 @@ test.describe('examples kit', () => {
     await expect(page.locator('#wg-timeline')).toHaveCSS('max-height', 'none');
     const seqLefts = await page.locator('#wg-timeline .log-line__time').evaluateAll((cells) => cells.map((cell) => cell.getBoundingClientRect().left));
     expect(new Set(seqLefts).size).toBe(1); // the columns line up
+    // On a wide screen the detail sits beside the cells.
+    const hookLine = page.locator('#wg-timeline .log-line--info');
+    const besideTops = await hookLine.evaluate((line) => [line.querySelector('.log-line__name')!, line.lastElementChild!].map((cell) => cell.getBoundingClientRect().top));
+    expect(besideTops[1]).toBe(besideTops[0]);
     // A text log keeps its line breaks; the placeholder shows only while empty.
     const textLog = page.locator('#wg-text-log');
     const placeholder = () => textLog.evaluate((log) => getComputedStyle(log, '::before').content);
@@ -321,6 +325,97 @@ test.describe('examples kit', () => {
     }, longCode);
     const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     expect(widths[0]).toBeLessThanOrEqual(widths[1]);
+  });
+
+  test('on a phone a timeline detail drops under its cells instead of being squeezed', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto('/examples-widgets.html');
+    const hookLine = page.locator('#wg-timeline .log-line--info'); // long source name
+    const [nameBox, detailBox, lineBox] = await hookLine.evaluate((line) =>
+      [line.querySelector('.log-line__name')!, line.lastElementChild!, line].map((element) => element.getBoundingClientRect().toJSON()));
+    expect(detailBox.top).toBeGreaterThanOrEqual(nameBox.bottom); // its own line
+    expect(detailBox.width).toBeGreaterThan(lineBox.width * 0.9); // at full width
+    const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+    expect(widths[0]).toBeLessThanOrEqual(widths[1]);
+  });
+
+  test('at 320px long inline code breaks instead of widening any page', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    for (const pageName of ['examples-basic', 'examples-theming', 'examples-devkit', 'examples-forms', 'examples-tables', 'examples-widgets']) {
+      await page.goto(`/${pageName}.html`);
+      await expect(page.locator('.kmwc-spotlight__trigger')).toBeVisible();
+      // A heading and a paragraph with one long identifier each (no break opportunity).
+      await page.evaluate(() => document.querySelector('.card')!.insertAdjacentHTML('afterbegin',
+        '<h2><code>resolvePresentation(mode,environment,map)</code></h2><p><code>window.components.renderLoaderCallback</code></p>'));
+      const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+      expect(widths[0], `${pageName} is wider than 320px`).toBeLessThanOrEqual(widths[1]);
+    }
+    // Code in a pre keeps its lines (the pre scrolls instead).
+    await expect(page.locator('pre code').first()).toHaveCSS('overflow-wrap', 'normal');
+  });
+
+  test('keys, search matches, field widths, push-end and the readout spacing', async ({ page }) => {
+    await page.goto('/examples-widgets.html');
+    const key = page.locator('#wg-keys kbd').first();
+    await expect(key).toHaveCSS('border-bottom-width', '2px');
+    await expect(key).toHaveCSS('font-weight', '600');
+    const mark = page.locator('#wg-mark mark').first();
+    await expect(mark).toHaveCSS('font-weight', '600');
+    expect(await mark.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe('rgb(255, 255, 0)'); // not the browser yellow
+    // The spotlight's own key hint keeps its look (its class wins over the kit's kbd).
+    await expect(page.locator('.kmwc-spotlight__trigger-key')).toHaveCSS('border-bottom-width', '1px');
+    await expect(page.locator('#wg-readout')).toHaveCSS('margin-top', '12px');
+
+    await page.goto('/examples-forms.html');
+    const widthOf = (selector: string) => page.locator(selector).evaluate((element) => element.getBoundingClientRect().width);
+    expect(await widthOf('#fc-width-number')).toBe(112); // 7rem
+    expect(await widthOf('#fc-width-xs')).toBe(64);
+    expect(await widthOf('#fc-width-md')).toBe(144);
+    expect(await widthOf('#fc-width-select')).toBe(96);
+    expect(await widthOf('#fc-name')).toBeGreaterThan(200); // a form group still stretches its field
+    const [rowRight, buttonRight] = await page.evaluate(() => [
+      document.getElementById('fc-widths')!.getBoundingClientRect().right,
+      document.getElementById('fc-push-end')!.getBoundingClientRect().right,
+    ]);
+    expect(Math.round(buttonRight)).toBe(Math.round(rowRight));
+  });
+
+  test('every log tone on both panels passes WCAG AA (4.5:1) in both themes', async ({ page }) => {
+    await page.goto('/examples-widgets.html');
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme });
+      await page.reload();
+      const ratios = await page.evaluate(() => {
+        const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
+        const getRgb = (color: string) => {
+          context.clearRect(0, 0, 1, 1);
+          context.fillStyle = color;
+          context.fillRect(0, 0, 1, 1);
+          return Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3));
+        };
+        const getLuminance = (rgb: number[]) => {
+          const [r, g, b] = rgb.map((channel) => {
+            const value = channel / 255;
+            return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        const getRatio = (foreground: string, background: string) => {
+          const [lighter, darker] = [getLuminance(getRgb(foreground)), getLuminance(getRgb(background))].sort((a, b) => b - a);
+          return (lighter + 0.05) / (darker + 0.05);
+        };
+        const results: Record<string, number> = {};
+        for (const panelId of ['wg-log-light', 'wg-log-dark']) {
+          const panel = document.getElementById(panelId)!;
+          const background = getComputedStyle(panel).backgroundColor;
+          for (const line of panel.querySelectorAll('.log-line')) {
+            results[`${panelId} ${line.className}`] = getRatio(getComputedStyle(line).color, background);
+          }
+        }
+        return results;
+      });
+      for (const [line, ratio] of Object.entries(ratios)) expect(ratio, `${colorScheme}: ${line}`).toBeGreaterThanOrEqual(4.5);
+    }
   });
 
   test('the control height leaves the kit copy buttons small', async ({ page }) => {

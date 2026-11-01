@@ -199,9 +199,16 @@ export function defineComponentConfig(presetConfig = {}) {
     const config = getKmwcConfig(presetConfig.root);
     // The component's own vite — the one running this config (see loadPeerModule).
     const { mergeConfig, searchForWorkspaceRoot } = await loadPeerModule(config.root, 'vite');
-    const library = { ...config.library, ...(presetConfig.library || {}) };
+    const library = { ...config.library, ...(presetConfig.library === false ? { shouldBuild: false } : presetConfig.library || {}) };
     const isExamplesMode = env.mode === EXAMPLES_MODE;
     const isLibraryBuild = env.command === 'build' && !isExamplesMode;
+    if (isLibraryBuild && !library.shouldBuild) {
+      // The library build empties dist/ — it would wipe a package the repo builds itself.
+      throw new Error(
+        `${config.id}: kmwc.library is false — plain \`vite build\` has nothing to build. ` +
+          'Build the package with its own script (npm run build), the examples site with `vite build --mode examples`.'
+      );
+    }
 
     const plugins = [createExamplesPlugin({ root: config.root }), ...(presetConfig.plugins || [])];
 

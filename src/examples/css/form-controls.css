@@ -74,7 +74,11 @@
         cursor: not-allowed;
     }
 
+    /* A number is short: 7rem holds six digits and the spin buttons (a
+       .form-group still stretches it to the row; .w-* sizes it). */
     :where(input[type="number"]):not(:where(.kmwc-native, .kmwc-native *)) {
+        width: 7rem;
+        max-width: 100%;
         padding-inline-end: 0.25rem;  /* room for the spin buttons */
     }
 

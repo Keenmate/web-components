@@ -120,6 +120,9 @@
         font-size: 0.9em;
         color: var(--kmwc-accent-color);
         font-family: var(--kmwc-mono-font-family);
+        /* A long identifier has no break opportunity — break it anywhere
+           rather than widen the page on a phone. */
+        overflow-wrap: anywhere;
     }
 
     pre code,
@@ -130,6 +133,32 @@
         border-radius: 0;
         color: inherit;
         font-size: inherit;
+        overflow-wrap: inherit;
+    }
+
+    /* A key in a keyboard map — the spotlight's key-hint look. */
+    kbd {
+        display: inline-block;
+        padding: 0.1rem 0.35rem;
+        background-color: var(--kmwc-elevated-bg);
+        color: var(--kmwc-text-color-1);
+        border: 1px solid var(--kmwc-border-color);
+        border-bottom-width: 2px;
+        border-radius: var(--kmwc-radius-sm);
+        font-family: var(--kmwc-font-family);
+        font-weight: 600;
+        font-size: 0.8em;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    /* A search match — the spotlight's match highlight. */
+    mark {
+        background-color: var(--kmwc-accent-light-bg-hover);
+        color: var(--kmwc-accent-color);
+        font-weight: 600;
+        padding: 0 2px;
+        border-radius: var(--kmwc-radius-sm);
     }
 
     /* ==========================================================================
@@ -227,6 +256,18 @@
     .mt-1 {
         margin-top: 1rem;
     }
+
+    /* Push an item to the end of a flex row (`.controls`, `.btn-group` …). */
+    .push-end {
+        margin-inline-start: auto;
+    }
+
+    /* Field widths: a native field is ~20 characters wide; these size a short
+       one (a page size, a caption) without an inline style. */
+    .w-xs { width: 4rem; max-width: 100%; }
+    .w-sm { width: 6rem; max-width: 100%; }
+    .w-md { width: 9rem; max-width: 100%; }
+    .w-lg { width: 12rem; max-width: 100%; }
 
     @media (max-width: 768px) {
         .grid,

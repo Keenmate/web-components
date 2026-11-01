@@ -2,15 +2,17 @@
 // (The examples kit is covered end-to-end by playground/e2e — `npm run test:e2e`.)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, mkdtempSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { mapKmwcConfig, getRegistry, getNextPortBlock, getPortRange, getPortsForBlock, getRulebookPath, DEVKIT_ROOT, PORT_BLOCK_SIZE, PACKAGE_FILES_EXCLUSIONS } from '../src/config.js';
+import { mapKmwcConfig, getRegistryKind, getRegistry, getNextPortBlock, getPortRange, getPortsForBlock, getRulebookPath, DEVKIT_ROOT, PORT_BLOCK_SIZE, PACKAGE_FILES_EXCLUSIONS } from '../src/config.js';
 import {
   getSyncPlan,
   renderTemplate,
   getTemplateVariables,
+  getStandardScripts,
   updateClaudeBlock,
   CLAUDE_BLOCK_START,
   CLAUDE_BLOCK_END,
@@ -18,7 +20,7 @@ import {
 } from '../src/cli/sync-plan.js';
 import { checkManifestVariables } from '../src/cli/commands/check-vars.js';
 import { checkVersionForTag } from '../src/cli/commands/check-release.js';
-import { getSuiteFailures, getPackageLeaks, RULEBOOK_SUITES } from '../src/cli/commands/doctor.js';
+import { getSuiteFailures, getPackageLeaks, getRulebookSuites, RULEBOOK_SUITES } from '../src/cli/commands/doctor.js';
 import { checkPrefix, generatePackageJson, generatePrefix, getReservedPrefixes } from '../src/cli/commands/new.js';
 import { renderCatalogue } from '../src/cli/commands/readme.js';
 import { createExamplesPlugin } from '../src/vite/index.js';
@@ -522,10 +524,77 @@ test('readme: catalogue renders every registry entry', () => {
 });
 
 test('cli: argument parser', () => {
-  assert.deepEqual(parseArgs(['web-x', '--title', 'X Y', '--register', '--port=13300']), {
+  const newFlags = { booleans: ['register'], values: ['title', 'port'] };
+  assert.deepEqual(parseArgs(['web-x', '--title', 'X Y', '--register', '--port=13300'], newFlags), {
     _: ['web-x'],
     title: 'X Y',
     register: true,
     port: '13300',
   });
+  // A boolean never swallows the next word; --root is global.
+  assert.deepEqual(parseArgs(['--register', 'web-x', '--root', '../y'], newFlags), { _: ['web-x'], register: true, root: '../y' });
+  assert.throws(() => parseArgs(['--chek'], newFlags), /unknown option "--chek"/);
+  assert.throws(() => parseArgs(['-x'], newFlags), /unknown option "-x"/);
+  assert.throws(() => parseArgs(['--title'], newFlags), /--title needs a value/);
+  assert.throws(() => parseArgs(['--register=yes'], newFlags), /takes no value/);
+});
+
+test('cli: <command> --help prints the usage and never runs the command', () => {
+  const temporaryRoot = mkdtempSync(join(tmpdir(), 'kmwc-help-'));
+  try {
+    writeFileSync(join(temporaryRoot, 'package.json'), JSON.stringify(createPackageJson({ ports: { dev: 14000 } })));
+    const runCli = (...cliArgs) => spawnSync(process.execPath, [join(DEVKIT_ROOT, 'src/cli/kmwc.js'), ...cliArgs, '--root', temporaryRoot], { encoding: 'utf8' });
+    for (const helpFlag of ['--help', '-h']) {
+      const result = runCli('sync', helpFlag);
+      assert.equal(result.status, 0);
+      assert.match(result.stdout, /Usage: kmwc sync/);
+    }
+    assert.equal(existsSync(join(temporaryRoot, 'Makefile')), false, 'sync --help wrote files');
+    const typoResult = runCli('sync', '--chek');
+    assert.equal(typoResult.status, 2);
+    assert.match(typoResult.stderr, /unknown option "--chek"/);
+    assert.equal(existsSync(join(temporaryRoot, 'Makefile')), false, 'sync with an unknown option wrote files');
+  } finally {
+    rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
+test('config: library: false and cssVariables: false — no library build, no check:vars', () => {
+  const temporaryRoot = mkdtempSync(join(tmpdir(), 'kmwc-library-'));
+  try {
+    writeFileSync(join(temporaryRoot, 'component-variables.manifest.json'), '{}');
+    const defaultConfig = mapKmwcConfig(createPackageJson(), temporaryRoot);
+    assert.equal(defaultConfig.library.shouldBuild, true);
+    assert.equal(defaultConfig.cssVariables.isEnabled, true);
+    assert.equal(getStandardScripts(defaultConfig).build, 'vite build');
+    assert.equal(getStandardScripts(defaultConfig)['check:vars'], 'kmwc check-vars');
+
+    const libraryConfig = mapKmwcConfig(createPackageJson({ library: false, cssVariables: false }), temporaryRoot);
+    assert.equal(libraryConfig.library.shouldBuild, false);
+    assert.equal(libraryConfig.library.entry, 'src/index.ts', 'pages still load the entry');
+    assert.equal(libraryConfig.cssVariables.isEnabled, false);
+    assert.equal('build' in getStandardScripts(libraryConfig), false);
+    assert.equal('check:vars' in getStandardScripts(libraryConfig), false);
+    assert.equal(mapKmwcConfig(createPackageJson({ cssVariables: { checkMode: 'off' } }), temporaryRoot).cssVariables.isEnabled, false);
+  } finally {
+    rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
+test('vite: with library: false a plain build refuses to run, the examples build still runs', async () => {
+  const { defineComponentConfig } = await import('../src/vite/index.js');
+  const getViteConfig = defineComponentConfig({ root: PLAYGROUND_ROOT, library: false });
+  await assert.rejects(getViteConfig({ command: 'build', mode: 'production' }), /kmwc\.library is false/);
+  const examplesConfig = await getViteConfig({ command: 'build', mode: 'examples' });
+  assert.equal(examplesConfig.build.outDir, 'dist-examples');
+});
+
+test('doctor: a library runs only the suites that apply to it', () => {
+  assert.equal(getRegistryKind('web-components-core'), 'library');
+  assert.equal(getRegistryKind('web-multiselect'), 'component');
+  assert.equal(getRegistryKind('web-not-registered'), 'component');
+  assert.equal(mapKmwcConfig(createPackageJson({ kind: 'library' })).kind, 'library');
+  assert.deepEqual(getRulebookSuites('component'), RULEBOOK_SUITES);
+  const librarySuiteNames = getRulebookSuites('library').map((suite) => suite.name);
+  assert.deepEqual(librarySuiteNames, ['naming-conventions', 'readme-structure', 'publish-command', 'example-pages']);
 });
