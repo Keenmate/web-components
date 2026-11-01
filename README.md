@@ -19,22 +19,21 @@ them in the same shape: `@keenmate/web-components-devkit`.
 > positioning) lives in [`@keenmate/web-components-core`](../web-components-core).
 > Nothing here ships inside a component's bundle.
 
+## What's New in v1.0.0-rc03
+
+- **Spotlight — Ctrl/⌘+K chapter search across every example page** — Example sites grew to dozens of chapters over several pages, and the per-page chapter nav only knew its own page. The Vite plugin now builds an index of every page's `<h2>`s (`virtual:kmwc-chapters`), coded and uncoded, and Ctrl/⌘+K opens a search that matches the section code or the heading text (`th7` finds `TH07`), grouped by page with the current one first. Enter jumps, Ctrl/⌘+Enter opens a new tab. It mirrors web-commandpalette's markup, matching, keyboard map and CSS without depending on it; `npm run check:spotlight-mirror` lists what changed there since the last alignment. Turn it off with `kmwc.examples.isSpotlightEnabled: false`.
+- **Form controls — one look for native inputs on every example page** — Pages styled their own selects and inputs, or got the browser default, so a select next to the kit's buttons came out shorter and in the platform's style (a `.controls` row was the only place the kit reached). Text fields, selects and list boxes, textareas, checkboxes, radios, `role="switch"` switches, ranges, colour and file inputs are now styled with no class, modelled on pure-admin's forms. Inputs, selects and buttons share `--kmwc-control-height`, so a mixed row lines up in any container. Focus, placeholder, disabled tone, checkbox size and the tick read the `--base-*` contract. The rules are zero-specificity, and `kmwc-native` opts an element out.
+- **Tables — every table styled, `.reference-table` plus modifiers** — Only `.reference-table` had a look; a bare table was unstyled and pages wrote their own table CSS with fixed light colours that break in dark mode. Any `<table>` now gets a header fill, row lines and a hover tint, and modifiers combine: `.table-full`, `.table-bordered`, `.table-striped`, and `.table-compact`, whose inputs and buttons shrink with the rows. Add `tr.is-highlight` and `.num` (tabular figures). Every wide table scrolls inside its card on a phone.
+- **Scaffold — component CSS no longer restyles the host page** — The `*, *::before, *::after { box-sizing: inherit }` reset in the `kmwc new` and `--minimal` templates also reached the page through the component's light-DOM stylesheet, in a layer that beats `@layer kmwc`, so page controls rendered content-box (a 36 px input came out 38 px). It is scoped to `:host *` now, and a unit test rejects any universal or bare-element selector in scaffold CSS. Components scaffolded on rc01/rc02 should make the same one-line change in `src/css/base.css`.
+- **Example pages — short chapter links, phones and the example-pages suite** — `#th07`, `#th7` or an uncoded heading's slug now scroll to that chapter on arrival. On a phone, example pages no longer grow wider than the screen, which made mobile browsers report a wrong viewport to pages that demo breakpoints. `kmwc doctor` runs the rulebook's new `example-pages` suite: every example `<h2>` carries a permanent section code.
+- **`make dev` at the devkit root** — the standard `dev` / `kill-port` / `build-examples` / `preview-examples` targets, run against the playground.
+
 ## What's New in v1.0.0-rc02
 
 - **Theming — kit and scaffolds follow base-css-variables 2.0** — base-css-variables 2.0 dropped `--base-accent-color*`, `--base-text-color-on-accent` and `--base-input-color`, so a theme's primary colour silently stopped reaching the example pages and every newly scaffolded component. The `--kmwc-*` tokens in `src/examples/css/tokens.css` and the `templates/new*` `variables.css` now read `--base-primary-color` (with `-hover` / `-active` / `-bg-subtle`), `--base-on-primary-text-color` and `--base-input-text-color`, and the theming pages, docs and manifests set the new names. Standalone fallbacks are now the contract's own values, so a page looks the same with or without the contract loaded: a blue-500 primary instead of the old purple, slate surfaces, and on-colours computed from their fill. Re-run `kmwc new` output or diff your `variables.css` if you scaffolded on rc01.
 - **`npm run check:contract` — fallbacks can't drift from the contract** — `base-contract-check` from `@keenmate/base-css-variables` now runs over the kit, the scaffold templates and the playground. It fails when a `--base-*` read doesn't exist in the contract, when an input's fallback differs from the contract default, or when a derived token's fallback isn't the contract formula. Deliberate differences, such as the scaffolds inheriting the page font, are listed with a reason in `contract-check.json`. It's part of the gate before every kit or template change.
 - **`kmwc new --adopt` — migrate a component that's already registered** — Brings an existing repo onto the devkit with the same rulebook-shaped scaffold, using the registry entry's port block and CSS prefix, skipping the npm-name check (the package already exists) and leaving `components.json` untouched. Scaffold into a scratch `--dir` and move the component's code in. web-editor's one-package monorepo was flattened this way.
 - **`kmwc doctor` — rulebook suites run from an npm install** — With the devkit installed from npm instead of linked, doctor looked for the BlissFramework rulebook at a path relative to the devkit, which ended up inside `node_modules`, and silently skipped every suite. It now uses the nearest `BlissFramework/guidelines/web-components` above the component (then above the devkit), and `kmwc.rulebook.path` resolves against the component root.
-
-## What's New in v1.0.0-rc01
-
-- **Devkit — one shared toolchain for every Keenmate web component** — Each `web-*` repo used to carry its own copy of the example helpers, the shared stylesheet, the Vite/Playwright configs and the deploy files, and every session "fixed" its own copy until they drifted apart. `@keenmate/web-components-devkit` owns all of it now: a component describes itself once in `package.json#kmwc` (title, prefix, ports, accent colours, analytics, image) and `defineComponentConfig()`, `definePlaywrightConfig()` and the `kmwc` CLI read it from there. A shared concern is fixed once in the devkit and every component picks it up on the next install.
-- **Vite preset — dev, library and examples-site builds from one config** — `defineComponentConfig()` (Vite 7) runs the dev server on the repo's registry port with `strictPort`, builds the library (`es` + `umd`, `style.css` kept under its historical name, rolled-up `.d.ts`) and, with `--mode examples`, builds every root `*.html` into a static multi-page site in `dist-examples/` with relative asset URLs. The examples plugin injects the kit into each page and loads its stylesheet render-blocking, so pages don't flash unstyled on reload.
-- **Examples kit — one design system and set of page helpers instead of six forks** — The `@layer kmwc` stylesheet merges six diverged `examples-shared.css` copies; its `--kmwc-*` tokens read the rulebook's `--base-*` taxonomy with `light-dark()` fallbacks, so a theme-designer theme restyles the demo page together with the component. Every page gets a light / dark / auto theme switch (it sets `data-theme` on `<html>`, the signal components react to), a chapter nav and copy-link buttons that share one slug algorithm, a version badge with the build stamp, and build-only Plausible. `attachControlsPersistence()` and `renderExamplesIndex()` replace the per-repo controls store and the 150-line inline index page.
-- **Fragment pages — no more copied page boilerplate** — A page without `<html>` is a fragment: `<meta name="kmwc:title">` and friends drive the shared layout (head, entry script, header with back link, container), `<kmwc-include>` pulls parameterised partials (nesting, cycle detection), and `<kmwc-demo>` renders live markup plus a code block of exactly that markup, so a snippet can no longer drift from its demo. Full documents pass through untouched, so pages migrate one at a time.
-- **`kmwc` CLI — generate, check and gate instead of hand-edit** — `kmwc sync` writes the Dockerfile, nginx.conf, Makefile (repo targets in `Makefile.local`), .dockerignore and a managed CLAUDE.md block from templates. `kmwc doctor` runs the devkit checks, an `npm pack` contents check (no CLAUDE.md, tests or example pages in the package) and every BlissFramework rulebook `*.checks.sh` suite. `kmwc check-vars` replaces three diverged manifest scripts (declared or consumed mode), and `kmwc check-release` gates `make publish*` on the dist-tag ⇔ version rule.
-- **`kmwc new` — a rulebook-shaped component on the first commit** — The scaffold runs the rulebook intake (npm name free, CSS prefix 2–4 letters and not reserved, next free port block) and generates the Element / Logic / types / logger layers, the canonical eight-file CSS set with Strategy-B dark mode, a Custom Elements Manifest, README + `docs/`, CHANGELOG, `/publish`, fragment example pages and smoke + dark-mode e2e specs. It passes every rulebook suite as generated; `--minimal` gives an empty skeleton instead of the sample toggle.
-- **Catalogue and port registry — every component listed, no port collisions** — `components.json` registers every Keenmate repo with its CSS prefix and a 100-port block (dev = block, preview = +1, image = +10), numbered inside a range per kind (components 12100–14900, libraries 15000–, showcases 16000–, tests 17000–), so any number of repos run side by side. The README catalogue is generated from it, with a ✅ for each repo on the devkit; web-commandpalette is the first.
 
 ## Catalogue
 
@@ -267,10 +266,26 @@ doctor` lists the ones still repeating the head/header boilerplate.
   Re-theme a site with `kmwc.theme.accentColor`. The page vocabulary is
   unchanged from the old shared CSS — `.card`, `.example-section`, `.controls`,
   `.demo-area`, `.demo-card`, `.code-block`, `.note(.warning|.info|.success|.error)`,
-  `.grid`/`.card-grid`, `.reference-table`, `.log-panel`, `.pill`,
+  `.grid`/`.card-grid`, `.reference-table` (+ `.table-*` modifiers), `.log-panel`, `.pill`,
   `.status-dot`, `.control-group`, buttons (`.btn-secondary`, `.btn-outline`,
   `.btn-danger`) — while everything the kit **generates** is prefixed BEM
   (`kmwc-chapter-nav__item--active`, `kmwc-copy-link--copied`, …).
+- **Form controls** look the same on every page without a class: text fields,
+  selects and list boxes (`multiple` / `size`), textareas, checkboxes, radios,
+  switches (`<input type="checkbox" role="switch">`), ranges, colour and file
+  inputs, fieldsets — modelled on pure-admin's forms and read through the
+  `--base-input-*` / `--base-checkbox-*` / `--base-icon-check` contract. Inputs,
+  selects and buttons share `--kmwc-control-height`, so a row of them lines up
+  in any container, not only `.controls`. The rules are zero-specificity
+  (`:where()`); `kmwc-native` on an element or an ancestor keeps the browser's
+  own controls (a light-DOM component that draws its own inputs). The
+  playground's `examples-forms.html` shows them all.
+- **Tables:** any `<table>` gets a header fill, row lines and a hover tint;
+  `.reference-table` is the full-width, fully bordered API table. Modifiers
+  combine — `.table-full`, `.table-bordered`, `.table-striped`, `.table-compact`
+  (tighter cells; the controls in it shrink via `--kmwc-control-height`) — plus
+  `tr.is-highlight` and a `.num` cell (right-aligned, tabular figures). On a phone
+  a wide table scrolls inside its card. See the playground's `examples-tables.html`.
 - **Theme switch** (top right) cycles light → dark → auto and sets
   `data-theme` on `<html>` — the same signal components react to via
   `:host-context([data-theme])`, so every example page is a dark-mode smoke

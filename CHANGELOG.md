@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.0.0-rc03] - 2026-11-01 [PUBLISHED]
 
 ### Fixed
 
@@ -9,9 +9,35 @@
   wraps and a `.controls` select is capped at the row, instead of overflowing. Besides the sideways scroll, an over-wide page made mobile
   browsers grow the layout viewport (a 390 px phone reporting ~600 px), so pages that
   demo device / breakpoint detection showed the wrong class.
+- **The scaffold's component CSS no longer sets `box-sizing` on the host page** — the
+  `*, *::before, *::after { box-sizing: inherit }` reset in `templates/new/src/css/base.css`
+  (also in the `--minimal` scaffold and the playground) reached the page through the light-DOM stylesheet, in a layer that beats
+  `@layer kmwc`, so every page control rendered content-box (the spotlight input overflowed, a
+  36 px input came out 38 px). It is scoped to `:host *` now; components scaffolded with an
+  earlier devkit should make the same one-line change. A unit test now rejects any universal or
+  bare-element selector in the scaffold CSS.
 
 ### Added
 
+- **Form controls: one look for native inputs on every example page** — text fields, selects
+  and list boxes, textareas, checkboxes (incl. indeterminate), radios, switches
+  (`<input type="checkbox" role="switch">`), ranges, colour and file inputs and fieldsets are
+  styled without a class, modelled on pure-admin's forms: inputs, selects and buttons share
+  `--kmwc-control-height`, so a row of them lines up in any container (not only `.controls`);
+  the focus border and halo, placeholder, disabled tone, the checkbox size and the
+  `--base-icon-check` / `-indeterminate` tick read the `--base-*` contract. Rules are
+  zero-specificity (`:where()`); `kmwc-native` on an element or an ancestor keeps the
+  browser's own controls. Outline buttons are as tall as filled ones now (transparent border).
+  The playground's new `examples-forms.html` shows them all.
+- **Tables: every `<table>` on an example page is styled** — a header fill, row lines, hover
+  tint, caption and footer, as pure-admin's `.pa-table`. `.reference-table` looks as before;
+  new modifiers combine with it or a bare table: `.table-full`, `.table-bordered`,
+  `.table-striped`, `.table-compact` (tighter cells, and the inputs / selects / buttons in it
+  shrink with them via `--kmwc-control-height`), plus `tr.is-highlight` on any table and a
+  `.num` cell (right-aligned, tabular figures). Every table, not only `.reference-table`,
+  scrolls inside its card on a phone. Pages no longer need their own table CSS with fixed light
+  colours (core's `.rs-table`, which breaks in dark mode). New playground page
+  `examples-tables.html`.
 - **Spotlight: Ctrl/⌘+K chapter search across every example page** — matches a chapter whose
   section code or heading text contains the query (`th7` finds `TH07`; uncoded `Summary` /
   reference sections by title), grouped by page with the current page first; Enter jumps,
@@ -37,11 +63,6 @@
   mirrored core `lockBodyScroll()` only sets `overflow: hidden`, so the scrollbar disappears
   (wcp has the same jump). pure-admin / pure-css avoid it with a `position: fixed` lock and
   width compensation; the proposal to bring that into core is in web-commandpalette's CLAUDE.md.
-- **The scaffold's component CSS sets `box-sizing` on the whole host page** —
-  `templates/new/src/css/base.css` has an unscoped `*, *::before, *::after { box-sizing: inherit }`
-  that also reaches the page through the light-DOM stylesheet, in a layer that beats `@layer kmwc`
-  (visible as the spotlight input overflowing in the playground). Fix pending: scope it to
-  `:host *`.
 
 ## [1.0.0-rc02] - 2026-10-31 [PUBLISHED]
 
