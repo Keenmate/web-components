@@ -95,7 +95,9 @@ async function loadPageReport(browser, pageUrl, width) {
 }
 
 async function startDevServer(config) {
-  const { createServer } = await loadPeerModule(config.root, 'vite');
+  const viteModule = await loadPeerModule(config.root, 'vite');
+  // Vite < 6 resolves to its CJS build here: the API sits on `default`.
+  const createServer = viteModule.createServer || viteModule.default?.createServer;
   // Run like `npm run dev` in the repo: the preset reads package.json#kmwc from the cwd,
   // and Vite looks for vite.config there too.
   process.chdir(config.root);

@@ -14,7 +14,7 @@ const PORT_BLOCK_SIZE = 100;
 const PLAUSIBLE_SNIPPET_FILE = 'plausible-snippet.html';
 const DOC_FILES = ['README.md', 'CLAUDE.md'];
 const DOCS_DIR = 'docs';
-const SIBLING_PORT_FILES = ['vite.config.ts', 'vite.config.mjs', 'vite.config.js', 'playwright.config.ts', 'playwright.config.mjs', 'playwright.config.js', 'Makefile'];
+const SIBLING_PORT_FILES = ['vite.config.ts', 'vite.config.mjs', 'vite.config.js', 'playwright.config.ts', 'playwright.config.mjs', 'playwright.config.js', 'Makefile', 'make.bat'];
 const PORTED_SCRIPTS = { dev: 'dev', preview: 'preview', 'preview:examples': 'preview' };
 const CHECK_ID_PATTERN = /\bC-[A-Z]+-\d+\b/g;
 

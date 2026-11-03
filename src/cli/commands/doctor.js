@@ -291,7 +291,7 @@ function checkPorts(config, portBlock, { addPass, addWarning, addError }) {
     addWarning(
       'ports',
       `docs mention ports outside ${blockLabel}: ${stalePortMentions.map(({ file, port }) => `${file} ${port}`).join(', ')}`,
-      `update them to ${config.ports.dev} (dev) / ${config.ports.image} (image)`
+      `update them to ${getPortsForBlock(portBlock).dev} (dev) / ${getPortsForBlock(portBlock).image} (image)`
     );
   }
   if (!scriptPortMismatches.length && !ownStrayPorts.length && !siblingCollisions.length && !stalePortMentions.length) {
