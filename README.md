@@ -42,7 +42,7 @@ them in the same shape: `@keenmate/web-components-devkit`.
 |---|---|---|---:|---|:---:|---|
 | **web-multiselect** | `@keenmate/web-multiselect` | `ms` | 12100 | [repo](https://github.com/keenmate/web-multiselect) · [examples](https://examples.web-multiselect.keenmate.dev) · [docs](https://web-multiselect.keenmate.dev) · `web-multiselect-showcase` · `web-multiselect-docs` | — | Lightweight multiselect web component with typeahead search, rich content support, and excellent keyboard… |
 | **web-daterangepicker** | `@keenmate/web-daterangepicker` | `drp` | 12200 | [repo](https://github.com/keenmate/web-daterangepicker) · [docs](https://web-daterangepicker.keenmate.dev) · `web-daterangepicker-showcase` | — | Lightweight date picker web component with excellent keyboard navigation and range selection |
-| **web-treeview** | `@keenmate/web-treeview` | `wtv` | 12300 | [repo](https://github.com/keenmate/web-treeview) · `web-treeview-showcase` | — | Lightweight treeview web component with hierarchical data display, search, expand/collapse, drag-drop, and… |
+| **web-treeview** | `@keenmate/web-treeview` | `wtv` | 12300 | [repo](https://github.com/keenmate/web-treeview) · `web-treeview-showcase` | ✅ | Lightweight treeview web component with hierarchical data display, search, expand/collapse, drag-drop, and… |
 | **web-commandpalette** | `@keenmate/web-commandpalette` | `cp` | 12400 | [repo](https://github.com/keenmate/web-commandpalette) · [examples](https://examples.web-commandpalette.keenmate.dev) | ✅ | Framework-agnostic command-palette web component — modes, multi-step commands, scoped + global search,… |
 | **web-dropzone** | `@keenmate/web-dropzone` | `dz` | 12500 | [repo](https://github.com/keenmate/web-dropzone) | — | Lightweight file dropzone web component with drag-drop, previews, validation, and multiple display modes. |
 | **web-grid** | `@keenmate/web-grid` | `wg` | 12600 | [repo](https://github.com/keenmate/web-grid) · [docs](https://web-grid.keenmate.com) · [showcase](https://web-grid.keenmate.com) | — | Framework-agnostic data grid web component with sorting, filtering, inline editing, and keyboard navigation |
@@ -168,9 +168,11 @@ Every field is optional. Defaults are derived from the package.
     "packageJsonPaths": ["package.json"]         // monorepos: list workspace package.jsons too
   },
   "cssVariables": {                              // false: no variables manifest, no check:vars
-    "sources": ["src/css"],                      // dirs (stylesheets) or explicit files (any type)
+    "sources": ["src/css"],                      // dirs (stylesheets) or explicit files (any type); a package
+                                                 // path (e.g. a core module's CSS) resolves from node_modules
     "internalVariables": ["ms-input-current-width"], // runtime internals, not theming knobs
-    "checkMode": "declared"                      // or "consumed" (var() reads)
+    "checkMode": "declared"                      // declared OR read (an input knob may be read, never set);
+                                                 // "consumed": var() reads only
   },
   "rulebook": {
     "path": "../BlissFramework/guidelines/web-components", // relative to the component; default: the nearest
@@ -362,6 +364,10 @@ kmwc doctor [--json]          devkit checks + package contents + the rulebook's 
                               (exit 1 on errors). --verbose lists passes, --no-rulebook skips the
                               suites, --no-pack skips the package-contents check
 kmwc check-vars [--strict]    component-variables.manifest.json ⇔ CSS
+kmwc check-pages [--url u]    every example page in Chromium at 1440 / 390 / 320px: page and console
+                              errors, failed requests, never-defined elements, a page wider than the
+                              viewport. Starts the dev server unless --url (e.g. the built site);
+                              --widths 1440,390,320
 kmwc check-release --tag t    latest ⇔ release version, rc ⇔ -rcN, version not yet on npm
 kmwc new web-<name>           scaffold a component (--prefix, --title, --tag, --dir, --port, --minimal, --register)
                               --adopt: scaffold an ALREADY registered component (its port/prefix) to migrate into
@@ -388,7 +394,31 @@ and example-pages; the others check what a custom element ships (its CSS,
 manifest, overlay).
 When the rulebook isn't checked out (or there's no bash) the suites are
 skipped with a warning — the rulebook stays the single source of truth; the
-devkit never copies its rules.
+devkit never copies its rules. A failure whose check id heads a section of
+`VALIDATION-NOTES.md` (`## C-CSS-1 — Lean strategy`, `## C-CST-4 / C-CST-10 — …`)
+is an accepted deviation — an architectural decision recorded per the rulebook —
+and counts as a pass (`--verbose` lists them).
+
+**What else doctor checks.** Beyond the presets, legacy files, fragment pages and
+generated files:
+
+- **Library outputs** — every `./dist/…` target in package.json (`main`,
+  `module`, `types`, `style`, `exports`) is a file the library build emits. Before
+  the switch to the preset it also compares the old `lib.name` with
+  `kmwc.library.globalName` — a renamed UMD global or CSS file breaks consumers
+  silently.
+- **Ports** — no script pins a `--port` of its own, the repo's configs, Makefile
+  and docs stay inside its registry block, and no sibling checkout (a registry
+  entry at `../<id>`) listens on a port inside it.
+- **Analytics** — no other repo uses the same Plausible site id.
+- **Page CSS** — a page `<style>` or `examples-local.css` rule on a kit-owned
+  selector (`.kbd`, `kbd`, `mark`, `.pill`, `.card` …) and single-declaration
+  inline styles a kit class covers (`width` on a field → `.w-*`,
+  `margin-left: auto` → `.push-end`, `margin-top: 1rem` → `.mt-1`) are warnings.
+
+`kmwc check-pages` is the browser half: it loads every example page and reports
+what doctor can't see in the source — a script error, a 404, a fixed width that
+pushes a phone sideways.
 
 **Package contents.** Doctor runs `npm pack --dry-run` and fails on anything
 dev-only that would reach a consumer's `node_modules`: `CLAUDE.md` at any
@@ -451,7 +481,11 @@ registry edits), and move the component's own code into that layout with
    runner from the old Makefile, the canonical origin from the old
    `examples-copy-link.js`, and internals from the old
    `check-variable-manifest.mjs` (`cssVariables.internalVariables`).
-3. Replace `vite.config.ts` (and any `vite.examples.config.ts`) with
+3. Run `npx kmwc doctor` **before** replacing `vite.config.ts`: it compares the
+   old `lib.name` with `kmwc.library.globalName` and package.json's `dist/`
+   targets with the preset's outputs — set `library.globalName` / `fileName` /
+   `cssFileName` to the published names so nothing gets renamed. Then replace
+   `vite.config.ts` (and any `vite.examples.config.ts`) with
    `defineComponentConfig()`. Move genuinely specific bits to `plugins` and
    `overrides`. Do the same for `playwright.config.ts`.
 4. Pages: delete the `<link href="examples-shared.css">` and the
@@ -468,10 +502,11 @@ registry edits), and move the component's own code into that layout with
 7. Set `"check:vars": "kmwc check-vars"` and run it.
 8. `npx kmwc sync`, then review the diff. Repo-specific Makefile targets move
    to `Makefile.local`.
-9. Check it runs: `npm run dev`, `npm run build`, `npm run build:examples`,
-   `npm run preview:examples`, the e2e tests, and finally `npx kmwc doctor`
-   (devkit + rulebook — rulebook failures are real findings to fix or to
-   document under `## Known limitations`, per the rulebook).
+9. Check it runs: `npm run dev`, `npm run build` (compare `dist/` with the old
+   build), `npm run build:examples`, `npm run preview:examples`, the e2e tests,
+   `npx kmwc check-pages` (and `--url` on the preview port for the built site),
+   and finally `npx kmwc doctor` (devkit + rulebook — rulebook failures are real
+   findings to fix, or architectural decisions to record in `VALIDATION-NOTES.md`).
 
 ### Developing the devkit
 

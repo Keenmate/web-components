@@ -19,8 +19,25 @@ import { spawnSync } from 'node:child_process';
 import { getKmwcConfig, getPortsForBlock, getRegistry, LEGACY_FILES, NON_PAGE_HTML_FILES, PACKAGE_LEAK_RULES, PACKAGE_FILES_EXCLUSIONS } from '../../config.js';
 import { getSyncPlan, getScriptsPlan, CLAUDE_BLOCK_START } from '../sync-plan.js';
 import { checkIsFragment } from '../../vite/page-composer.js';
+import {
+  VALIDATION_NOTES_FILE,
+  loadAcceptedCheckIds,
+  getLibraryOutputMismatches,
+  getLibraryOutputPaths,
+  getLegacyGlobalName,
+  getPortBlockRange,
+  getScriptPortMismatches,
+  loadStalePortMentions,
+  loadSiblingPortCollisions,
+  loadOwnPortsOutsideBlock,
+  loadPlausibleSiteId,
+  loadSharedPlausibleSiteIds,
+  loadKitClassNames,
+  getKitDuplicates,
+} from '../repo-checks.js';
 
 const DEVKIT_PACKAGE_NAME = '@keenmate/web-components-devkit';
+const LOCAL_STYLESHEET_FILE = 'examples-local.css';
 const LEGACY_PAGE_REFERENCES = ['examples-shared.css', 'examples-chapter-nav.js', 'examples-copy-link.js', 'examples-controls-store.js'];
 const VITE_CONFIG_FILES = ['vite.config.ts', 'vite.config.mjs', 'vite.config.js'];
 const PLAYWRIGHT_CONFIG_FILES = ['playwright.config.ts', 'playwright.config.mjs', 'playwright.config.js'];
@@ -114,6 +131,11 @@ export function checkComponent(config, doctorConfig = {}) {
   if (!viteConfigFile) addError('vite', 'no vite.config.*', 'create one: export default defineComponentConfig()');
   else if (!/defineComponentConfig|createExamplesPlugin/.test(readFileSync(join(config.root, viteConfigFile), 'utf8'))) {
     addError('vite', `${viteConfigFile} doesn't use the devkit preset`, "import { defineComponentConfig } from '@keenmate/web-components-devkit/vite'");
+    // Before the switch: the preset derives the UMD global from kmwc — a silent rename breaks script-tag users.
+    const legacyGlobalName = getLegacyGlobalName(readFileSync(join(config.root, viteConfigFile), 'utf8'));
+    if (legacyGlobalName && config.library.shouldBuild && legacyGlobalName !== config.library.globalName) {
+      addError('vite', `the UMD global is "${legacyGlobalName}" today; the preset would make it "${config.library.globalName}"`, `set kmwc.library.globalName to "${legacyGlobalName}"`);
+    }
   } else addPass('vite', `${viteConfigFile} uses the devkit preset`);
 
   const playwrightConfigFile = getFirstExistingFile(config.root, PLAYWRIGHT_CONFIG_FILES);
@@ -160,6 +182,21 @@ export function checkComponent(config, doctorConfig = {}) {
     );
   }
 
+  // Page CSS that re-implements the kit (a local .kbd after the kit styled <kbd>, inline widths …).
+  const kitClassNames = loadKitClassNames();
+  const localStylesheetPath = join(config.root, LOCAL_STYLESHEET_FILE);
+  const kitDuplicateSources = [
+    ...pageFiles.map((pageFile) => ({ file: pageFile, duplicates: getKitDuplicates(readFileSync(join(config.root, pageFile), 'utf8'), kitClassNames) })),
+    ...(existsSync(localStylesheetPath)
+      ? [{ file: LOCAL_STYLESHEET_FILE, duplicates: getKitDuplicates(readFileSync(localStylesheetPath, 'utf8'), kitClassNames, { isStylesheet: true }) }]
+      : []),
+  ].filter((source) => source.duplicates.length);
+  for (const { file, duplicates } of kitDuplicateSources) {
+    const shownDuplicates = duplicates.slice(0, 3).map((duplicate) => `${duplicate.found} → ${duplicate.advice}`).join('; ');
+    addWarning('pages', `${file}: ${duplicates.length} rule(s) / style(s) the kit already covers — ${shownDuplicates}${duplicates.length > 3 ? ' …' : ''}`, 'use the kit (devkit README "Examples kit")');
+  }
+  if (pageFiles.length && !kitDuplicateSources.length) addPass('pages', 'no page CSS re-implements the kit');
+
   // ── generated files ──────────────────────────────────────────────────────
   if (config.hasPackageConfig) {
     for (const planItem of getSyncPlan(config)) {
@@ -195,11 +232,36 @@ export function checkComponent(config, doctorConfig = {}) {
           `set package.json#kmwc.ports to { "dev": ${registryPorts.dev}, "image": ${registryPorts.image} } (components.json port block ${registryEntry.port})`
         );
       } else addPass('registry', `ports match the registry (dev ${config.ports.dev}, image ${config.ports.image})`);
+      checkPorts(config, registryEntry.port, { addPass, addWarning, addError });
     }
     if (registryEntry.prefix && config.prefix && registryEntry.prefix !== config.prefix) {
       addError('registry', `kmwc.prefix "${config.prefix}" ≠ registry prefix "${registryEntry.prefix}"`, 'use the reserved prefix');
     }
   }
+
+  // ── library output names ─────────────────────────────────────────────────
+  if (config.hasPackageConfig && config.library.shouldBuild) {
+    const outputMismatches = getLibraryOutputMismatches(config.packageJson, config.library);
+    for (const { field, target } of outputMismatches) {
+      addError(
+        'library',
+        `package.json#${field} → ${target}, but the library build emits ${getLibraryOutputPaths(config.library).join(', ')}`,
+        'set kmwc.library.fileName / cssFileName to the published names (or fix the package.json target)'
+      );
+    }
+    if (!outputMismatches.length) addPass('library', 'package.json targets match the library build outputs');
+  }
+
+  // ── analytics ────────────────────────────────────────────────────────────
+  const plausibleSiteId = loadPlausibleSiteId(config.root);
+  const sharingRepoIds = loadSharedPlausibleSiteIds(config, getRegistry(), plausibleSiteId);
+  if (sharingRepoIds.length) {
+    addError(
+      'analytics',
+      `Plausible site id ${plausibleSiteId} is also used by ${sharingRepoIds.join(', ')} — one site's traffic is counted as the other's`,
+      "set kmwc.analytics.plausibleSiteId to this site's own id"
+    );
+  } else if (plausibleSiteId) addPass('analytics', `Plausible site id ${plausibleSiteId} is this repo's own`);
 
   // ── package contents ─────────────────────────────────────────────────────
   if (doctorConfig.shouldCheckPackage !== false) checkPackageContents(config, { addPass, addWarning, addError });
@@ -208,6 +270,33 @@ export function checkComponent(config, doctorConfig = {}) {
   if (doctorConfig.shouldRunRulebook !== false) checkRulebook(config, { addPass, addWarning, addError });
 
   return results;
+}
+
+/** Ports: script --port flags, own configs and docs outside the block, siblings inside it. */
+function checkPorts(config, portBlock, { addPass, addWarning, addError }) {
+  const [firstPort, lastPort] = getPortBlockRange(portBlock);
+  const blockLabel = `${firstPort}–${lastPort}`;
+  const scriptPortMismatches = getScriptPortMismatches(config.packageJson.scripts, config.ports);
+  for (const { scriptName, port, expectedPort } of scriptPortMismatches) {
+    addError('ports', `script "${scriptName}" pins --port ${port}; kmwc.ports gives ${expectedPort}`, `drop the --port flag (the preset reads kmwc.ports)`);
+  }
+  const ownStrayPorts = loadOwnPortsOutsideBlock(config, portBlock).filter(({ file }) => !file.startsWith('package.json#scripts.'));
+  for (const { port, file } of ownStrayPorts) addError('ports', `${file} uses port ${port}, outside this repo's block ${blockLabel}`, 'take ports from kmwc.ports (the devkit presets do)');
+  const siblingCollisions = loadSiblingPortCollisions(config, getRegistry());
+  for (const { id, port, file } of siblingCollisions) {
+    addError('ports', `${id} uses port ${port} (${file}) — inside this repo's block ${blockLabel}`, `move ${id} to its own components.json block`);
+  }
+  const stalePortMentions = loadStalePortMentions(config.root, portBlock);
+  if (stalePortMentions.length) {
+    addWarning(
+      'ports',
+      `docs mention ports outside ${blockLabel}: ${stalePortMentions.map(({ file, port }) => `${file} ${port}`).join(', ')}`,
+      `update them to ${config.ports.dev} (dev) / ${config.ports.image} (image)`
+    );
+  }
+  if (!scriptPortMismatches.length && !ownStrayPorts.length && !siblingCollisions.length && !stalePortMentions.length) {
+    addPass('ports', `scripts, configs, docs and sibling repos keep to block ${blockLabel}`);
+  }
 }
 
 /** Packed paths that break PACKAGE_LEAK_RULES → [{ path, label }]. Pure — exported for tests. */
@@ -260,6 +349,7 @@ function checkRulebook(config, { addPass, addWarning, addError }) {
     return;
   }
   const skippedSuites = new Set(config.rulebook.skippedChecks);
+  const acceptedCheckIds = loadAcceptedCheckIds(config.root);
   const suites = getRulebookSuites(config.kind);
   if (suites.length < RULEBOOK_SUITES.length) {
     const componentOnlySuiteNames = RULEBOOK_SUITES.filter((suite) => !suites.includes(suite)).map((suite) => suite.name);
@@ -280,7 +370,11 @@ function checkRulebook(config, { addPass, addWarning, addError }) {
       continue;
     }
     const failures = getSuiteFailures(suiteResult.stdout);
-    for (const failure of failures) addError(checkName, `${failure.checkId} ${failure.reason}`, `see ${suite.name}.checks.md → ${failure.checkId}`);
+    for (const failure of failures) {
+      // An architectural decision recorded in VALIDATION-NOTES.md (the rulebook's accepted-deviation file).
+      if (acceptedCheckIds.has(failure.checkId)) addPass(checkName, `${failure.checkId} accepted deviation (${VALIDATION_NOTES_FILE}): ${failure.reason}`);
+      else addError(checkName, `${failure.checkId} ${failure.reason}`, `see ${suite.name}.checks.md → ${failure.checkId}`);
+    }
     if (!failures.length) addPass(checkName, suiteResult.status === 0 ? 'all auto checks pass' : `exit ${suiteResult.status}`);
   }
 }
@@ -302,6 +396,8 @@ export async function run(args) {
     if (result.level === 'pass' && !args.verbose) continue;
     console.log(`${LEVEL_ICONS[result.level]} [${result.checkName}] ${result.message}${result.fixHint ? `\n    → ${result.fixHint}` : ''}`);
   }
+  const acceptedCount = results.filter((result) => result.level === 'pass' && result.message.includes(`accepted deviation (${VALIDATION_NOTES_FILE})`)).length;
+  if (acceptedCount && !args.verbose) console.log(`ℹ ${acceptedCount} rulebook failure(s) accepted in ${VALIDATION_NOTES_FILE} (--verbose lists them)`);
   console.log(`\n${errorCount ? '✗' : '✓'} ${errorCount} error(s), ${warningCount} warning(s)${args.verbose ? '' : ' (--verbose lists passing checks)'}`);
   return errorCount ? 1 : 0;
 }

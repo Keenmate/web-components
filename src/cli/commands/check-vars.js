@@ -8,10 +8,12 @@
  *
  * Contract (prefix = kmwc.prefix or manifest.prefix, e.g. `ms`):
  *   - every `--base-*` read via var() must be in baseVariables, and vice versa
- *   - checkMode "declared" (default): every `--<prefix>-*` DECLARED (`--x:`)
- *     must be in componentVariables, and vice versa
- *   - checkMode "consumed": the same, but against `var(--<prefix>-*)` reads (for
- *     components whose public knobs are read-with-fallback, never declared)
+ *   - checkMode "declared" (default): every `--<prefix>-*` DECLARED (`--x:`) or
+ *     READ (`var(--x)`) must be in componentVariables, and vice versa. A read
+ *     without a declaration is an input variable — a public knob that is unset by
+ *     design, e.g. one forwarded to core's menu so a page-wide value still applies
+ *   - checkMode "consumed": only `var(--<prefix>-*)` reads count (for components
+ *     whose knobs are all read-with-fallback; a declared-but-unread name is dead)
  *   - names in kmwc.cssVariables.internalVariables are runtime internals — exempt
  *
  * Undocumented component variables are a warning unless --strict; everything else errors.
@@ -25,7 +27,9 @@ const STYLESHEET_EXTENSIONS = new Set(['.css', '.scss', '.sass', '.less', '.pcss
 /**
  * Directories are scanned for stylesheets; a file listed explicitly is read
  * whatever its type — e.g. a built bundle that inlines the compiled CSS, for
- * components whose SCSS generates variable names via interpolation.
+ * components whose SCSS generates variable names via interpolation, or a core
+ * module whose CSS the component renders (`@keenmate/web-components-core/dist/menu/styles.js`
+ * — a package path resolves from node_modules).
  */
 function getStylesheetTexts(sourcePath, stylesheetTexts, isExplicit = true) {
   if (!existsSync(sourcePath)) throw new Error(`cssVariables source not found: ${sourcePath}`);
@@ -35,6 +39,14 @@ function getStylesheetTexts(sourcePath, stylesheetTexts, isExplicit = true) {
     stylesheetTexts.push(readFileSync(sourcePath, 'utf8'));
   }
   return stylesheetTexts;
+}
+
+/** A source relative to the repo, else a package path (`@scope/pkg/dist/x.js`) under node_modules. */
+function resolveSourcePath(root, sourcePath) {
+  const repoPath = resolve(root, sourcePath);
+  if (existsSync(repoPath) || sourcePath.startsWith('.')) return repoPath;
+  const packagePath = resolve(root, 'node_modules', sourcePath);
+  return existsSync(packagePath) ? packagePath : repoPath;
 }
 
 const mapToRegExpSource = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -48,7 +60,7 @@ export function checkManifestVariables({ cssText, manifest, prefix, internalVari
   const consumedVariables = new Set([...cssText.matchAll(new RegExp(`var\\(\\s*--(${prefixSource}-[a-z0-9-]+)`, 'gi'))].map((match) => match[1]));
   const consumedBaseVariables = new Set([...cssText.matchAll(/var\(\s*--(base-[a-z0-9-]+)/gi)].map((match) => match[1]));
 
-  const componentVariablesInCss = checkMode === 'consumed' ? consumedVariables : declaredVariables;
+  const componentVariablesInCss = checkMode === 'consumed' ? consumedVariables : new Set([...declaredVariables, ...consumedVariables]);
   const internalVariableSet = new Set(internalVariables);
   const manifestComponentVariables = new Set((manifest.componentVariables || []).map((entry) => entry.name));
   const manifestBaseVariables = new Set((manifest.baseVariables || []).map((entry) => entry.name));
@@ -81,7 +93,7 @@ export async function run(args) {
   const prefix = config.prefix || manifest.prefix;
   if (!prefix) throw new Error('no variable prefix — set kmwc.prefix or "prefix" in the manifest');
 
-  const cssText = config.cssVariables.sources.flatMap((sourcePath) => getStylesheetTexts(resolve(config.root, sourcePath), [])).join('\n');
+  const cssText = config.cssVariables.sources.flatMap((sourcePath) => getStylesheetTexts(resolveSourcePath(config.root, sourcePath), [])).join('\n');
   const verdict = checkManifestVariables({
     cssText,
     manifest,
@@ -90,7 +102,7 @@ export async function run(args) {
     checkMode: config.cssVariables.checkMode,
   });
 
-  const presenceWord = config.cssVariables.checkMode === 'consumed' ? 'consumed via var()' : 'declared';
+  const presenceWord = config.cssVariables.checkMode === 'consumed' ? 'consumed via var()' : 'declared or read';
   const renderSection = (title, names) => `${title} (${names.length}):\n` + names.map((name) => `  --${name}`).join('\n');
   const errors = [];
   const warnings = [];

@@ -1,5 +1,54 @@
 # Changelog
 
+## [1.0.0-rc07] - 2026-11-03
+
+Found migrating web-treeview — each item is something doctor missed or got wrong there.
+
+### Added
+
+- **`kmwc check-pages`** — loads every example page in Chromium at 1440 / 390 / 320px and
+  reports page and console errors, failed requests, custom elements that never get defined and a
+  page wider than the viewport (with the widest elements named). treeview's iOS-Files mockup
+  (`width: 420px`) and theme gallery (`minmax(500px, 1fr)`) pushed a phone sideways and only a
+  browser could tell. Starts the repo's dev server, or `--url` for one already running (the built
+  site on the preview port); `--widths`. `kmwc sync` adds a `check:pages` script and a
+  `make check-pages` target.
+- **Doctor: accepted deviations** — a rulebook failure whose id heads a section of
+  `VALIDATION-NOTES.md` (`## C-CST-4 / C-CST-10 — …`) is an architectural decision recorded per the
+  rulebook and counts as a pass (`--verbose` lists them). treeview's documented C-CST-4 / C-CSS-1 /
+  C-NC-6 showed as errors.
+- **Doctor: library outputs** — every `./dist/…` target in package.json (`main`, `module`, `types`,
+  `style`, `exports`) must be a file the library build emits, and before the switch the old
+  `lib.name` must equal `kmwc.library.globalName`. The preset's defaults would have renamed
+  treeview's UMD global (`WebTreeView` → `WebTreeview`) and its CSS (`web-treeview.css` →
+  `style.css`) without a word.
+- **Doctor: ports** — a script that pins its own `--port`, a config / Makefile / doc port outside the
+  repo's registry block, and a sibling checkout listening inside it are reported. treeview ran on
+  21111 (docs too), and web-daterangepicker hardcoded treeview's 12300; the check also finds
+  web-multiselect and web-dropzone on 12200 and web-component-framework-test on 12300.
+- **Doctor: analytics** — a Plausible site id another repo also uses is an error (treeview's
+  snippet borrowed web-multiselect's, so its traffic was counted as multiselect's).
+- **Doctor: page CSS the kit covers** — page `<style>` / `examples-local.css` rules on kit-owned
+  selectors (`.kbd`, `kbd`, `mark`, `.pill` …) and one-declaration inline styles a kit class covers
+  (`width` on a field → `.w-*`, `margin-left: auto` → `.push-end`, `margin-top: 1rem` → `.mt-1`)
+  are warnings.
+
+### Changed
+
+- **check-vars: input variables** — in the default mode a component variable is present when it is
+  declared **or** read. A knob that is read but never declared is an input, unset by design:
+  treeview forwards `--wtv-context-menu-*` to core's private `--_km-menu-*` so a page-wide
+  `--km-menu-*` still applies, and declaring them would break that chain — check-vars called all 26
+  dead. A read-with-fallback that isn't in the manifest is now reported as undocumented.
+  `cssVariables.sources` also takes a package path (`@keenmate/web-components-core/dist/menu/styles.js`)
+  for the `--base-*` reads of a core module the component renders.
+
+### Fixed
+
+- **`mark` no longer splits a word** — the 2px side padding cut a match inside a word apart
+  (core's Search page: "Town send"); `padding: 0`, and a match that wraps keeps its look on both
+  lines (`box-decoration-break: clone`).
+
 ## [1.0.0-rc06] - 2026-11-01 [PUBLISHED]
 
 ### Added

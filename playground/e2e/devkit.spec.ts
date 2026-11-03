@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 
 // The devkit repo's own version (the playground links it via file:..).
@@ -361,6 +363,7 @@ test.describe('examples kit', () => {
     await expect(key).toHaveCSS('font-weight', '600');
     const mark = page.locator('#wg-mark mark').first();
     await expect(mark).toHaveCSS('font-weight', '600');
+    await expect(mark).toHaveCSS('padding-left', '0px'); // a match inside a word doesn't split it
     expect(await mark.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe('rgb(255, 255, 0)'); // not the browser yellow
     // The spotlight's own key hint keeps its look (its class wins over the kit's kbd).
     await expect(page.locator('.kmwc-spotlight__trigger-key')).toHaveCSS('border-bottom-width', '1px');
@@ -555,5 +558,19 @@ test.describe('built site only', () => {
     test.skip(testInfo.project.name !== 'built', 'build-only');
     await page.goto('/index.html');
     await expect(page.locator('.kmwc-index__version')).toHaveText(/^v0\.1\.0 \(built \d{4}-\d\d-\d\dT\d\d:\d\dZ\)$/);
+  });
+});
+
+test.describe('kmwc check-pages', () => {
+  // The CLI itself, against this project's server (dev, or the built site): every
+  // playground page is clean at a phone width. (Catching problems is unit-tested via getPageProblems.)
+  test('reports every playground page clean at 320px', async ({ baseURL }) => {
+    test.setTimeout(120_000);
+    const devkitCli = fileURLToPath(new URL('../../src/cli/kmwc.js', import.meta.url));
+    const playgroundRoot = fileURLToPath(new URL('..', import.meta.url));
+    const result = spawnSync(process.execPath, [devkitCli, 'check-pages', '--url', baseURL!, '--widths', '320', '--root', playgroundRoot], { encoding: 'utf8' });
+    expect(result.stdout).toContain('✓ examples-widgets.html');
+    expect(result.stdout).toContain('✓ 0 problem(s)');
+    expect(result.status).toBe(0);
   });
 });

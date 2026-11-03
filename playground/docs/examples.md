@@ -1,6 +1,6 @@
 # Examples — `<web-playground>`
 
-Live examples: run `make dev` and open http://localhost:13900.
+Live examples: run `make dev` and open http://localhost:17300.
 
 ## Common patterns
 

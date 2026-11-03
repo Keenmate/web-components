@@ -25,6 +25,22 @@ import { checkPrefix, generatePackageJson, generatePrefix, getReservedPrefixes }
 import { renderCatalogue } from '../src/cli/commands/readme.js';
 import { createExamplesPlugin } from '../src/vite/index.js';
 import { parseArgs } from '../src/cli/args.js';
+import {
+  getAcceptedCheckIds,
+  getLibraryOutputPaths,
+  getLibraryOutputMismatches,
+  getLegacyGlobalName,
+  getScriptPortMismatches,
+  getMentionedPorts,
+  getPortBlockRange,
+  loadSiblingPortCollisions,
+  loadStalePortMentions,
+  loadPlausibleSiteId,
+  loadSharedPlausibleSiteIds,
+  loadKitClassNames,
+  getKitDuplicates,
+} from '../src/cli/repo-checks.js';
+import { parseWidths, getPageProblems, DEFAULT_WIDTHS } from '../src/cli/commands/check-pages.js';
 import { CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, SPOTLIGHT_CLASSES, THEME_SWITCH_CLASSES } from '../src/examples/constants.js';
 import { generateChapterIndex, getPageChapters, getHeadingText } from '../src/vite/chapter-index.js';
 import { searchChapters, checkMatchesAny, renderHighlightedText } from '../src/examples/chapter-search.js';
@@ -142,20 +158,22 @@ test('sync plan: playground is in sync', () => {
   assert.deepEqual(driftedPaths, []);
 });
 
-test('check-vars: declared vs consumed modes, internals, comments ignored', () => {
+test('check-vars: declared-or-read vs consumed modes, input variables, internals, comments ignored', () => {
   const cssText = `
     /* --ms-ghost: 1px; var(--base-ghost) */
-    :host { --ms-gap: 4px; --ms-internal-width: 0; color: var(--base-text-color, red); }
+    :host { --ms-gap: 4px; --ms-internal-width: 0; color: var(--base-text-color, red); --_km-menu-bg: var(--ms-menu-bg); }
     .x { padding: var(--ms-pad, 2px); }`;
   const manifest = {
     baseVariables: [{ name: 'base-text-color' }, { name: 'base-dead' }],
-    componentVariables: [{ name: 'ms-gap' }, { name: 'ms-gone' }],
+    componentVariables: [{ name: 'ms-gap' }, { name: 'ms-gone' }, { name: 'ms-menu-bg' }],
   };
+  // Default: declared OR read. --ms-menu-bg is an input (read, never declared) → alive;
+  // --ms-pad is read with a fallback but undocumented.
   const declaredVerdict = checkManifestVariables({ cssText, manifest, prefix: 'ms', internalVariables: ['ms-internal-width'] });
   assert.deepEqual(declaredVerdict.unusedBaseVariables, ['base-dead']);
   assert.deepEqual(declaredVerdict.missingBaseVariables, []);
   assert.deepEqual(declaredVerdict.unusedComponentVariables, ['ms-gone']);
-  assert.deepEqual(declaredVerdict.undocumentedComponentVariables, []);
+  assert.deepEqual(declaredVerdict.undocumentedComponentVariables, ['ms-pad']);
 
   const consumedVerdict = checkManifestVariables({ cssText, manifest, prefix: 'ms', checkMode: 'consumed' });
   assert.deepEqual(consumedVerdict.undocumentedComponentVariables, ['ms-pad']);
@@ -597,4 +615,97 @@ test('doctor: a library runs only the suites that apply to it', () => {
   assert.deepEqual(getRulebookSuites('component'), RULEBOOK_SUITES);
   const librarySuiteNames = getRulebookSuites('library').map((suite) => suite.name);
   assert.deepEqual(librarySuiteNames, ['naming-conventions', 'readme-structure', 'publish-command', 'example-pages']);
+});
+
+test('doctor: VALIDATION-NOTES.md headings accept check ids; prose mentions do not', () => {
+  const notes = '# Validation notes\n\n## C-CST-4 / C-CST-10 — Namespace split\nSee also C-NC-3 in prose.\n\n## C-CSS-1 — Lean strategy\n';
+  assert.deepEqual([...getAcceptedCheckIds(notes)].sort(), ['C-CSS-1', 'C-CST-10', 'C-CST-4']);
+  assert.equal(getAcceptedCheckIds(null).size, 0);
+});
+
+test('doctor: package.json targets must match the library build outputs', () => {
+  const library = mapKmwcConfig(createPackageJson({ library: { fileName: 'web-sample' } }), DEVKIT_ROOT).library;
+  assert.deepEqual(getLibraryOutputPaths(library), ['dist/web-sample.js', 'dist/web-sample.umd.js', 'dist/style.css', 'dist/index.d.ts']);
+  const packageJson = {
+    main: './dist/web-sample.umd.js',
+    style: './dist/web-sample.css',
+    exports: { '.': { types: './dist/index.d.ts', import: './dist/web-sample.js' }, './style.css': './dist/web-sample.css', './dist/*': './dist/*' },
+  };
+  assert.deepEqual(getLibraryOutputMismatches(packageJson, library).map(({ field }) => field), ['style', 'exports["./style.css"]']);
+  assert.deepEqual(getLibraryOutputMismatches(packageJson, { ...library, cssFileName: 'web-sample' }), []);
+  assert.equal(getLegacyGlobalName("build: { lib: { entry: 'src/index.ts', name: 'WebTreeView', formats: ['es'] } }"), 'WebTreeView');
+  assert.equal(getLegacyGlobalName('export default defineComponentConfig();'), null);
+});
+
+test('doctor: ports — script flags, mentions, sibling collisions, shared Plausible ids', () => {
+  assert.deepEqual(getScriptPortMismatches({ dev: 'vite --port 21111', preview: 'vite preview' }, { dev: 12300, preview: 12301 }), [
+    { scriptName: 'dev', port: 21111, expectedPort: 12300 },
+  ]);
+  assert.deepEqual(getMentionedPorts('npm run dev # port 21111, open http://localhost:12300; IMAGE_PORT ?= 12210; server: { port: 5173 }'), [5173, 12210, 12300, 21111]);
+  assert.deepEqual(getPortBlockRange(12300), [12300, 12399]);
+
+  const workspaceRoot = mkdtempSync(join(tmpdir(), 'kmwc-siblings-'));
+  try {
+    const writeRepo = (id, packageJson, files = {}) => {
+      mkdirSync(join(workspaceRoot, id), { recursive: true });
+      writeFileSync(join(workspaceRoot, id, 'package.json'), JSON.stringify({ name: `@keenmate/${id}`, ...packageJson }));
+      for (const [fileName, text] of Object.entries(files)) writeFileSync(join(workspaceRoot, id, fileName), text);
+    };
+    writeRepo('web-own', { kmwc: { ports: { dev: 12300, image: 12310 }, analytics: { plausibleSiteId: 'pa-shared' } } }, { 'README.md': 'Dev server on port 21111.' });
+    writeRepo('web-other', { scripts: { dev: 'vite' } }, { 'vite.config.ts': 'server: { port: 12300 }', 'plausible-snippet.html': '<script src="https://stats.keenmate.services/js/pa-shared.js"></script>' });
+    writeRepo('web-clean', { kmwc: { ports: { dev: 12400, image: 12410 } } });
+    const registry = {
+      components: [
+        { id: 'web-own', port: 12300, path: '../web-own' },
+        { id: 'web-other', port: 12200, path: '../web-other' },
+        { id: 'web-clean', port: 12400, path: '../web-clean' },
+        { id: 'web-components', port: 15900, path: '.' },
+      ],
+    };
+    const config = { id: 'web-own', root: join(workspaceRoot, 'web-own') };
+    assert.deepEqual(loadSiblingPortCollisions(config, registry), [{ id: 'web-other', port: 12300, file: 'vite.config.ts' }]);
+    assert.deepEqual(loadStalePortMentions(config.root, 12300), [{ file: 'README.md', port: 21111 }]);
+    assert.equal(loadPlausibleSiteId(config.root), 'pa-shared');
+    assert.deepEqual(loadSharedPlausibleSiteIds(config, registry, 'pa-shared'), ['web-other']);
+    assert.deepEqual(loadSharedPlausibleSiteIds(config, registry, null), []);
+  } finally {
+    rmSync(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test('doctor: page CSS the kit already covers', () => {
+  const kitClassNames = loadKitClassNames();
+  assert.ok(kitClassNames.has('pill') && kitClassNames.has('card') && !kitClassNames.has('kmwc-spotlight'));
+  const page = `<style>
+      .kbd { padding: 2px; }
+      .pill { color: red; }
+      .my-demo .pill, .tree-container { border: 0; }
+      @media (max-width: 600px) { mark { color: blue; } }
+    </style>
+    <input type="number" style="width:5rem"> <span style="margin-left: auto"></span>
+    <div style="margin-top:1rem"></div> <div style="margin-top:1rem; color: red"></div> <input style="width: 90px">`;
+  const duplicates = getKitDuplicates(page, kitClassNames);
+  assert.deepEqual(duplicates.map(({ found }) => found), [
+    '.kbd { … }',
+    '.pill { … }',
+    'mark { … }',
+    '<input style="width:5rem">',
+    'style="margin-left: auto"',
+    'style="margin-top:1rem"',
+    '<input style="width: 90px">',
+  ]);
+  assert.deepEqual(duplicates.filter(({ found }) => found.startsWith('<input')).map(({ advice }) => advice), ['class="w-xs"', 'class="w-sm"']);
+  assert.deepEqual(getKitDuplicates('.tree-container { padding: 1rem; } .card { gap: 0; }', kitClassNames, { isStylesheet: true }).map(({ found }) => found), ['.card { … }']);
+});
+
+test('check-pages: widths parse; a report turns into problems', () => {
+  assert.deepEqual(parseWidths(undefined), DEFAULT_WIDTHS);
+  assert.deepEqual(parseWidths('390, 320'), [390, 320]);
+  assert.throws(() => parseWidths('wide'), /pixel widths/);
+  const cleanReport = { width: 390, errors: [], undefinedElements: [], scrollWidth: 390, clientWidth: 390, offenders: [] };
+  assert.deepEqual(getPageProblems(cleanReport), []);
+  assert.deepEqual(
+    getPageProblems({ ...cleanReport, errors: ['page error: boom'], undefinedElements: ['web-sample'], scrollWidth: 460, offenders: ['div#phone.ios-phone'] }),
+    ['page error: boom', 'never defined: <web-sample>', 'page is 460px wide in a 390px viewport — widest: div#phone.ios-phone']
+  );
 });

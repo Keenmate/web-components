@@ -84,6 +84,7 @@ export function getStandardScripts(config) {
       'test:e2e:ui': 'playwright test --ui',
       'test:e2e:headed': 'playwright test --headed',
       'test:e2e:install': 'playwright install chromium',
+      'check:pages': 'kmwc check-pages',
     });
   }
   return scripts;

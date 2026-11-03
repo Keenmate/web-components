@@ -1,0 +1,150 @@
+/**
+ * kmwc check-pages — load every example page in a real browser and report what
+ * a reader would hit: page errors, console errors, failed requests, custom
+ * elements that never get defined, and a page wider than the viewport (a fixed
+ * width or a long word that pushes a phone sideways).
+ *
+ * Runs against the repo's own dev server (started here on kmwc.ports.dev), or a
+ * server you already have (--url, e.g. the built site on the preview port).
+ * Widths default to desktop + two phones. Uses the component's own
+ * @playwright/test (see getPeerModule) — `npx playwright install chromium` once.
+ */
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { getKmwcConfig, getPeerModule, loadPeerModule } from '../../config.js';
+import { getExamplePages } from '../../vite/index.js';
+
+export const DEFAULT_WIDTHS = [1440, 390, 320];
+const VIEWPORT_HEIGHT = 900;
+const SETTLE_MS = 600;
+const VITE_CONFIG_FILES = ['vite.config.ts', 'vite.config.mts', 'vite.config.mjs', 'vite.config.js'];
+const MAX_OFFENDERS = 3;
+// Requests a page doesn't control (favicon probes, analytics in a built site).
+const IGNORED_REQUEST_PATTERN = /favicon\.ico|stats\.keenmate\.services|plausible/;
+
+/** `--widths 1440,390` → [1440, 390]. Pure. */
+export function parseWidths(widthsText) {
+  if (!widthsText) return DEFAULT_WIDTHS;
+  const widths = String(widthsText).split(',').map((width) => Number(width.trim()));
+  if (!widths.length || widths.some((width) => !Number.isInteger(width) || width < 200)) throw new Error(`--widths: "${widthsText}" is not a list of pixel widths ≥ 200`);
+  return widths;
+}
+
+/**
+ * Problems in one page load's report → [string]. Pure — exported for tests.
+ * @param {{ width: number, errors: string[], undefinedElements: string[], scrollWidth: number, clientWidth: number, offenders: string[] }} pageReport
+ */
+export function getPageProblems(pageReport) {
+  const problems = [...pageReport.errors];
+  if (pageReport.undefinedElements.length) problems.push(`never defined: <${pageReport.undefinedElements.join('>, <')}>`);
+  if (pageReport.scrollWidth > pageReport.clientWidth) {
+    const offenderText = pageReport.offenders.length ? ` — widest: ${pageReport.offenders.join(', ')}` : '';
+    problems.push(`page is ${pageReport.scrollWidth}px wide in a ${pageReport.clientWidth}px viewport${offenderText}`);
+  }
+  return problems;
+}
+
+/** Runs in the page: overflow, undefined custom elements. */
+function inspectPage(maxOffenders) {
+  const viewportWidth = document.documentElement.clientWidth;
+  const describe = (element) => `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}${[...element.classList].slice(0, 2).map((name) => `.${name}`).join('')}`;
+  // The deepest elements past the right edge (a wide child's ancestors aren't the cause),
+  // outside places that scroll on purpose.
+  const pastEdge = [...document.body.querySelectorAll('*')].filter((element) => {
+    const box = element.getBoundingClientRect();
+    if (box.right <= viewportWidth + 1 || box.width === 0) return false;
+    for (let ancestor = element.parentElement; ancestor && ancestor !== document.body; ancestor = ancestor.parentElement) {
+      const overflowX = getComputedStyle(ancestor).overflowX;
+      if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden' || overflowX === 'clip') return false;
+    }
+    return true;
+  });
+  const offenders = pastEdge.filter((element) => !pastEdge.some((other) => other !== element && element.contains(other)));
+  const undefinedElements = [...new Set([...document.querySelectorAll(':not(:defined)')].map((element) => element.localName).filter((name) => name.includes('-')))];
+  return {
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: viewportWidth,
+    offenders: offenders.slice(0, maxOffenders).map(describe),
+    undefinedElements,
+  };
+}
+
+async function loadPageReport(browser, pageUrl, width) {
+  const page = await browser.newPage({ viewport: { width, height: VIEWPORT_HEIGHT } });
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(`page error: ${error.message.split('\n')[0]}`));
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(`console error: ${message.text().split('\n')[0]}`);
+  });
+  page.on('response', (response) => {
+    if (response.status() >= 400 && !IGNORED_REQUEST_PATTERN.test(response.url())) errors.push(`HTTP ${response.status()}: ${response.url()}`);
+  });
+  page.on('requestfailed', (request) => {
+    if (!IGNORED_REQUEST_PATTERN.test(request.url())) errors.push(`request failed: ${request.url()} (${request.failure()?.errorText})`);
+  });
+  try {
+    await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.waitForTimeout(SETTLE_MS);
+    const inspection = await page.evaluate(inspectPage, MAX_OFFENDERS);
+    return { width, errors: [...new Set(errors)], ...inspection };
+  } catch (error) {
+    return { width, errors: [...new Set([...errors, `load failed: ${error.message.split('\n')[0]}`])], scrollWidth: 0, clientWidth: 0, offenders: [], undefinedElements: [] };
+  } finally {
+    await page.close();
+  }
+}
+
+async function startDevServer(config) {
+  const { createServer } = await loadPeerModule(config.root, 'vite');
+  // Run like `npm run dev` in the repo: the preset reads package.json#kmwc from the cwd,
+  // and Vite looks for vite.config there too.
+  process.chdir(config.root);
+  const configFile = VITE_CONFIG_FILES.map((fileName) => join(config.root, fileName)).find((filePath) => existsSync(filePath));
+  const server = await createServer({ root: config.root, configFile: configFile || false, logLevel: 'error', server: { port: config.ports.dev, strictPort: true } });
+  try {
+    await server.listen();
+  } catch (error) {
+    await server.close();
+    throw new Error(
+      `port ${config.ports.dev} is busy (${error.code || error.message}). If that is this repo's dev server, run: kmwc check-pages --url http://localhost:${config.ports.dev}`
+    );
+  }
+  return server;
+}
+
+export async function run(args) {
+  const config = getKmwcConfig(args.root);
+  const widths = parseWidths(args.widths);
+  const pageFiles = Object.values(getExamplePages(config)).map((pagePath) => pagePath.replace(/\\/g, '/').split('/').pop());
+  if (!pageFiles.length) {
+    console.log('kmwc check-pages: no example pages — nothing to check.');
+    return 0;
+  }
+  let chromium;
+  try {
+    ({ chromium } = getPeerModule(config.root, '@playwright/test'));
+  } catch {
+    throw new Error('@playwright/test is not installed in this repo — npm i -D @playwright/test && npx playwright install chromium');
+  }
+
+  const server = args.url ? null : await startDevServer(config);
+  const baseUrl = (args.url || `http://localhost:${config.ports.dev}`).replace(/\/$/, '');
+  const browser = await chromium.launch();
+  let problemCount = 0;
+  try {
+    console.log(`kmwc check-pages — ${pageFiles.length} page(s) × ${widths.join(' / ')}px on ${baseUrl}\n`);
+    for (const pageFile of pageFiles) {
+      const pageProblems = [];
+      for (const width of widths) {
+        for (const problem of getPageProblems(await loadPageReport(browser, `${baseUrl}/${pageFile}`, width))) pageProblems.push(`@${width}px ${problem}`);
+      }
+      problemCount += pageProblems.length;
+      console.log(`${pageProblems.length ? '✗' : '✓'} ${pageFile}${pageProblems.map((problem) => `\n    ${problem}`).join('')}`);
+    }
+  } finally {
+    await browser.close();
+    if (server) await server.close();
+  }
+  console.log(`\n${problemCount ? '✗' : '✓'} ${problemCount} problem(s)`);
+  return problemCount ? 1 : 0;
+}

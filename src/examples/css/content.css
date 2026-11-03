@@ -157,8 +157,11 @@
         background-color: var(--kmwc-accent-light-bg-hover);
         color: var(--kmwc-accent-color);
         font-weight: 600;
-        padding: 0 2px;
+        /* No padding: a match inside a word ("Town|send") must not split it. */
+        padding: 0;
         border-radius: var(--kmwc-radius-sm);
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
     }
 
     /* ==========================================================================

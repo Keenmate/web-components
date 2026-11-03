@@ -5,6 +5,7 @@
  *   kmwc sync [--check]               regenerate devkit-owned files from package.json#kmwc
  *   kmwc doctor [--json]              check this repo against the devkit + rulebook standard
  *   kmwc check-vars [--strict]        validate component-variables.manifest.json against the CSS
+ *   kmwc check-pages [--url <u>]      every example page in Chromium: errors, undefined elements, overflow
  *   kmwc check-release --tag <tag>    gate a publish (version ⇔ dist-tag, not yet on npm)
  *   kmwc new <name> [options]         scaffold a new component repo next to the devkit
  *   kmwc readme [--check]             regenerate the devkit README catalogue (devkit repo only)
@@ -37,6 +38,14 @@ const COMMANDS = {
     load: () => import('./commands/check-vars.js'),
     flags: { booleans: ['strict'] },
     usage: `check-vars [--strict]     Validate component-variables.manifest.json against the CSS.`,
+  },
+  'check-pages': {
+    load: () => import('./commands/check-pages.js'),
+    flags: { values: ['url', 'widths'] },
+    usage: `check-pages [--url <u>]   Load every example page in Chromium at 1440 / 390 / 320px and report
+                            page/console errors, failed requests, undefined elements and a page
+                            wider than the viewport. Starts the dev server unless --url is given.
+                            --widths 1440,390,320.`,
   },
   'check-release': {
     load: () => import('./commands/check-release.js'),
