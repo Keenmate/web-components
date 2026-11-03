@@ -633,6 +633,9 @@ test('doctor: package.json targets must match the library build outputs', () => 
   };
   assert.deepEqual(getLibraryOutputMismatches(packageJson, library).map(({ field }) => field), ['style', 'exports["./style.css"]']);
   assert.deepEqual(getLibraryOutputMismatches(packageJson, { ...library, cssFileName: 'web-sample' }), []);
+  // Types from the repo's own tsc step: .d.ts targets aren't checked.
+  assert.deepEqual(getLibraryOutputMismatches({ types: './dist/web-sample.d.ts' }, library).map(({ field }) => field), ['types']);
+  assert.deepEqual(getLibraryOutputMismatches({ types: './dist/web-sample.d.ts' }, { ...library, shouldEmitTypes: false }), []);
   assert.equal(getLegacyGlobalName("build: { lib: { entry: 'src/index.ts', name: 'WebTreeView', formats: ['es'] } }"), 'WebTreeView');
   assert.equal(getLegacyGlobalName('export default defineComponentConfig();'), null);
 });

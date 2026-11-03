@@ -72,7 +72,9 @@ export function getPackageDistTargets(packageJson) {
  */
 export function getLibraryOutputMismatches(packageJson, library) {
   const outputPaths = new Set(getLibraryOutputPaths(library));
-  return getPackageDistTargets(packageJson).filter(({ target }) => !outputPaths.has(target) && !target.endsWith('.map'));
+  // Types emitted by the repo's own step (`tsc`) aren't the preset's to know.
+  const isOwnTypes = (target) => !library.shouldEmitTypes && target.endsWith('.d.ts');
+  return getPackageDistTargets(packageJson).filter(({ target }) => !outputPaths.has(target) && !target.endsWith('.map') && !isOwnTypes(target));
 }
 
 /**
