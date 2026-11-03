@@ -347,8 +347,12 @@ test.describe('examples kit', () => {
       await page.goto(`/${pageName}.html`);
       await expect(page.locator('.kmwc-spotlight__trigger')).toBeVisible();
       // A heading and a paragraph with one long identifier each (no break opportunity).
+      // A heading naming an API outside <code>, and a 250px widget (an inline calendar) in a
+      // demo card's demo area — two boxes deep inside the card.
       await page.evaluate(() => document.querySelector('.card')!.insertAdjacentHTML('afterbegin',
-        '<h2><code>resolvePresentation(mode,environment,map)</code></h2><p><code>window.components.renderLoaderCallback</code></p>'));
+        '<h2><code>resolvePresentation(mode,environment,map)</code></h2><p><code>window.components.renderLoaderCallback</code></p>' +
+          '<h2>EV05 · getMonthDataCallback&amp;beforeMonthChangeCallback</h2>' +
+          '<div class="demo-card"><div class="demo-area"><div style="width: 250px; height: 4px"></div></div></div>'));
       const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
       expect(widths[0], `${pageName} is wider than 320px`).toBeLessThanOrEqual(widths[1]);
     }

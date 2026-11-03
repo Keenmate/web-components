@@ -161,6 +161,15 @@
         margin-bottom: 0.75rem;
     }
 
+    /* A heading naming an API (`EV05 · getMonthDataCallback & beforeMonthChangeCallback`)
+       has no break opportunity — let it break rather than widen the page on a phone. */
+    h1,
+    h2,
+    h3,
+    h4 {
+        overflow-wrap: anywhere;
+    }
+
     ul {
         line-height: 1.8;
     }
@@ -204,6 +213,25 @@
         .card,
         .example-section {
             padding: 1.5rem;
+        }
+    }
+
+    /* A small phone (320–400px): a component with a fixed minimum width — an inline
+       calendar is ~250px — still fits inside a card. */
+    @media (max-width: 400px) {
+        body {
+            padding: 0.75rem;
+        }
+
+        .card,
+        .example-section {
+            padding: 1rem;
+        }
+
+        /* Boxes nested in a card (a demo card holding a demo area) add up. */
+        .demo-card,
+        .demo-area {
+            padding: 0.75rem;
         }
     }
 

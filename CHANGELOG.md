@@ -11,8 +11,10 @@ Found migrating web-treeview — each item is something doctor missed or got wro
   page wider than the viewport (with the widest elements named). treeview's iOS-Files mockup
   (`width: 420px`) and theme gallery (`minmax(500px, 1fr)`) pushed a phone sideways and only a
   browser could tell. Starts the repo's dev server, or `--url` for one already running (the built
-  site on the preview port); `--widths`. `kmwc sync` adds a `check:pages` script and a
-  `make check-pages` target.
+  site on the preview port); `--widths`. It looks inside shadow roots and at text (a long word
+  sticking out of a box that fits), and skips what can't widen the page (code blocks and other
+  scrolling boxes, hidden or fixed layers such as a closed chapter-nav panel). `kmwc sync` adds a
+  `check:pages` script and a `make check-pages` target.
 - **Doctor: accepted deviations** — a rulebook failure whose id heads a section of
   `VALIDATION-NOTES.md` (`## C-CST-4 / C-CST-10 — …`) is an architectural decision recorded per the
   rulebook and counts as a pass (`--verbose` lists them). treeview's documented C-CST-4 / C-CSS-1 /
@@ -45,6 +47,13 @@ Found migrating web-treeview — each item is something doctor missed or got wro
 
 ### Fixed
 
+- **Headings break instead of widening a phone** — a chapter heading naming an API outside
+  `<code>` (drp's `EV05 · getMonthDataCallback & beforeMonthChangeCallback`) and the examples index
+  title ("Web DateRangePicker" at 2.5rem) had no break opportunity at 320px. `h1`–`h4` get
+  `overflow-wrap: anywhere`; the index title is 2rem on a phone.
+- **A 250px widget fits a 320px phone** — body + card padding left 240px, so an inline calendar
+  widened the page. Below 400px the body pads 0.75rem, cards and example sections 1rem, demo cards
+  and demo areas 0.75rem (264px inside a card).
 - **`mark` no longer splits a word** — the 2px side padding cut a match inside a word apart
   (core's Search page: "Town send"); `padding: 0`, and a match that wraps keeps its look on both
   lines (`box-decoration-break: clone`).

@@ -44,27 +44,64 @@ export function getPageProblems(pageReport) {
   return problems;
 }
 
-/** Runs in the page: overflow, undefined custom elements. */
+/**
+ * Runs in the page: overflow, undefined custom elements. A culprit is the deepest
+ * element — or the text — past the right edge, outside anything that scrolls or
+ * clips on purpose (a code block, a table wrapper) and outside hidden or fixed
+ * layers (a closed nav panel, a toast), which don't widen the page.
+ */
 function inspectPage(maxOffenders) {
   const viewportWidth = document.documentElement.clientWidth;
-  const describe = (element) => `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}${[...element.classList].slice(0, 2).map((name) => `.${name}`).join('')}`;
-  // The deepest elements past the right edge (a wide child's ancestors aren't the cause),
-  // outside places that scroll on purpose.
-  const pastEdge = [...document.body.querySelectorAll('*')].filter((element) => {
-    const box = element.getBoundingClientRect();
-    if (box.right <= viewportWidth + 1 || box.width === 0) return false;
-    for (let ancestor = element.parentElement; ancestor && ancestor !== document.body; ancestor = ancestor.parentElement) {
-      const overflowX = getComputedStyle(ancestor).overflowX;
-      if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden' || overflowX === 'clip') return false;
+  // Shadow roots count: a component's own internals can widen the page too.
+  const getParent = (element) => element.parentElement || element.getRootNode().host || null;
+  const describeOne = (element) => `${element.tagName.toLowerCase()}${element.id ? `#${element.id}` : ''}${[...element.classList].slice(0, 2).map((name) => `.${name}`).join('')}`;
+  const describe = (element) => {
+    const host = element.getRootNode().host;
+    return host ? `${describe(host)} › ${describeOne(element)}` : describeOne(element);
+  };
+  const getAllElements = (root) => [...root.querySelectorAll('*')].flatMap((element) => (element.shadowRoot ? [element, ...getAllElements(element.shadowRoot)] : [element]));
+  const checkIsContained = (element) => {
+    for (let current = element; current && current !== document.body; current = getParent(current)) {
+      const style = getComputedStyle(current);
+      if (style.position === 'fixed' || style.visibility === 'hidden' || style.display === 'none') return true;
+      if (current !== element && ['auto', 'scroll', 'hidden', 'clip'].includes(style.overflowX)) return true;
     }
-    return true;
+    return false;
+  };
+  const allElements = getAllElements(document.body);
+  const pastEdge = allElements.filter((element) => {
+    const box = element.getBoundingClientRect();
+    return box.width > 0 && box.right > viewportWidth + 1 && !checkIsContained(element);
   });
-  const offenders = pastEdge.filter((element) => !pastEdge.some((other) => other !== element && element.contains(other)));
+  const checkContainsDeep = (element, other) => {
+    for (let current = other; current; current = getParent(current)) if (current === element) return true;
+    return false;
+  };
+  const offenders = pastEdge.filter((element) => !pastEdge.some((other) => other !== element && checkContainsDeep(element, other))).map(describe);
+  // Text past the edge inside a box that fits: a long word with no break opportunity.
+  const textRoots = [document.body, ...allElements.filter((element) => element.shadowRoot).map((element) => element.shadowRoot)];
+  const textNodes = textRoots.flatMap((root) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) nodes.push(node);
+    return nodes;
+  });
+  for (const textNode of textNodes) {
+    const parent = textNode.parentElement;
+    if (!textNode.textContent.trim() || !parent || pastEdge.includes(parent)) continue;
+    const range = document.createRange();
+    range.selectNodeContents(textNode);
+    const box = range.getBoundingClientRect();
+    const parentStyle = getComputedStyle(parent);
+    if (box.right > viewportWidth + 1 && !['hidden', 'clip', 'auto', 'scroll'].includes(parentStyle.overflowX) && !checkIsContained(parent)) {
+      offenders.push(`${describe(parent)} "${textNode.textContent.trim().slice(0, 40)}"`);
+    }
+  }
   const undefinedElements = [...new Set([...document.querySelectorAll(':not(:defined)')].map((element) => element.localName).filter((name) => name.includes('-')))];
   return {
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: viewportWidth,
-    offenders: offenders.slice(0, maxOffenders).map(describe),
+    offenders: [...new Set(offenders)].slice(0, maxOffenders),
     undefinedElements,
   };
 }
