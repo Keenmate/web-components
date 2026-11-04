@@ -512,6 +512,36 @@ test.describe('examples kit', () => {
     expect(colors.onNeutral).toBe('color(srgb 1 1 1)');
   });
 
+  test('the grey secondary button passes WCAG AA (4.5:1) in both themes, hovered too', async ({ page }) => {
+    await page.goto('/examples-forms.html');
+    const button = page.locator('button.btn-secondary').first();
+    const getRatio = () => button.evaluate((element) => {
+      const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
+      const getLuminance = (color: string) => {
+        context.clearRect(0, 0, 1, 1);
+        context.fillStyle = color;
+        context.fillRect(0, 0, 1, 1);
+        const [r, g, b] = Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3)).map((channel) => {
+          const value = channel / 255;
+          return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const style = getComputedStyle(element);
+      const [lighter, darker] = [getLuminance(style.color), getLuminance(style.backgroundColor)].sort((a, b) => b - a);
+      return (lighter + 0.05) / (darker + 0.05);
+    });
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((name) => document.documentElement.setAttribute('data-theme', name), theme);
+      await page.mouse.move(0, 0);
+      await page.waitForTimeout(250); // the background transition
+      expect(await getRatio(), `${theme}`).toBeGreaterThanOrEqual(4.5);
+      await button.hover();
+      await page.waitForTimeout(250); // the background transition
+      expect(await getRatio(), `${theme} hover`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   test('theme switch cycles light → dark → auto, persists, and reaches the component', async ({ page }) => {
     await page.goto('/examples-devkit.html');
     await page.evaluate(() => localStorage.clear());

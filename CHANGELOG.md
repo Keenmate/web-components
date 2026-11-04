@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0-rc09] - 2026-11-04
+
+### Fixed
+
+- **The grey secondary button in dark mode** (`button.secondary` / `.btn-secondary`) had white text on
+  `#9ca3af` at 2.54:1. That grey sits just under the on-colour formula's 0.34 luminance switch, so the
+  formula picked white. It showed on 9 web-treeview pages ("Clear", "Reset", "Move up" …) and on every
+  other site's grey buttons. The button now has its own fill, `--kmwc-neutral-fill-color`
+  (`#6b7280` light / `#4b5563` dark, white text ≥ 4.5:1 in both, hovered too), and
+  `--kmwc-neutral-fill-color-hover`. Muted dots and pills keep the light `--kmwc-neutral-color`.
+
 ## [1.0.0-rc08] - 2026-11-04 [PUBLISHED]
 
 ### Added

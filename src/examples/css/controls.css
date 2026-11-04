@@ -213,13 +213,13 @@
 
     button.secondary,
     button.btn-secondary {
-        background: var(--kmwc-neutral-color);
+        background: var(--kmwc-neutral-fill-color);
         color: var(--kmwc-text-color-on-neutral);
     }
 
     button.secondary:hover,
     button.btn-secondary:hover {
-        background: color-mix(in srgb, var(--kmwc-neutral-color) 80%, black);
+        background: var(--kmwc-neutral-fill-color-hover);
     }
 
     button.btn-outline {

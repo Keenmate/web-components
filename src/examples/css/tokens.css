@@ -137,10 +137,15 @@
         --kmwc-danger-fill-color-hover: var(--base-danger-color-hover, light-dark(color-mix(in srgb, black 15%, var(--kmwc-danger-fill-color)), color-mix(in srgb, white 15%, var(--kmwc-danger-fill-color))));
         --kmwc-text-color-on-danger: var(--base-on-danger-text-color, color(from color(from var(--kmwc-danger-fill-color) srgb calc(0.21 * r * r * (0.4 + r * (0.82 - 0.22 * r)) + 0.72 * g * g * (0.4 + g * (0.82 - 0.22 * g)) + 0.07 * b * b * (0.4 + b * (0.82 - 0.22 * b))) 0 0) srgb clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1)));
         --kmwc-neutral-color: light-dark(#6b7280, #9ca3af);
+        /* A grey button needs its own fill: the dark-mode neutral (#9ca3af) sits just under the
+           on-colour formula's 0.34 switch, so it got white text at 2.5:1. Dots and pills keep the
+           light grey; the button takes a dark one (white text ≥ 4.5:1 in both themes). */
+        --kmwc-neutral-fill-color: light-dark(#6b7280, #4b5563);
+        --kmwc-neutral-fill-color-hover: light-dark(color-mix(in srgb, black 15%, var(--kmwc-neutral-fill-color)), color-mix(in srgb, white 12%, var(--kmwc-neutral-fill-color)));
         --kmwc-badge-new-bg: light-dark(#e53e3e, #f56565);
         /* Text on the neutral / badge fills: the contract's on-colour formula on
            their own background, not on the accent (a light primary would turn it black). */
-        --kmwc-text-color-on-neutral: color(from color(from var(--kmwc-neutral-color) srgb calc(0.21 * r * r * (0.4 + r * (0.82 - 0.22 * r)) + 0.72 * g * g * (0.4 + g * (0.82 - 0.22 * g)) + 0.07 * b * b * (0.4 + b * (0.82 - 0.22 * b))) 0 0) srgb clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1));
+        --kmwc-text-color-on-neutral: color(from color(from var(--kmwc-neutral-fill-color) srgb calc(0.21 * r * r * (0.4 + r * (0.82 - 0.22 * r)) + 0.72 * g * g * (0.4 + g * (0.82 - 0.22 * g)) + 0.07 * b * b * (0.4 + b * (0.82 - 0.22 * b))) 0 0) srgb clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1));
         --kmwc-text-color-on-badge-new: color(from color(from var(--kmwc-badge-new-bg) srgb calc(0.21 * r * r * (0.4 + r * (0.82 - 0.22 * r)) + 0.72 * g * g * (0.4 + g * (0.82 - 0.22 * g)) + 0.07 * b * b * (0.4 + b * (0.82 - 0.22 * b))) 0 0) srgb clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1) clamp(0, (0.34 - r) * 1e9, 1));
 
         /* ======================================================================
