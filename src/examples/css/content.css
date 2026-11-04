@@ -118,7 +118,7 @@
         padding: 0.2rem 0.4rem;
         border-radius: 3px;
         font-size: 0.9em;
-        color: var(--kmwc-accent-color);
+        color: var(--kmwc-inline-code-color);
         font-family: var(--kmwc-mono-font-family);
         /* A long identifier has no break opportunity — break it anywhere
            rather than widen the page on a phone. */

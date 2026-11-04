@@ -425,6 +425,34 @@ test.describe('examples kit', () => {
     }
   });
 
+  test('dark mode: inline code passes WCAG AA (4.5:1) on its chip whatever the accent', async ({ page }) => {
+    await page.goto('/examples-devkit.html');
+    // treeview's mid-dark green read at ~3:1 on the old neutral #2b2b2b chip; navy is the hard case.
+    for (const accentColor of ['', '#059669', '#1e3a8a', '#fbbf24']) {
+      const ratio = await page.evaluate((accent) => {
+        const root = document.documentElement;
+        root.setAttribute('data-theme', 'dark');
+        if (accent) root.style.setProperty('--kmwc-accent-color', accent);
+        else root.style.removeProperty('--kmwc-accent-color');
+        const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
+        const getLuminance = (color: string) => {
+          context.clearRect(0, 0, 1, 1);
+          context.fillStyle = color;
+          context.fillRect(0, 0, 1, 1);
+          const [r, g, b] = Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3)).map((channel) => {
+            const value = channel / 255;
+            return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        const code = document.querySelector('.card p code')!;
+        const [lighter, darker] = [getLuminance(getComputedStyle(code).color), getLuminance(getComputedStyle(code).backgroundColor)].sort((a, b) => b - a);
+        return (lighter + 0.05) / (darker + 0.05);
+      }, accentColor);
+      expect(ratio, `accent ${accentColor || 'site default'}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   test('the control height leaves the kit copy buttons small', async ({ page }) => {
     await page.goto('/examples-devkit.html');
     const copyLinkHeight = await page.locator('.kmwc-copy-link').first().evaluate((element) => element.getBoundingClientRect().height);

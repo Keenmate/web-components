@@ -19,6 +19,14 @@
   (drp has one for other classes). Doctor reads which class the installed core's `render-loader.js`
   draws and fails on a `src/**/*.css` selector for the other one.
 
+### Fixed
+
+- **Inline `<code>` in dark mode** was the accent colour on a neutral `#2b2b2b` chip: about 3:1, and
+  web-treeview's `#059669` green read dim in prose and tables. The chip is now a step up from the main
+  surface (`oklch(from --kmwc-main-bg calc(l + 0.07) …)`, slate on slate), and the text is a new
+  `--kmwc-inline-code-color`: the accent hue at a lightness of at least 0.8 in dark, the accent as-is in
+  light. An e2e spec checks 4.5:1 for the default, green, navy and amber accents.
+
 ## [1.0.0-rc07] - 2026-11-03 [PUBLISHED]
 
 Found migrating web-treeview — each item is something doctor missed or got wrong there.
