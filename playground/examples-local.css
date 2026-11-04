@@ -1,4 +1,5 @@
 /* Component-only example rules (unlayered → always beat @layer kmwc). */
+/* kmwc-fixed-colors: the e2e checks this exact red beats the kit */
 .card p.local-override {
     color: rgb(200, 0, 0);
 }

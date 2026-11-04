@@ -31,7 +31,10 @@ locally — every local fork is how they drifted apart.
   element out. Log lines take the kit tones (`.log-line--ok|info|warn|err|muted`,
   `--action`, timeline cells `.log-line__time` …) — don't colour them per page.
   `<kbd>`, `<mark>`, field widths (`.w-xs` … `.w-lg`) and `.push-end` are kit
-  too — no inline styles for them.
+  too — no inline styles for them. Page colours come from the kit's `--kmwc-*`
+  tokens or `light-dark()` — a literal doesn't follow dark mode (doctor warns);
+  a demo that shows fixed colours on purpose goes in `<style data-kmwc-fixed-colors>`
+  (one rule: a `/* kmwc-fixed-colors: why */` comment before it).
   If a second component needs a pattern, it belongs in the devkit.
 - **Example pages are fragments:** no `<html>`/`<head>`/`<header>` — start with
   `<meta name="kmwc:title" content="…">`, the devkit layout adds the rest. Shared text

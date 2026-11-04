@@ -39,6 +39,12 @@ import {
   loadSharedPlausibleSiteIds,
   loadKitClassNames,
   getKitDuplicates,
+  checkIsHardcodedColor,
+  getHardcodedColors,
+  getCoreLoaderSeparator,
+  getStyledLoaderClasses,
+  loadCoreLoader,
+  loadStyledLoaderClasses,
 } from '../src/cli/repo-checks.js';
 import { parseWidths, getPageProblems, DEFAULT_WIDTHS } from '../src/cli/commands/check-pages.js';
 import { CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, SPOTLIGHT_CLASSES, THEME_SWITCH_CLASSES } from '../src/examples/constants.js';
@@ -732,6 +738,60 @@ test('doctor: page CSS the kit already covers', () => {
   ]);
   assert.deepEqual(duplicates.filter(({ found }) => found.startsWith('<input')).map(({ advice }) => advice), ['class="w-xs"', 'class="w-sm"']);
   assert.deepEqual(getKitDuplicates('.tree-container { padding: 1rem; } .card { gap: 0; }', kitClassNames, { isStylesheet: true }).map(({ found }) => found), ['.card { … }']);
+});
+
+test('doctor: hard-coded page colours — literals warn, var() fallbacks / light-dark() / fixed-colour blocks pass', () => {
+  assert.equal(checkIsHardcodedColor('background', '#fff'), true);
+  assert.equal(checkIsHardcodedColor('border', '1px solid rgb(0 0 0 / 0.1)'), true);
+  assert.equal(checkIsHardcodedColor('color', 'white'), true);
+  assert.equal(checkIsHardcodedColor('color', 'var(--kmwc-text-color, #333)'), false);
+  assert.equal(checkIsHardcodedColor('color', 'var(--a, var(--b, #333))'), false);
+  assert.equal(checkIsHardcodedColor('color', 'light-dark(#333, #eee)'), false);
+  assert.equal(checkIsHardcodedColor('background-color', 'rgb(from var(--wtv-glow) r g b / 0.2)'), false);
+  assert.equal(checkIsHardcodedColor('--demo-color', '#f00'), false);
+  assert.equal(checkIsHardcodedColor('width', '120px'), false);
+  assert.equal(checkIsHardcodedColor('font-family', '"Red Hat Text"'), false);
+  const page = `<style>
+      /* .old { color: #000; } */
+      .search-bar,
+      .status-bar { background: #f8fafc; border: 1px solid var(--kmwc-border-color); }
+      @media (max-width: 600px) { .hint { color: #64748b; } }
+    </style>
+    <style data-kmwc-fixed-colors>.neon { background: #000; }</style>
+    <span style="color: #fc8181">x</span> <span style="padding: 0">y</span>`;
+  assert.deepEqual(getHardcodedColors(page).map(({ found }) => found), [
+    '.search-bar, .status-bar { background: #f8fafc }',
+    '.hint { color: #64748b }',
+    'style="color: #fc8181"',
+  ]);
+  assert.deepEqual(getHardcodedColors('.swatch { color: #fff; }', { isStylesheet: true }).map(({ found }) => found), ['.swatch { color: #fff }']);
+  const markedStylesheet = '/* plain */ .a { color: #111; } /* kmwc-fixed-colors: fixture */ .b { color: #222; } .c { color: #333; }';
+  assert.deepEqual(getHardcodedColors(markedStylesheet, { isStylesheet: true }).map(({ found }) => found), ['.a { color: #111 }', '.c { color: #333 }']);
+});
+
+test('doctor: the loader class the installed core draws vs the one the CSS styles', () => {
+  assert.equal(getCoreLoaderSeparator('span.className = `${prefix}__loader`;'), '__');
+  assert.equal(getCoreLoaderSeparator('span.className = `${prefix}-loader`; // `${prefix}-loader-spin`'), '-');
+  assert.equal(getCoreLoaderSeparator('a.className=e+"__loader"'), '__');
+  assert.equal(getCoreLoaderSeparator('no loader here'), null);
+  assert.deepEqual(
+    getStyledLoaderClasses('/* .wtv__loader */ .wtv-loader { width: var(--wtv-loader-size); } .wtv__loading-overlay .wtv-loader {} .wtv__loader-overlay {}', 'wtv'),
+    [{ className: 'wtv-loader', separator: '-' }]
+  );
+  const workspaceRoot = mkdtempSync(join(tmpdir(), 'kmwc-loader-'));
+  try {
+    const coreRoot = join(workspaceRoot, 'node_modules', '@keenmate', 'web-components-core');
+    mkdirSync(join(coreRoot, 'dist', 'dom'), { recursive: true });
+    writeFileSync(join(coreRoot, 'package.json'), JSON.stringify({ version: '1.0.0-rc19' }));
+    writeFileSync(join(coreRoot, 'dist', 'dom', 'render-loader.js'), 'span.className = `${prefix}__loader`;');
+    const componentRoot = join(workspaceRoot, 'web-x');
+    mkdirSync(join(componentRoot, 'src', 'css'), { recursive: true });
+    writeFileSync(join(componentRoot, 'src', 'css', 'loading.css'), '.x-loader { inline-size: 1em; }');
+    assert.deepEqual(loadCoreLoader(componentRoot), { version: '1.0.0-rc19', separator: '__' });
+    assert.deepEqual(loadStyledLoaderClasses(componentRoot, 'x'), [{ file: 'src/css/loading.css', className: 'x-loader', separator: '-' }]);
+  } finally {
+    rmSync(workspaceRoot, { recursive: true, force: true });
+  }
 });
 
 test('check-pages: widths parse; a report turns into problems', () => {

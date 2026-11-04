@@ -247,3 +247,120 @@ export function getKitDuplicates(pageText, kitClassNames, { isStylesheet = false
   }
   return duplicates;
 }
+
+// ── hard-coded colours in page CSS ───────────────────────────────────────────
+
+/**
+ * Fixed colours on purpose (a theme gallery, a mockup, a test fixture): a page `<style>`
+ * block with the attribute, or one rule right after a `/* kmwc-fixed-colors *\/` comment.
+ */
+export const FIXED_COLORS_ATTRIBUTE = 'data-kmwc-fixed-colors';
+export const FIXED_COLORS_MARKER = 'kmwc-fixed-colors';
+const MARKED_RULE_PATTERN = new RegExp(`/\\*[^*]*${FIXED_COLORS_MARKER}[\\s\\S]*?\\*/\\s*[^{}]*\\{[^{}]*\\}`, 'g');
+const COLOR_PROPERTY_PATTERN = /color|background|border|outline|shadow|fill|stroke|text-decoration/i;
+const COLOR_LITERAL_PATTERN =
+  /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(\s*(?!from\b)|\b(?:white|black|red|green|blue|gray|grey|silver|orange|yellow|purple|pink|navy|teal|maroon|olive|lime|aqua|fuchsia|gold|crimson)\b/i;
+
+/** A declaration value with every `var(…)` collapsed — a literal fallback never shows while the kit token exists. */
+function mapWithoutVarFallbacks(value) {
+  let previous;
+  let current = value;
+  do {
+    previous = current;
+    current = current.replace(/var\([^()]*\)/gi, 'var()');
+  } while (current !== previous);
+  return current;
+}
+
+/** True when a colour declaration's value is a literal that ignores dark mode. Pure. */
+export function checkIsHardcodedColor(property, value) {
+  if (!COLOR_PROPERTY_PATTERN.test(property) || property.startsWith('--')) return false;
+  const plainValue = mapWithoutVarFallbacks(value);
+  return !/light-dark\(/i.test(plainValue) && COLOR_LITERAL_PATTERN.test(plainValue);
+}
+
+/**
+ * Hard-coded colours in one page's `<style>` blocks and `style="…"` attributes (or in
+ * examples-local.css): they stay the same in dark mode while the kit around them flips.
+ * `var()` fallbacks and `light-dark()` pairs follow the theme; a `<style data-kmwc-fixed-colors>`
+ * block and a rule marked `/* kmwc-fixed-colors *\/` are skipped. Returns [{ found }]. Pure.
+ */
+export function getHardcodedColors(pageText, { isStylesheet = false } = {}) {
+  const styleText = isStylesheet
+    ? pageText
+    : [...pageText.matchAll(/<style\b([^>]*)>([\s\S]*?)<\/style>/gi)]
+        .filter((match) => !match[1].includes(FIXED_COLORS_ATTRIBUTE))
+        .map((match) => match[2])
+        .join('\n');
+  const hardcodedColors = [];
+  const checkedText = styleText.replace(MARKED_RULE_PATTERN, '').replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const [, selector, body] of checkedText.matchAll(/([^{};@]+?)\s*\{([^{}]*)\}/g)) {
+    for (const declaration of body.split(';')) {
+      const [property, ...valueParts] = declaration.split(':');
+      const value = valueParts.join(':').trim();
+      if (value && checkIsHardcodedColor(property.trim(), value)) hardcodedColors.push({ found: `${selector.trim().replace(/\s+/g, ' ')} { ${property.trim()}: ${value} }` });
+    }
+  }
+  if (isStylesheet) return hardcodedColors;
+  for (const [, inlineStyle] of pageText.matchAll(/\sstyle="([^"]*)"/g)) {
+    for (const declaration of inlineStyle.split(';')) {
+      const [property, ...valueParts] = declaration.split(':');
+      const value = valueParts.join(':').trim();
+      if (value && checkIsHardcodedColor(property.trim(), value)) hardcodedColors.push({ found: `style="${property.trim()}: ${value}"` });
+    }
+  }
+  return hardcodedColors;
+}
+
+// ── core's default loader class ──────────────────────────────────────────────
+
+const CORE_PACKAGE_PATH = join('node_modules', '@keenmate', 'web-components-core');
+const CORE_RENDER_LOADER_FILE = join('dist', 'dom', 'render-loader.js');
+const SOURCE_DIR = 'src';
+const SKIPPED_SOURCE_DIRS = new Set(['node_modules', 'dist']);
+
+/**
+ * The separator in the class core's default loader gets: `'__'` (`<prefix>__loader`),
+ * `'-'` (`<prefix>-loader`, before core 6d6b768), or null when the build doesn't say. Pure.
+ */
+export function getCoreLoaderSeparator(renderLoaderText) {
+  const match =
+    renderLoaderText.match(/\$\{\s*[\w$.]+\s*\}(__|-)loader(?![\w-])/) || renderLoaderText.match(/\+\s*["'`](__|-)loader["'`]/);
+  return match ? match[1] : null;
+}
+
+/** The loader classes a stylesheet styles: [{ className, separator }]. Pure. */
+export function getStyledLoaderClasses(cssText, prefix) {
+  const pattern = new RegExp(`\.(${prefix}(__|-)loader)(?![\w-])`, 'g');
+  const plainText = cssText.replace(/\/\*[\s\S]*?\*\//g, '');
+  const classes = new Map([...plainText.matchAll(pattern)].map((match) => [match[1], match[2]]));
+  return [...classes].map(([className, separator]) => ({ className, separator }));
+}
+
+/** The installed core (walking up for hoisted installs): { version, separator } or null. */
+export function loadCoreLoader(root) {
+  for (let directory = resolve(root); ; directory = resolve(directory, '..')) {
+    const packageText = readText(join(directory, CORE_PACKAGE_PATH, 'package.json'));
+    if (packageText) {
+      const renderLoaderText = readText(join(directory, CORE_PACKAGE_PATH, CORE_RENDER_LOADER_FILE));
+      return { version: JSON.parse(packageText).version, separator: renderLoaderText ? getCoreLoaderSeparator(renderLoaderText) : null };
+    }
+    if (resolve(directory, '..') === directory) return null;
+  }
+}
+
+function getSourceStylesheets(directory, relativeDirectory = SOURCE_DIR) {
+  if (!existsSync(directory)) return [];
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const relativePath = `${relativeDirectory}/${entry.name}`;
+    if (entry.isDirectory()) return SKIPPED_SOURCE_DIRS.has(entry.name) ? [] : getSourceStylesheets(join(directory, entry.name), relativePath);
+    return entry.name.endsWith('.css') ? [relativePath] : [];
+  });
+}
+
+/** Loader classes styled in the component's src CSS: [{ file, className, separator }]. */
+export function loadStyledLoaderClasses(root, prefix) {
+  return getSourceStylesheets(join(root, SOURCE_DIR)).flatMap((file) =>
+    getStyledLoaderClasses(readFileSync(join(root, file), 'utf8'), prefix).map((styledClass) => ({ file, ...styledClass }))
+  );
+}

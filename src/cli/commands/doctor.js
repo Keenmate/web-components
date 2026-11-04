@@ -34,6 +34,11 @@ import {
   loadSharedPlausibleSiteIds,
   loadKitClassNames,
   getKitDuplicates,
+  FIXED_COLORS_ATTRIBUTE,
+  FIXED_COLORS_MARKER,
+  getHardcodedColors,
+  loadCoreLoader,
+  loadStyledLoaderClasses,
 } from '../repo-checks.js';
 
 const DEVKIT_PACKAGE_NAME = '@keenmate/web-components-devkit';
@@ -197,6 +202,23 @@ export function checkComponent(config, doctorConfig = {}) {
   }
   if (pageFiles.length && !kitDuplicateSources.length) addPass('pages', 'no page CSS re-implements the kit');
 
+  // Page CSS colours that stay put when the theme switch flips the kit to dark.
+  const hardcodedColorSources = [
+    ...pageFiles.map((pageFile) => ({ file: pageFile, hardcodedColors: getHardcodedColors(readFileSync(join(config.root, pageFile), 'utf8')) })),
+    ...(existsSync(localStylesheetPath)
+      ? [{ file: LOCAL_STYLESHEET_FILE, hardcodedColors: getHardcodedColors(readFileSync(localStylesheetPath, 'utf8'), { isStylesheet: true }) }]
+      : []),
+  ].filter((source) => source.hardcodedColors.length);
+  for (const { file, hardcodedColors } of hardcodedColorSources) {
+    const shownColors = hardcodedColors.slice(0, 3).map(({ found }) => found).join('; ');
+    addWarning(
+      'pages',
+      `${file}: ${hardcodedColors.length} hard-coded colour(s) that don't follow dark mode — ${shownColors}${hardcodedColors.length > 3 ? ' …' : ''}`,
+      `use the kit's --kmwc-* tokens or light-dark(); fixed colours on purpose: <style ${FIXED_COLORS_ATTRIBUTE}>, or /* ${FIXED_COLORS_MARKER} */ before one rule`
+    );
+  }
+  if (pageFiles.length && !hardcodedColorSources.length) addPass('pages', 'page CSS colours follow the theme');
+
   // ── generated files ──────────────────────────────────────────────────────
   if (config.hasPackageConfig) {
     for (const planItem of getSyncPlan(config)) {
@@ -252,6 +274,9 @@ export function checkComponent(config, doctorConfig = {}) {
     if (!outputMismatches.length) addPass('library', 'package.json targets match the library build outputs');
   }
 
+  // ── core's default loader class ──────────────────────────────────────────
+  if (config.prefix && config.kind !== LIBRARY_KIND) checkLoaderClass(config, { addPass, addWarning, addError });
+
   // ── analytics ────────────────────────────────────────────────────────────
   const plausibleSiteId = loadPlausibleSiteId(config.root);
   const sharingRepoIds = loadSharedPlausibleSiteIds(config, getRegistry(), plausibleSiteId);
@@ -297,6 +322,30 @@ function checkPorts(config, portBlock, { addPass, addWarning, addError }) {
   if (!scriptPortMismatches.length && !ownStrayPorts.length && !siblingCollisions.length && !stalePortMentions.length) {
     addPass('ports', `scripts, configs, docs and sibling repos keep to block ${blockLabel}`);
   }
+}
+
+/**
+ * The CSS styles the loader class the INSTALLED core draws. Core 6d6b768 renamed
+ * `<prefix>-loader` → `<prefix>__loader` with no overlap release; renaming the CSS
+ * before (or after) the core bump leaves the default loader unstyled, and no rulebook
+ * check sees that (a VALIDATION-NOTES `## C-NC-8` even hides a leftover old class).
+ */
+function checkLoaderClass(config, { addPass, addError }) {
+  const coreLoader = loadCoreLoader(config.root);
+  if (!coreLoader?.separator) return;
+  const coreClassName = `${config.prefix}${coreLoader.separator}loader`;
+  const styledLoaderClasses = loadStyledLoaderClasses(config.root, config.prefix);
+  const mismatchedClasses = styledLoaderClasses.filter(({ separator }) => separator !== coreLoader.separator);
+  for (const { file, className } of mismatchedClasses) {
+    addError(
+      'loader',
+      `${file} styles .${className}, but core ${coreLoader.version} draws the default loader as <span class="${coreClassName}"> — it renders unstyled`,
+      coreLoader.separator === '__'
+        ? `rename .${className} → .${coreClassName} (CSS, tests, docs; keep the --${config.prefix}-loader-* tokens)`
+        : `keep .${coreClassName} until the component builds on a core that draws <prefix>__loader, then rename in the same change`
+    );
+  }
+  if (styledLoaderClasses.length && !mismatchedClasses.length) addPass('loader', `CSS styles .${coreClassName}, the class core ${coreLoader.version} draws`);
 }
 
 /** Packed paths that break PACKAGE_LEAK_RULES → [{ path, label }]. Pure — exported for tests. */

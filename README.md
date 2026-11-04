@@ -416,6 +416,16 @@ generated files:
   selector (`.kbd`, `kbd`, `mark`, `.pill`, `.card` …) and single-declaration
   inline styles a kit class covers (`width` on a field → `.w-*`,
   `margin-left: auto` → `.push-end`, `margin-top: 1rem` → `.mt-1`) are warnings.
+  So is a hard-coded colour (`#hex`, `rgb()`, `white` …) in page CSS or a `style="…"`:
+  it stays put when the theme switch flips the kit to dark. `var()` fallbacks and
+  `light-dark()` pairs follow the theme. Fixed colours on purpose (a theme gallery, a
+  mockup, a test fixture) go in a `<style data-kmwc-fixed-colors>` block, or one rule
+  gets a `/* kmwc-fixed-colors: why */` comment right before it.
+- **Loader class** — the component CSS styles the class the *installed* core gives
+  its default loader (`<prefix>__loader` from core 6d6b768 on, `<prefix>-loader`
+  before). Renaming the selector on one side of the core bump leaves the loader
+  unstyled, and a VALIDATION-NOTES `## C-NC-8` would hide the old class from the
+  rulebook.
 
 `kmwc check-pages` is the browser half: it loads every example page and reports
 what doctor can't see in the source — a script error, a 404, a fixed width that

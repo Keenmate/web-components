@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0-rc08] - 2026-11-04
+
+### Added
+
+- **Doctor: hard-coded colours in page CSS** (warning). A colour literal (`#hex`, `rgb()` / `hsl()` /
+  `oklch()`, a named colour) on a colour property in a page `<style>`, a `style="…"` or
+  `examples-local.css` stays the same when the theme switch flips the kit to dark. web-treeview's
+  migration kept 10 pages' own `<style>` blocks, and 8 of them had search bars, status bars, badges and
+  panels that didn't follow dark mode. rc07 only flagged rules that restyle a kit class, so nothing
+  reported them. `var()` fallbacks and `light-dark()` pairs pass. A block that shows fixed colours on
+  purpose (a theme gallery, an iOS mockup) opts out with `<style data-kmwc-fixed-colors>`, or one
+  rule with a `/* kmwc-fixed-colors: why */` comment before it (the playground's e2e fixture red).
+- **Doctor: the loader class matches the installed core** (error). Core 6d6b768 renamed the default
+  loader's class from `<prefix>-loader` to `<prefix>__loader`, with no release that emits both. A
+  component that renames its selector before the core bump, or forgets to after it, ships an unstyled
+  loader. No rulebook check sees that, and a VALIDATION-NOTES `## C-NC-8` hides a leftover `.x-loader`
+  (drp has one for other classes). Doctor reads which class the installed core's `render-loader.js`
+  draws and fails on a `src/**/*.css` selector for the other one.
+
 ## [1.0.0-rc07] - 2026-11-03 [PUBLISHED]
 
 Found migrating web-treeview — each item is something doctor missed or got wrong there.
