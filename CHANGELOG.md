@@ -47,6 +47,14 @@ Found migrating web-treeview — each item is something doctor missed or got wro
 
 ### Fixed
 
+- **The text "&lt;head&gt;" / "&lt;/body&gt;" on a page no longer receives the injected snippets** —
+  the plugin put the theme / page-config / analytics block after the first `<head…>` match,
+  which also matched `<header>` (a page without `<head>`), and the kit's module script before
+  the first `</body>`, which can be text inside a page's inline script (the kit then landed
+  in that script and broke it). Now: the first real `<head>` tag outside HTML comments, and
+  the last `</body>`. Same failure as web-multiselect's live action-buttons page, where its
+  own Dockerfile's `sed '/<head>/r …'` put the Plausible snippet (an HTML comment) into the
+  page's module script, so no picker got its options.
 - **Headings break instead of widening a phone** — a chapter heading naming an API outside
   `<code>` (drp's `EV05 · getMonthDataCallback & beforeMonthChangeCallback`) and the examples index
   title ("Web DateRangePicker" at 2.5rem) had no break opportunity at 320px. `h1`–`h4` get

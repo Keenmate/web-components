@@ -354,7 +354,40 @@ test('plugin: a configured Plausible id goes into built pages, first in <head>',
   }
 });
 
-const createPartialReader = (partials) => (absolutePath, displayPath) => {
+test('plugin: "<head>" / "</body>" as page text never receive the injected snippets', () => {
+  // web-multiselect's action-buttons page: a sed on /<head>/ put the Plausible snippet
+  // (which opens with an HTML comment) into the page's module script → the script threw.
+  const temporaryRoot = mkdtempSync(join(tmpdir(), 'kmwc-'));
+  try {
+    writeFileSync(join(temporaryRoot, 'package.json'), JSON.stringify(createPackageJson({ analytics: { plausibleSiteId: 'pa-TEST123' } })));
+    const transformBuiltHtml = getHtmlTransformer({ root: temporaryRoot }, { command: 'build', mode: 'examples' });
+    const scriptText = "// The <link> in <head> registers the font; </body> is just text here\nconsole.log(1);";
+    const pageScript = `<script type="module">${scriptText}</script>`;
+    const fragmentHtml = [
+      '<meta name="kmwc:title" content="AB">',
+      '<div class="card"><h2>AB04</h2><span title="Unicode glyphs — no <head> link needed">?</span></div>',
+      pageScript,
+    ].join('\n');
+    const documentHtml = `<!-- copy this into <head> -->\n<html><head><title>x</title></head><body><header>h</header>${pageScript}</body></html>`;
+
+    for (const builtHtml of [transformBuiltHtml(fragmentHtml), transformBuiltHtml(documentHtml)]) {
+      assert.equal(builtHtml.split('pa-TEST123').length - 1, 1, 'snippet once');
+      assert.equal(builtHtml.split('import \'virtual:kmwc-examples\'').length - 1, 1, 'kit once');
+      assert.ok(builtHtml.includes(pageScript), 'page script untouched');
+      assert.ok(builtHtml.indexOf('pa-TEST123') < builtHtml.indexOf('</head>'), 'snippet in <head>');
+      assert.match(builtHtml, /virtual:kmwc-examples';<\/script>\n?<\/body><\/html>\s*$|virtual:kmwc-examples';<\/script>\n?<\/body>\s*<\/html>\s*$/);
+    }
+
+    // No <head> at all: prepended — never into <header>.
+    const headlessHtml = transformBuiltHtml('<html><body><header>h</header></body></html>');
+    assert.ok(headlessHtml.startsWith('<!-- Privacy-friendly analytics'));
+    assert.match(headlessHtml, /<header>h<\/header>/);
+  } finally {
+    rmSync(temporaryRoot, { recursive: true, force: true });
+  }
+});
+
+const createPartialReader =(partials) => (absolutePath, displayPath) => {
   if (!(displayPath in partials)) throw new Error(`no partial ${displayPath}`);
   return partials[displayPath];
 };

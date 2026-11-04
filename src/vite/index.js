@@ -20,7 +20,7 @@ import { readdirSync, existsSync, cpSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { getKmwcConfig, getDevkitPackageJson, generateBuildDefines, loadPeerModule, DEVKIT_ROOT, NON_PAGE_HTML_FILES } from '../config.js';
 import { renderThemeBootstrapScript } from '../examples/theme-switch.js';
-import { composePage } from './page-composer.js';
+import { composePage, insertIntoHead, insertBeforeBodyEnd } from './page-composer.js';
 import { generateChapterIndex } from './chapter-index.js';
 
 const AUTO_ENTRY_PATH = join(DEVKIT_ROOT, 'src', 'examples', 'auto.js');
@@ -162,11 +162,7 @@ export function createExamplesPlugin(pluginConfig = {}) {
         const kitImports = isBuild ? `import '${KIT_STYLESHEET_PATH}'; import '${VIRTUAL_AUTO_ID}';` : `import '${VIRTUAL_AUTO_ID}';`;
         const bodyHtml = `<script type="module">${kitImports}</script>\n`;
 
-        html = /<head[^>]*>/i.test(html)
-          ? html.replace(/<head[^>]*>/i, (headTag) => `${headTag}\n${headHtml}`)
-          : headHtml + html;
-        html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${bodyHtml}</body>`) : html + bodyHtml;
-        return html;
+        return insertBeforeBodyEnd(insertIntoHead(html, headHtml), bodyHtml);
       },
     },
 

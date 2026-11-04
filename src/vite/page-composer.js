@@ -64,7 +64,36 @@ export function mapOutsideComments(html, mapper, skippedPattern = HTML_COMMENT_P
   return mappedHtml + mapper(html.slice(lastIndex));
 }
 
-const mapToCamelCase = (kebabName) => kebabName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+// The real tag only — `<head[^>]*>` also matches `<header>`.
+const HEAD_TAG_PATTERN = /<head(?=[\s>])[^>]*>/i;
+const BODY_END_TAG = '</body>';
+
+/**
+ * Insert `headHtml` right after the page's <head> tag (prepend when there is none).
+ * The first <head> outside comments is the real one: the text "<head>" in a tooltip
+ * or a script comment comes later, and a snippet landing there breaks the page
+ * (an HTML comment inside a module script throws).
+ */
+export function insertIntoHead(html, headHtml) {
+  let isInserted = false;
+  const insertedHtml = mapOutsideComments(html, (text) => {
+    if (isInserted || !HEAD_TAG_PATTERN.test(text)) return text;
+    isInserted = true;
+    return text.replace(HEAD_TAG_PATTERN, (headTag) => `${headTag}\n${headHtml}`);
+  });
+  return isInserted ? insertedHtml : headHtml + html;
+}
+
+/**
+ * Insert `bodyHtml` before the LAST </body> (append when there is none): an
+ * earlier one is text — e.g. a comment inside an inline script.
+ */
+export function insertBeforeBodyEnd(html, bodyHtml) {
+  const bodyEndIndex = html.toLowerCase().lastIndexOf(BODY_END_TAG);
+  return bodyEndIndex < 0 ? html + bodyHtml : html.slice(0, bodyEndIndex) + bodyHtml + html.slice(bodyEndIndex);
+}
+
+const mapToCamelCase =(kebabName) => kebabName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 
 const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 const mapToEscapedHtml = (text) => String(text).replace(/[&<>"]/g, (character) => HTML_ESCAPES[character]);
