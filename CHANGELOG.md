@@ -2,6 +2,16 @@
 
 ## [1.0.0-rc09] - 2026-11-04
 
+### Added
+
+- **check-pages: page CSS that only matches inside a shadow root.** A page's own rules (its `<style>`
+  blocks and `examples-local.css`) are matched against the loaded page. A rule whose element (the last
+  compound, pseudo-classes dropped) exists nowhere in the document but inside a component's shadow root
+  never applies — page CSS stops at the shadow boundary. web-treeview styled the rows its
+  `renderNodeCallback` draws that way (custom-layout: `.file-icon`, `.node-badge`, `.badge-new` …;
+  responsive: `.isco-row`, `.dev-badge` …, 18 rules); against its pre-fix pages the check reports
+  exactly those. Checked once per page (first width).
+
 ### Fixed
 
 - **The grey secondary button in dark mode** (`button.secondary` / `.btn-secondary`) had white text on

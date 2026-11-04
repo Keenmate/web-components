@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
+import { findShadowOnlyRules } from '../../src/cli/commands/check-pages.js';
 
 // The devkit repo's own version (the playground links it via file:..).
 const DEVKIT_VERSION = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
@@ -634,5 +635,17 @@ test.describe('kmwc check-pages', () => {
     expect(result.stdout).toContain('✓ examples-widgets.html');
     expect(result.stdout).toContain('✓ 0 problem(s)');
     expect(result.status).toBe(0);
+  });
+
+  test('finds page CSS that only matches inside a shadow root', async ({ page }) => {
+    await page.goto('/examples-basic.html');
+    await page.locator('web-playground').first().waitFor();
+    // .pg__root is the button the element renders in its shadow root; .card is page markup.
+    const found = await page.evaluate(findShadowOnlyRules, [
+      { selector: '.demo .pg__root:hover', subject: '.pg__root' },
+      { selector: '.card', subject: '.card' },
+      { selector: '.never-rendered', subject: '.never-rendered' },
+    ]);
+    expect(found).toEqual([{ selector: '.demo .pg__root:hover', host: 'web-playground' }]);
   });
 });

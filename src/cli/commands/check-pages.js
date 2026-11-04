@@ -1,24 +1,28 @@
 /**
  * kmwc check-pages — load every example page in a real browser and report what
  * a reader would hit: page errors, console errors, failed requests, custom
- * elements that never get defined, and a page wider than the viewport (a fixed
- * width or a long word that pushes a phone sideways).
+ * elements that never get defined, a page wider than the viewport (a fixed
+ * width or a long word that pushes a phone sideways), and page CSS that can
+ * never apply because what it targets lives only inside a shadow root (classes
+ * a render callback puts into the component).
  *
  * Runs against the repo's own dev server (started here on kmwc.ports.dev), or a
  * server you already have (--url, e.g. the built site on the preview port).
  * Widths default to desktop + two phones. Uses the component's own
  * @playwright/test (see getPeerModule) — `npx playwright install chromium` once.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getKmwcConfig, getPeerModule, loadPeerModule } from '../../config.js';
 import { getExamplePages } from '../../vite/index.js';
+import { getRuleSelectors } from '../repo-checks.js';
 
 export const DEFAULT_WIDTHS = [1440, 390, 320];
 const VIEWPORT_HEIGHT = 900;
 const SETTLE_MS = 600;
 const VITE_CONFIG_FILES = ['vite.config.ts', 'vite.config.mts', 'vite.config.mjs', 'vite.config.js'];
 const MAX_OFFENDERS = 3;
+const LOCAL_STYLESHEET_FILE = 'examples-local.css';
 // Requests a page doesn't control (favicon probes, analytics in a built site).
 const IGNORED_REQUEST_PATTERN = /favicon\.ico|stats\.keenmate\.services|plausible/;
 
@@ -31,11 +35,67 @@ export function parseWidths(widthsText) {
 }
 
 /**
+ * The element a selector styles, as a selector of its own: the last compound with
+ * pseudo-classes / -elements dropped (`.tree .badge:hover::after` → `.badge`), or
+ * null when there's no class / id / attribute to look for (`:root`, `div`, `from`). Pure.
+ */
+export function getSelectorSubject(selector) {
+  let depth = 0;
+  let start = 0;
+  for (let index = 0; index < selector.length; index++) {
+    const character = selector[index];
+    if (character === '(' || character === '[') depth++;
+    else if (character === ')' || character === ']') depth--;
+    else if (depth === 0 && /[\s>+~]/.test(character)) start = index + 1;
+  }
+  const subject = selector.slice(start).replace(/::?[\w-]+(\([^()]*\))?/g, '').trim();
+  return /[.#[]/.test(subject) ? subject : null;
+}
+
+/** A page's own CSS rules (its `<style>` blocks + examples-local.css) → [{ selector, subject }]. */
+export function loadPageRules(root, pagePath) {
+  const pageText = readFileSync(pagePath, 'utf8');
+  const localStylesheetPath = join(root, LOCAL_STYLESHEET_FILE);
+  const styleText = [
+    ...[...pageText.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map((match) => match[1]),
+    existsSync(localStylesheetPath) ? readFileSync(localStylesheetPath, 'utf8') : '',
+  ].join('\n');
+  const selectors = [...new Set(getRuleSelectors(styleText))];
+  return selectors.map((selector) => ({ selector, subject: getSelectorSubject(selector) })).filter((rule) => rule.subject);
+}
+
+/**
+ * Runs in the page: page rules whose subject matches nothing in the document but
+ * something inside a shadow root → [{ selector, host }]. Page CSS stops at the
+ * shadow boundary, so such a rule never applies.
+ */
+export function findShadowOnlyRules(rules) {
+  const getShadowRoots = (root) =>
+    [...root.querySelectorAll('*')].filter((element) => element.shadowRoot).flatMap((element) => [element.shadowRoot, ...getShadowRoots(element.shadowRoot)]);
+  const shadowRoots = getShadowRoots(document);
+  const safeQuery = (root, selector) => {
+    try {
+      return root.querySelector(selector);
+    } catch {
+      return null;
+    }
+  };
+  return rules.flatMap(({ selector, subject }) => {
+    if (safeQuery(document, subject)) return [];
+    const shadowRoot = shadowRoots.find((root) => safeQuery(root, subject));
+    return shadowRoot ? [{ selector, host: shadowRoot.host.localName }] : [];
+  });
+}
+
+/**
  * Problems in one page load's report → [string]. Pure — exported for tests.
- * @param {{ width: number, errors: string[], undefinedElements: string[], scrollWidth: number, clientWidth: number, offenders: string[] }} pageReport
+ * @param {{ width: number, errors: string[], undefinedElements: string[], scrollWidth: number, clientWidth: number, offenders: string[], shadowOnlyRules?: { selector: string, host: string }[] }} pageReport
  */
 export function getPageProblems(pageReport) {
   const problems = [...pageReport.errors];
+  for (const { selector, host } of pageReport.shadowOnlyRules || []) {
+    problems.push(`page CSS "${selector}" only matches inside <${host}>'s shadow root — page styles can't reach it (use a CSS variable, ::part or the component's styles hook)`);
+  }
   if (pageReport.undefinedElements.length) problems.push(`never defined: <${pageReport.undefinedElements.join('>, <')}>`);
   if (pageReport.scrollWidth > pageReport.clientWidth) {
     const offenderText = pageReport.offenders.length ? ` — widest: ${pageReport.offenders.join(', ')}` : '';
@@ -106,7 +166,7 @@ function inspectPage(maxOffenders) {
   };
 }
 
-async function loadPageReport(browser, pageUrl, width) {
+async function loadPageReport(browser, pageUrl, width, pageRules = []) {
   const page = await browser.newPage({ viewport: { width, height: VIEWPORT_HEIGHT } });
   const errors = [];
   page.on('pageerror', (error) => errors.push(`page error: ${error.message.split('\n')[0]}`));
@@ -123,7 +183,8 @@ async function loadPageReport(browser, pageUrl, width) {
     await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 30_000 });
     await page.waitForTimeout(SETTLE_MS);
     const inspection = await page.evaluate(inspectPage, MAX_OFFENDERS);
-    return { width, errors: [...new Set(errors)], ...inspection };
+    const shadowOnlyRules = pageRules.length ? await page.evaluate(findShadowOnlyRules, pageRules) : [];
+    return { width, errors: [...new Set(errors)], ...inspection, shadowOnlyRules };
   } catch (error) {
     return { width, errors: [...new Set([...errors, `load failed: ${error.message.split('\n')[0]}`])], scrollWidth: 0, clientWidth: 0, offenders: [], undefinedElements: [] };
   } finally {
@@ -154,7 +215,8 @@ async function startDevServer(config) {
 export async function run(args) {
   const config = getKmwcConfig(args.root);
   const widths = parseWidths(args.widths);
-  const pageFiles = Object.values(getExamplePages(config)).map((pagePath) => pagePath.replace(/\\/g, '/').split('/').pop());
+  const pagePaths = Object.values(getExamplePages(config));
+  const pageFiles = pagePaths.map((pagePath) => pagePath.replace(/\\/g, '/').split('/').pop());
   if (!pageFiles.length) {
     console.log('kmwc check-pages: no example pages — nothing to check.');
     return 0;
@@ -172,10 +234,13 @@ export async function run(args) {
   let problemCount = 0;
   try {
     console.log(`kmwc check-pages — ${pageFiles.length} page(s) × ${widths.join(' / ')}px on ${baseUrl}\n`);
-    for (const pageFile of pageFiles) {
+    for (const [pageIndex, pageFile] of pageFiles.entries()) {
       const pageProblems = [];
-      for (const width of widths) {
-        for (const problem of getPageProblems(await loadPageReport(browser, `${baseUrl}/${pageFile}`, width))) pageProblems.push(`@${width}px ${problem}`);
+      const pageRules = loadPageRules(config.root, pagePaths[pageIndex]);
+      for (const [widthIndex, width] of widths.entries()) {
+        // Shadow-only rules don't depend on the width: check them on the first load only.
+        const report = await loadPageReport(browser, `${baseUrl}/${pageFile}`, width, widthIndex === 0 ? pageRules : []);
+        for (const problem of getPageProblems(report)) pageProblems.push(`@${width}px ${problem}`);
       }
       problemCount += pageProblems.length;
       console.log(`${pageProblems.length ? '✗' : '✓'} ${pageFile}${pageProblems.map((problem) => `\n    ${problem}`).join('')}`);

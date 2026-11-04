@@ -365,7 +365,7 @@ kmwc doctor [--json]          devkit checks + package contents + the rulebook's 
 kmwc check-vars [--strict]    component-variables.manifest.json ⇔ CSS
 kmwc check-pages [--url u]    every example page in Chromium at 1440 / 390 / 320px: page and console
                               errors, failed requests, never-defined elements, a page wider than the
-                              viewport. Starts the dev server unless --url (e.g. the built site);
+                              viewport, page CSS that only matches inside a shadow root. Starts the dev server unless --url (e.g. the built site);
                               --widths 1440,390,320
 kmwc check-release --tag t    latest ⇔ release version, rc ⇔ -rcN, version not yet on npm
 kmwc new web-<name>           scaffold a component (--prefix, --title, --tag, --dir, --port, --minimal, --register)
@@ -427,7 +427,11 @@ generated files:
 
 `kmwc check-pages` is the browser half: it loads every example page and reports
 what doctor can't see in the source — a script error, a 404, a fixed width that
-pushes a phone sideways.
+pushes a phone sideways, and page CSS that can never apply: a rule (in the page's
+`<style>` or `examples-local.css`) whose element exists only inside a component's
+shadow root, such as the rows a `renderNodeCallback` draws. Page CSS stops at the
+shadow boundary — style those through a CSS variable, `::part` or the component's
+styles hook (`getCustomStylesCallback`).
 
 **Package contents.** Doctor runs `npm pack --dry-run` and fails on anything
 dev-only that would reach a consumer's `node_modules`: `CLAUDE.md` at any

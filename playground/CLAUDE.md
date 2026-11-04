@@ -57,5 +57,7 @@ locally — every local fork is how they drifted apart.
   `*.checks.sh` suites. A rulebook failure that is a real architectural decision
   goes into `VALIDATION-NOTES.md` under a `## C-XX-N — …` heading (deferrals
   don't count). After changing a page, `npx kmwc check-pages` loads every page at
-  desktop and phone widths and reports errors and horizontal overflow.
+  desktop and phone widths and reports errors, horizontal overflow and page CSS
+  that only matches inside a shadow root (markup a render callback draws there is
+  out of page CSS's reach — style it through the component's styles hook).
 <!-- kmwc:devkit:end -->

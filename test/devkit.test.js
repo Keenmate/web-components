@@ -46,7 +46,7 @@ import {
   loadCoreLoader,
   loadStyledLoaderClasses,
 } from '../src/cli/repo-checks.js';
-import { parseWidths, getPageProblems, DEFAULT_WIDTHS } from '../src/cli/commands/check-pages.js';
+import { parseWidths, getPageProblems, getSelectorSubject, loadPageRules, DEFAULT_WIDTHS } from '../src/cli/commands/check-pages.js';
 import { CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, SPOTLIGHT_CLASSES, THEME_SWITCH_CLASSES } from '../src/examples/constants.js';
 import { generateChapterIndex, getPageChapters, getHeadingText } from '../src/vite/chapter-index.js';
 import { searchChapters, checkMatchesAny, renderHighlightedText } from '../src/examples/chapter-search.js';
@@ -804,4 +804,28 @@ test('check-pages: widths parse; a report turns into problems', () => {
     getPageProblems({ ...cleanReport, errors: ['page error: boom'], undefinedElements: ['web-sample'], scrollWidth: 460, offenders: ['div#phone.ios-phone'] }),
     ['page error: boom', 'never defined: <web-sample>', 'page is 460px wide in a 390px viewport — widest: div#phone.ios-phone']
   );
+});
+
+test('check-pages: page rules and the element each one styles (for the shadow-root check)', () => {
+  assert.equal(getSelectorSubject('.tree .badge:hover::after'), '.badge');
+  assert.equal(getSelectorSubject('.wtv-node > .my-badge'), '.my-badge');
+  assert.equal(getSelectorSubject('li:not(.x) .tag[data-a="b c"]'), '.tag[data-a="b c"]');
+  assert.equal(getSelectorSubject('#x.y'), '#x.y');
+  assert.equal(getSelectorSubject(':root'), null);
+  assert.equal(getSelectorSubject('div'), null);
+  assert.equal(getSelectorSubject('from'), null);
+  const cleanReport = { width: 1440, errors: [], undefinedElements: [], scrollWidth: 1440, clientWidth: 1440, offenders: [] };
+  assert.match(getPageProblems({ ...cleanReport, shadowOnlyRules: [{ selector: '.node-badge', host: 'web-treeview' }] })[0], /"\.node-badge" only matches inside <web-treeview>'s shadow root/);
+  const workspaceRoot = mkdtempSync(join(tmpdir(), 'kmwc-page-rules-'));
+  try {
+    writeFileSync(join(workspaceRoot, 'examples-a.html'), '<style>.row .badge { color: red; } :root { --x: 1; } @media (width < 600px) { .badge { gap: 0; } }</style><p>x</p>');
+    writeFileSync(join(workspaceRoot, 'examples-local.css'), '.shared:hover { color: red; }');
+    assert.deepEqual(loadPageRules(workspaceRoot, join(workspaceRoot, 'examples-a.html')), [
+      { selector: '.row .badge', subject: '.badge' },
+      { selector: '.badge', subject: '.badge' },
+      { selector: '.shared:hover', subject: '.shared' },
+    ]);
+  } finally {
+    rmSync(workspaceRoot, { recursive: true, force: true });
+  }
 });
