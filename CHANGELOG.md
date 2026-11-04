@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0-rc07] - 2026-11-03
+## [1.0.0-rc07] - 2026-11-03 [PUBLISHED]
 
 Found migrating web-treeview — each item is something doctor missed or got wrong there.
 
