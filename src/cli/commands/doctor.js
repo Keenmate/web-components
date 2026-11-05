@@ -19,6 +19,7 @@ import { spawnSync } from 'node:child_process';
 import { getKmwcConfig, getPortsForBlock, getRegistry, LEGACY_FILES, NON_PAGE_HTML_FILES, PACKAGE_LEAK_RULES, PACKAGE_FILES_EXCLUSIONS } from '../../config.js';
 import { getSyncPlan, getScriptsPlan, CLAUDE_BLOCK_START } from '../sync-plan.js';
 import { checkIsFragment } from '../../vite/page-composer.js';
+import { loadManifestVerdict } from './check-vars.js';
 import {
   VALIDATION_NOTES_FILE,
   loadAcceptedCheckIds,
@@ -28,6 +29,7 @@ import {
   getPortBlockRange,
   getScriptPortMismatches,
   loadStalePortMentions,
+  OTHER_PORTS_MARKER,
   loadSiblingPortCollisions,
   loadOwnPortsOutsideBlock,
   loadPlausibleSiteId,
@@ -38,6 +40,7 @@ import {
   FIXED_COLORS_MARKER,
   getHardcodedColors,
   loadCoreLoader,
+  getLoaderClassVerdict,
   loadStyledLoaderClasses,
 } from '../repo-checks.js';
 
@@ -277,6 +280,9 @@ export function checkComponent(config, doctorConfig = {}) {
   // ── core's default loader class ──────────────────────────────────────────
   if (config.prefix && config.kind !== LIBRARY_KIND) checkLoaderClass(config, { addPass, addWarning, addError });
 
+  // ── variable manifest (what `kmwc check-vars` checks; it only runs in the build) ──
+  if (config.hasPackageConfig) checkVariableManifest(config, { addPass, addWarning, addError });
+
   // ── analytics ────────────────────────────────────────────────────────────
   const plausibleSiteId = loadPlausibleSiteId(config.root);
   const sharingRepoIds = loadSharedPlausibleSiteIds(config, getRegistry(), plausibleSiteId);
@@ -316,7 +322,7 @@ function checkPorts(config, portBlock, { addPass, addWarning, addError }) {
     addWarning(
       'ports',
       `docs mention ports outside ${blockLabel}: ${stalePortMentions.map(({ file, port }) => `${file} ${port}`).join(', ')}`,
-      `update them to ${getPortsForBlock(portBlock).dev} (dev) / ${getPortsForBlock(portBlock).image} (image)`
+      `update them to ${getPortsForBlock(portBlock).dev} (dev) / ${getPortsForBlock(portBlock).image} (image); a doc that names other repos' ports on purpose gets <!-- ${OTHER_PORTS_MARKER}: why -->`
     );
   }
   if (!scriptPortMismatches.length && !ownStrayPorts.length && !siblingCollisions.length && !stalePortMentions.length) {
@@ -330,13 +336,19 @@ function checkPorts(config, portBlock, { addPass, addWarning, addError }) {
  * before (or after) the core bump leaves the default loader unstyled, and no rulebook
  * check sees that (a VALIDATION-NOTES `## C-NC-8` even hides a leftover old class).
  */
-function checkLoaderClass(config, { addPass, addError }) {
+function checkLoaderClass(config, { addPass, addWarning, addError }) {
   const coreLoader = loadCoreLoader(config.root);
   if (!coreLoader?.separator) return;
   const coreClassName = `${config.prefix}${coreLoader.separator}loader`;
-  const styledLoaderClasses = loadStyledLoaderClasses(config.root, config.prefix);
-  const mismatchedClasses = styledLoaderClasses.filter(({ separator }) => separator !== coreLoader.separator);
-  for (const { file, className } of mismatchedClasses) {
+  const { isCoreClassStyled, renamedClasses, collidingClasses } = getLoaderClassVerdict(coreLoader.separator, loadStyledLoaderClasses(config.root, config.prefix));
+  for (const { file, className } of collidingClasses) {
+    addWarning(
+      'loader',
+      `${file} styles .${className} next to core's .${coreClassName} — from core 6d6b768 on, core draws its default loader as <span class="${className}"> and it picks up these rules`,
+      `rename the component's own .${className} element (e.g. .${config.prefix}__loading) in the same change as the core bump`
+    );
+  }
+  for (const { file, className } of renamedClasses) {
     addError(
       'loader',
       `${file} styles .${className}, but core ${coreLoader.version} draws the default loader as <span class="${coreClassName}"> — it renders unstyled`,
@@ -345,7 +357,30 @@ function checkLoaderClass(config, { addPass, addError }) {
         : `keep .${coreClassName} until the component builds on a core that draws <prefix>__loader, then rename in the same change`
     );
   }
-  if (styledLoaderClasses.length && !mismatchedClasses.length) addPass('loader', `CSS styles .${coreClassName}, the class core ${coreLoader.version} draws`);
+  if (isCoreClassStyled && !renamedClasses.length) addPass('loader', `CSS styles .${coreClassName}, the class core ${coreLoader.version} draws`);
+}
+
+/** The variable manifest matches the CSS — the same verdict as `kmwc check-vars` (undocumented = warning). */
+function checkVariableManifest(config, { addPass, addWarning, addError }) {
+  let manifestVerdict;
+  try {
+    manifestVerdict = loadManifestVerdict(config);
+  } catch (error) {
+    addError('vars', `kmwc check-vars can't run: ${error.message}`, 'fix kmwc.cssVariables (sources / manifest / prefix)');
+    return;
+  }
+  const { verdict, prefix, skippedReason } = manifestVerdict;
+  if (skippedReason) return;
+  const fixHint = 'edit the manifest to match the CSS (npm run check:vars lists every name)';
+  const listNames = (names) => names.map((name) => `--${name}`).join(', ');
+  if (verdict.missingBaseVariables.length) addError('vars', `--base-* read in CSS but missing from the manifest: ${listNames(verdict.missingBaseVariables)}`, fixHint);
+  if (verdict.unusedBaseVariables.length) addError('vars', `--base-* in the manifest but not read in CSS: ${listNames(verdict.unusedBaseVariables)}`, fixHint);
+  if (verdict.unusedComponentVariables.length) addError('vars', `--${prefix}-* in the manifest but not in CSS: ${listNames(verdict.unusedComponentVariables)}`, fixHint);
+  if (verdict.undocumentedComponentVariables.length) {
+    addWarning('vars', `--${prefix}-* in CSS but missing from the manifest: ${listNames(verdict.undocumentedComponentVariables)}`, `${fixHint}; runtime internals go in kmwc.cssVariables.internalVariables`);
+  }
+  const isInSync = !['missingBaseVariables', 'unusedBaseVariables', 'unusedComponentVariables', 'undocumentedComponentVariables'].some((key) => verdict[key].length);
+  if (isInSync) addPass('vars', `variable manifest in sync — ${verdict.counts.base} base, ${verdict.counts.component} component vars`);
 }
 
 /** Packed paths that break PACKAGE_LEAK_RULES → [{ path, label }]. Pure — exported for tests. */

@@ -109,6 +109,12 @@ export function getMentionedPorts(text) {
   return getUniqueSorted(patterns.flatMap((pattern) => [...text.matchAll(pattern)].map((match) => Number(match[1]))));
 }
 
+/**
+ * A doc that names other repos' ports on purpose (a dated plan, a cross-repo review) carries
+ * `<!-- kmwc-other-ports: why -->` and isn't scanned.
+ */
+export const OTHER_PORTS_MARKER = 'kmwc-other-ports';
+
 /** Mentions in README.md / CLAUDE.md / docs/*.md of ports outside the repo's block → [{ file, port }]. */
 export function loadStalePortMentions(root, portBlock) {
   const blockRange = getPortBlockRange(portBlock);
@@ -116,7 +122,7 @@ export function loadStalePortMentions(root, portBlock) {
   const docFiles = [...DOC_FILES, ...(existsSync(docsDir) ? readdirSync(docsDir).filter((name) => name.endsWith('.md')).map((name) => `${DOCS_DIR}/${name}`) : [])];
   return docFiles.flatMap((file) => {
     const text = readText(join(root, file));
-    return text ? getMentionedPorts(text).filter((port) => !checkIsInRange(port, blockRange)).map((port) => ({ file, port })) : [];
+    return text && !text.includes(OTHER_PORTS_MARKER) ? getMentionedPorts(text).filter((port) => !checkIsInRange(port, blockRange)).map((port) => ({ file, port })) : [];
   });
 }
 
@@ -252,7 +258,8 @@ export function getKitDuplicates(pageText, kitClassNames, { isStylesheet = false
 
 /**
  * Fixed colours on purpose (a theme gallery, a mockup, a test fixture): a page `<style>`
- * block with the attribute, or one rule right after a `/* kmwc-fixed-colors *\/` comment.
+ * block or an element with a `style="…"` that carries the attribute, or one rule right
+ * after a `/* kmwc-fixed-colors *\/` comment.
  */
 export const FIXED_COLORS_ATTRIBUTE = 'data-kmwc-fixed-colors';
 export const FIXED_COLORS_MARKER = 'kmwc-fixed-colors';
@@ -283,7 +290,7 @@ export function checkIsHardcodedColor(property, value) {
  * Hard-coded colours in one page's `<style>` blocks and `style="…"` attributes (or in
  * examples-local.css): they stay the same in dark mode while the kit around them flips.
  * `var()` fallbacks and `light-dark()` pairs follow the theme; a `<style data-kmwc-fixed-colors>`
- * block and a rule marked `/* kmwc-fixed-colors *\/` are skipped. Returns [{ found }]. Pure.
+ * block, an element carrying the attribute and a rule marked `/* kmwc-fixed-colors *\/` are skipped. Returns [{ found }]. Pure.
  */
 export function getHardcodedColors(pageText, { isStylesheet = false } = {}) {
   const styleText = isStylesheet
@@ -302,7 +309,12 @@ export function getHardcodedColors(pageText, { isStylesheet = false } = {}) {
     }
   }
   if (isStylesheet) return hardcodedColors;
-  for (const [, inlineStyle] of pageText.matchAll(/\sstyle="([^"]*)"/g)) {
+  for (const match of pageText.matchAll(/\sstyle="([^"]*)"/g)) {
+    // The element's own attribute opts its style="…" out: markup a render callback draws
+    // inside a shadow root can't be reached by page CSS, so inline is the only way there.
+    const tagText = pageText.slice(pageText.lastIndexOf('<', match.index), pageText.indexOf('>', match.index + match[0].length) + 1);
+    if (tagText.includes(FIXED_COLORS_ATTRIBUTE)) continue;
+    const inlineStyle = match[1];
     for (const declaration of inlineStyle.split(';')) {
       const [property, ...valueParts] = declaration.split(':');
       const value = valueParts.join(':').trim();
@@ -356,6 +368,24 @@ function getSourceStylesheets(directory, relativeDirectory = SOURCE_DIR) {
     if (entry.isDirectory()) return SKIPPED_SOURCE_DIRS.has(entry.name) ? [] : getSourceStylesheets(join(directory, entry.name), relativePath);
     return entry.name.endsWith('.css') ? [relativePath] : [];
   });
+}
+
+/**
+ * Styled loader classes vs the separator core draws → { isCoreClassStyled, renamedClasses,
+ * collidingClasses }. A class with the other separator is a rename done too early / too late —
+ * unless core is still on `-` and its class is styled too: then the `__loader` is the
+ * component's own element (web-multiselect's loading-state row), which collides once core
+ * draws `<prefix>__loader`. Pure.
+ */
+export function getLoaderClassVerdict(coreSeparator, styledLoaderClasses) {
+  const isCoreClassStyled = styledLoaderClasses.some(({ separator }) => separator === coreSeparator);
+  const otherClasses = styledLoaderClasses.filter(({ separator }) => separator !== coreSeparator);
+  const isOwnLoaderElement = coreSeparator === '-' && isCoreClassStyled;
+  return {
+    isCoreClassStyled,
+    renamedClasses: isOwnLoaderElement ? [] : otherClasses,
+    collidingClasses: isOwnLoaderElement ? otherClasses : [],
+  };
 }
 
 /** Loader classes styled in the component's src CSS: [{ file, className, separator }]. */

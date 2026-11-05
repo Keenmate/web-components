@@ -35,6 +35,7 @@ import {
   getPortBlockRange,
   loadSiblingPortCollisions,
   loadStalePortMentions,
+  OTHER_PORTS_MARKER,
   loadPlausibleSiteId,
   loadSharedPlausibleSiteIds,
   loadKitClassNames,
@@ -45,6 +46,7 @@ import {
   getStyledLoaderClasses,
   loadCoreLoader,
   loadStyledLoaderClasses,
+  getLoaderClassVerdict,
 } from '../src/cli/repo-checks.js';
 import { parseWidths, getPageProblems, getSelectorSubject, loadPageRules, DEFAULT_WIDTHS } from '../src/cli/commands/check-pages.js';
 import { CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, SPOTLIGHT_CLASSES, THEME_SWITCH_CLASSES } from '../src/examples/constants.js';
@@ -446,6 +448,15 @@ test('composer: fragments get the layout, full documents pass through', () => {
   assert.match(scriptStyleHtml, /<head>[\s\S]*<style>\.page\{\}<\/style>[\s\S]*<\/head>/);
   assert.match(scriptStyleHtml, /<\/head>[\s\S]*<script>el\.innerHTML = `<style>\.shadow\{\}<\/style><span><\/span>`;<\/script>/);
 
+  // `<link>` as text in an attribute value (a tooltip) is part of its tag, not an element to move.
+  const attributeTextHtml = composePage(
+    '<meta name="kmwc:title" content="X">\n<link rel="stylesheet" href="a.css">\n<span title="put the <link> in <head>">tip</span>',
+    { config, pagePath: '/examples-x.html' }
+  );
+  assert.match(attributeTextHtml, /<head>[\s\S]*<link rel="stylesheet" href="a\.css">[\s\S]*<\/head>/);
+  assert.ok(!attributeTextHtml.split('</head>')[0].includes('<link>'), 'no empty <link> carved out of the tooltip');
+  assert.ok(attributeTextHtml.includes('<span title="put the <link> in <head>">tip</span>'));
+
   const bareHtml = composePage('<meta name="kmwc:layout" content="bare">\n<meta name="kmwc:entry" content="none">\n<p>index</p>', { config, pagePath: '/index.html' });
   assert.ok(!bareHtml.includes('<header>') && !bareHtml.includes('src="/src/index.ts"'));
   assert.throws(() => composePage('<p>no title</p>', { config, pagePath: '/x.html' }), /needs <meta name="kmwc:title"/);
@@ -707,6 +718,9 @@ test('doctor: ports — script flags, mentions, sibling collisions, shared Plaus
     const config = { id: 'web-own', root: join(workspaceRoot, 'web-own') };
     assert.deepEqual(loadSiblingPortCollisions(config, registry), [{ id: 'web-other', port: 12300, file: 'vite.config.ts' }]);
     assert.deepEqual(loadStalePortMentions(config.root, 12300), [{ file: 'README.md', port: 21111 }]);
+    mkdirSync(join(config.root, 'docs'));
+    writeFileSync(join(config.root, 'docs', 'review-plan.md'), `<!-- ${OTHER_PORTS_MARKER}: a dated cross-repo plan -->\nweb-other ran on port 12200.`);
+    assert.deepEqual(loadStalePortMentions(config.root, 12300), [{ file: 'README.md', port: 21111 }]);
     assert.equal(loadPlausibleSiteId(config.root), 'pa-shared');
     assert.deepEqual(loadSharedPlausibleSiteIds(config, registry, 'pa-shared'), ['web-other']);
     assert.deepEqual(loadSharedPlausibleSiteIds(config, registry, null), []);
@@ -758,7 +772,8 @@ test('doctor: hard-coded page colours — literals warn, var() fallbacks / light
       @media (max-width: 600px) { .hint { color: #64748b; } }
     </style>
     <style data-kmwc-fixed-colors>.neon { background: #000; }</style>
-    <span style="color: #fc8181">x</span> <span style="padding: 0">y</span>`;
+    <span style="color: #fc8181">x</span> <span style="padding: 0">y</span>
+    <b class="chip" data-kmwc-fixed-colors style="color: white; background: \${role.color}">\${count}</b>`;
   assert.deepEqual(getHardcodedColors(page).map(({ found }) => found), [
     '.search-bar, .status-bar { background: #f8fafc }',
     '.hint { color: #64748b }',
@@ -789,6 +804,15 @@ test('doctor: the loader class the installed core draws vs the one the CSS style
     writeFileSync(join(componentRoot, 'src', 'css', 'loading.css'), '.x-loader { inline-size: 1em; }');
     assert.deepEqual(loadCoreLoader(componentRoot), { version: '1.0.0-rc19', separator: '__' });
     assert.deepEqual(loadStyledLoaderClasses(componentRoot, 'x'), [{ file: 'src/css/loading.css', className: 'x-loader', separator: '-' }]);
+    const oldClass = { file: 'a.css', className: 'x-loader', separator: '-' };
+    const newClass = { file: 'b.css', className: 'x__loader', separator: '__' };
+    // Core draws __, the CSS still styles - → a rename to finish.
+    assert.deepEqual(getLoaderClassVerdict('__', [oldClass]), { isCoreClassStyled: false, renamedClasses: [oldClass], collidingClasses: [] });
+    // Core draws -, the CSS only styles __ → renamed too early.
+    assert.deepEqual(getLoaderClassVerdict('-', [newClass]), { isCoreClassStyled: false, renamedClasses: [newClass], collidingClasses: [] });
+    // Core draws -, the CSS styles both → the __loader is the component's own element: a collision ahead.
+    assert.deepEqual(getLoaderClassVerdict('-', [oldClass, newClass]), { isCoreClassStyled: true, renamedClasses: [], collidingClasses: [newClass] });
+    assert.deepEqual(getLoaderClassVerdict('__', [newClass]), { isCoreClassStyled: true, renamedClasses: [], collidingClasses: [] });
   } finally {
     rmSync(workspaceRoot, { recursive: true, force: true });
   }
@@ -802,7 +826,7 @@ test('check-pages: widths parse; a report turns into problems', () => {
   assert.deepEqual(getPageProblems(cleanReport), []);
   assert.deepEqual(
     getPageProblems({ ...cleanReport, errors: ['page error: boom'], undefinedElements: ['web-sample'], scrollWidth: 460, offenders: ['div#phone.ios-phone'] }),
-    ['page error: boom', 'never defined: <web-sample>', 'page is 460px wide in a 390px viewport — widest: div#phone.ios-phone']
+    ['page error: boom', 'never defined: <web-sample> (left undefined on purpose? add data-kmwc-undefined)', 'page is 460px wide in a 390px viewport — widest: div#phone.ios-phone']
   );
 });
 

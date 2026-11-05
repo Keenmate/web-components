@@ -21,7 +21,8 @@ them in the same shape: `@keenmate/web-components-devkit`.
 
 ## What's New in v1.0.0-rc09
 
-- **check-pages — page CSS that can't reach into a shadow root** — web-treeview's custom-layout and responsive pages styled the rows their `renderNodeCallback` draws with page CSS (`.file-icon`, `.node-badge`, `.isco-row`, `.dev-badge` …, 18 rules). Those rows live in the tree's shadow root, and page CSS stops at the shadow boundary, so none of the rules ever applied. Nothing in the source shows where a render callback's output ends up, so this needs the loaded page. `kmwc check-pages` now reads the page's own rules (its `<style>` blocks and `examples-local.css`) and finds what each one styles: the last part of the selector, without pseudo-classes. It reports a rule when that element exists nowhere in the document but does exist inside a component's shadow root, and names the component. Run against treeview's pages from before its fix, it lists exactly those 18 rules. The fix is a CSS variable, `::part`, or the component's styles hook (`getCustomStylesCallback`).
+- **check-pages — page CSS that can't reach into a shadow root** — web-treeview's custom-layout and responsive pages styled the rows their `renderNodeCallback` draws with page CSS (`.file-icon`, `.node-badge`, `.isco-row`, `.dev-badge` …, 18 rules). Those rows live in the tree's shadow root, and page CSS stops at the shadow boundary, so none of the rules ever applied. Nothing in the source shows where a render callback's output ends up, so this needs the loaded page. `kmwc check-pages` now reads the page's own rules (its `<style>` blocks and `examples-local.css`) and finds what each one styles: the last part of the selector, without pseudo-classes. It reports a rule when that element exists nowhere in the document but does exist inside a component's shadow root, and names the component. Run against treeview's pages from before its fix, it lists exactly those 18 rules. The fix is a CSS variable, `::part`, or the component's styles hook (`getCustomStylesCallback`). An element a demo leaves undefined on
+purpose (registered on a button press) carries `data-kmwc-undefined`.
 - **Examples kit — the grey secondary button in dark mode** — `button.secondary` / `.btn-secondary` had white text on `#9ca3af` in dark mode, at 2.54:1. That grey sits just under the 0.34 luminance switch in the formula that picks a button's text colour, so the formula chose white. It showed on 9 web-treeview pages ("Clear", "Reset", "Move up" …) and on every other component site's grey buttons. The button now has its own fill, `--kmwc-neutral-fill-color` (`#6b7280` light / `#4b5563` dark), plus a hover token, so white text stays at 4.5:1 or better in both themes, hovered too. Muted status dots and pills keep the lighter `--kmwc-neutral-color`. An e2e spec checks the contrast in both themes.
 
 ## What's New in v1.0.0-rc08
@@ -36,7 +37,7 @@ them in the same shape: `@keenmate/web-components-devkit`.
 
 | Component | Package | Prefix | Dev port | Links | Devkit | About |
 |---|---|---|---:|---|:---:|---|
-| **web-multiselect** | `@keenmate/web-multiselect` | `ms` | 12100 | [repo](https://github.com/keenmate/web-multiselect) · [examples](https://examples.web-multiselect.keenmate.dev) · [docs](https://web-multiselect.keenmate.dev) · `web-multiselect-showcase` · `web-multiselect-docs` | — | Lightweight multiselect web component with typeahead search, rich content support, and excellent keyboard… |
+| **web-multiselect** | `@keenmate/web-multiselect` | `ms` | 12100 | [repo](https://github.com/keenmate/web-multiselect) · [examples](https://examples.web-multiselect.keenmate.dev) · [docs](https://web-multiselect.keenmate.dev) · `web-multiselect-showcase` · `web-multiselect-docs` | ✅ | Lightweight multiselect web component with typeahead search, rich content support, and excellent keyboard… |
 | **web-daterangepicker** | `@keenmate/web-daterangepicker` | `drp` | 12200 | [repo](https://github.com/keenmate/web-daterangepicker) · [docs](https://web-daterangepicker.keenmate.dev) · `web-daterangepicker-showcase` | ✅ | Lightweight date picker web component with excellent keyboard navigation and range selection |
 | **web-treeview** | `@keenmate/web-treeview` | `wtv` | 12300 | [repo](https://github.com/keenmate/web-treeview) · `web-treeview-showcase` | ✅ | Lightweight treeview web component with hierarchical data display, search, expand/collapse, drag-drop, and… |
 | **web-commandpalette** | `@keenmate/web-commandpalette` | `cp` | 12400 | [repo](https://github.com/keenmate/web-commandpalette) · [examples](https://examples.web-commandpalette.keenmate.dev) | ✅ | Framework-agnostic command-palette web component — modes, multi-step commands, scoped + global search,… |
@@ -405,7 +406,9 @@ generated files:
   silently.
 - **Ports** — no script pins a `--port` of its own, the repo's configs, Makefile
   and docs stay inside its registry block, and no sibling checkout (a registry
-  entry at `../<id>`) listens on a port inside it.
+  entry at `../<id>`) listens on a port inside it. A doc that names other repos'
+  ports on purpose (a dated plan, a cross-repo review) carries
+  `<!-- kmwc-other-ports: why -->` and isn't scanned.
 - **Analytics** — no other repo uses the same Plausible site id.
 - **Page CSS** — a page `<style>` or `examples-local.css` rule on a kit-owned
   selector (`.kbd`, `kbd`, `mark`, `.pill`, `.card` …) and single-declaration
@@ -415,12 +418,19 @@ generated files:
   it stays put when the theme switch flips the kit to dark. `var()` fallbacks and
   `light-dark()` pairs follow the theme. Fixed colours on purpose (a theme gallery, a
   mockup, a test fixture) go in a `<style data-kmwc-fixed-colors>` block, or one rule
-  gets a `/* kmwc-fixed-colors: why */` comment right before it.
+  gets a `/* kmwc-fixed-colors: why */` comment right before it. An element whose
+  `style="…"` sets them on purpose carries the same attribute — markup a render
+  callback draws inside a shadow root can't be reached by page CSS at all.
 - **Loader class** — the component CSS styles the class the *installed* core gives
   its default loader (`<prefix>__loader` from core 6d6b768 on, `<prefix>-loader`
   before). Renaming the selector on one side of the core bump leaves the loader
   unstyled, and a VALIDATION-NOTES `## C-NC-8` would hide the old class from the
-  rulebook.
+  rulebook. On a core that still draws `<prefix>-loader`, CSS that styles both
+  classes has an element of its own called `<prefix>__loader`: a warning, because
+  core's loader takes that name (and those rules) with the bump.
+- **Variable manifest** — the same verdict as `kmwc check-vars`, which otherwise
+  only runs inside `npm run build`: `--base-*` reads and the manifest agree, no
+  dead `--<prefix>-*` entries (errors), no undocumented ones (warning).
 
 `kmwc check-pages` is the browser half: it loads every example page and reports
 what doctor can't see in the source — a script error, a 404, a fixed width that

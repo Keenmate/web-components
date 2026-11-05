@@ -426,13 +426,14 @@ test.describe('examples kit', () => {
     }
   });
 
-  test('dark mode: inline code passes WCAG AA (4.5:1) on its chip whatever the accent', async ({ page }) => {
+  test('inline code passes WCAG AA (4.5:1) on its chip whatever the accent, light and dark', async ({ page }) => {
     await page.goto('/examples-devkit.html');
-    // treeview's mid-dark green read at ~3:1 on the old neutral #2b2b2b chip; navy is the hard case.
-    for (const accentColor of ['', '#059669', '#1e3a8a', '#fbbf24']) {
-      const ratio = await page.evaluate((accent) => {
+    // treeview's mid-dark green read at ~3:1 on the old neutral #2b2b2b chip; navy is the hard case
+    // in dark, amber and sky blue in light (the raw accent on the pale chip was ~2–3:1).
+    for (const [theme, accentColor] of ['light', 'dark'].flatMap((theme) => ['', '#059669', '#1e3a8a', '#fbbf24', '#38bdf8'].map((accent) => [theme, accent]))) {
+      const ratio = await page.evaluate(([theme, accent]) => {
         const root = document.documentElement;
-        root.setAttribute('data-theme', 'dark');
+        root.setAttribute('data-theme', theme);
         if (accent) root.style.setProperty('--kmwc-accent-color', accent);
         else root.style.removeProperty('--kmwc-accent-color');
         const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
@@ -449,8 +450,8 @@ test.describe('examples kit', () => {
         const code = document.querySelector('.card p code')!;
         const [lighter, darker] = [getLuminance(getComputedStyle(code).color), getLuminance(getComputedStyle(code).backgroundColor)].sort((a, b) => b - a);
         return (lighter + 0.05) / (darker + 0.05);
-      }, accentColor);
-      expect(ratio, `accent ${accentColor || 'site default'}`).toBeGreaterThanOrEqual(4.5);
+      }, [theme, accentColor]);
+      expect(ratio, `${theme}, accent ${accentColor || 'site default'}`).toBeGreaterThanOrEqual(4.5);
     }
   });
 

@@ -77,18 +77,14 @@ export function checkManifestVariables({ cssText, manifest, prefix, internalVari
   };
 }
 
-export async function run(args) {
-  const config = getKmwcConfig(args.root);
-  const isStrict = !!args.strict;
-  if (!config.cssVariables.isEnabled) {
-    console.log('kmwc check-vars: off (kmwc.cssVariables is false) — nothing to check.');
-    return 0;
-  }
+/**
+ * The repo's manifest checked against its CSS sources → { verdict, prefix }, or { skippedReason }
+ * when there's nothing to check. Shared by `kmwc check-vars` and doctor.
+ */
+export function loadManifestVerdict(config) {
+  if (!config.cssVariables.isEnabled) return { skippedReason: 'off (kmwc.cssVariables is false)' };
   const manifestPath = resolve(config.root, config.cssVariables.manifest);
-  if (!existsSync(manifestPath)) {
-    console.log(`kmwc check-vars: no ${config.cssVariables.manifest} — nothing to check.`);
-    return 0;
-  }
+  if (!existsSync(manifestPath)) return { skippedReason: `no ${config.cssVariables.manifest}` };
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
   const prefix = config.prefix || manifest.prefix;
   if (!prefix) throw new Error('no variable prefix — set kmwc.prefix or "prefix" in the manifest');
@@ -101,6 +97,17 @@ export async function run(args) {
     internalVariables: config.cssVariables.internalVariables,
     checkMode: config.cssVariables.checkMode,
   });
+  return { verdict, prefix };
+}
+
+export async function run(args) {
+  const config = getKmwcConfig(args.root);
+  const isStrict = !!args.strict;
+  const { verdict, prefix, skippedReason } = loadManifestVerdict(config);
+  if (skippedReason) {
+    console.log(`kmwc check-vars: ${skippedReason} — nothing to check.`);
+    return 0;
+  }
 
   const presenceWord = config.cssVariables.checkMode === 'consumed' ? 'consumed via var()' : 'declared or read';
   const renderSection = (title, names) => `${title} (${names.length}):\n` + names.map((name) => `  --${name}`).join('\n');

@@ -120,9 +120,10 @@
         --kmwc-console-err-color: #fca5a5;
         /* Dark: the chip is a step up from the main surface (slate on a slate page, not a
            neutral grey), and the text keeps the accent hue but at least 0.8 lightness, so a
-           mid-dark accent (treeview's #059669) stays readable on it. */
+           mid-dark accent (treeview's #059669) stays readable on it. Light: the same hue at
+           most 0.5 lightness — the raw accent read at ~3.3:1 on the pale chip. */
         --kmwc-inline-code-bg: light-dark(#edf2f7, oklch(from var(--kmwc-main-bg) calc(l + 0.07) c h));
-        --kmwc-inline-code-color: light-dark(var(--kmwc-accent-color), oklch(from var(--kmwc-accent-color) max(l, 0.8) c h));
+        --kmwc-inline-code-color: light-dark(oklch(from var(--kmwc-accent-color) min(l, 0.5) c h), oklch(from var(--kmwc-accent-color) max(l, 0.8) c h));
 
         /* ======================================================================
            COLORS — SEMANTIC

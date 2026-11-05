@@ -39,7 +39,11 @@ const INCLUDE_PATTERN = /<kmwc-include\b([^>]*?)(?:\/>|>([\s\S]*?)<\/kmwc-includ
 const DEMO_PATTERN = /<kmwc-demo\b([^>]*)>([\s\S]*?)<\/kmwc-demo>/g;
 const SHOWN_SCRIPT_PATTERN = /<script\b([^>]*\bdata-kmwc-show\b[^>]*)>([\s\S]*?)<\/script>/g;
 const PAGE_META_PATTERN = /<meta\s+name="kmwc:([a-z-]+)"\s+content="([^"]*)"\s*\/?>\s*/g;
-const HEAD_ELEMENT_PATTERN = /<link\b[^>]*>\s*|<style\b[^>]*>[\s\S]*?<\/style>\s*/g;
+// A <style> element, or ANY start tag (quoted attribute values may hold `>` and `<link>`):
+// matching whole tags left to right means the text `<link>` inside a tooltip's title=""
+// is consumed with its tag and never read as an element. Only <style> and <link> move.
+const HEAD_ELEMENT_PATTERN = /<style(?=[\s>])(?:"[^"]*"|'[^']*'|[^>"'])*>[\s\S]*?<\/style>\s*|<([a-zA-Z][\w-]*)(?:"[^"]*"|'[^']*'|[^>"'])*>\s*/g;
+const HEAD_ELEMENT_TAGS = ['style', 'link'];
 const ATTRIBUTE_PATTERN = /([a-zA-Z][\w-]*)(?:\s*=\s*"([^"]*)")?/g;
 
 const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/g;
@@ -201,7 +205,8 @@ export function renderLayout(fragmentHtml, { config, pagePath }) {
   const bodyContent = mapOutsideComments(
     htmlWithoutMeta,
     (text) =>
-      text.replace(HEAD_ELEMENT_PATTERN, (element) => {
+      text.replace(HEAD_ELEMENT_PATTERN, (element, tagName = 'style') => {
+        if (!HEAD_ELEMENT_TAGS.includes(tagName.toLowerCase())) return element;
         headElements.push(`    ${element.trim()}`);
         return '';
       }),

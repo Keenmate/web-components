@@ -23,6 +23,8 @@ const SETTLE_MS = 600;
 const VITE_CONFIG_FILES = ['vite.config.ts', 'vite.config.mts', 'vite.config.mjs', 'vite.config.js'];
 const MAX_OFFENDERS = 3;
 const LOCAL_STYLESHEET_FILE = 'examples-local.css';
+// An element a demo leaves undefined on purpose (registered on a button press) opts out.
+export const UNDEFINED_ON_PURPOSE_ATTRIBUTE = 'data-kmwc-undefined';
 // Requests a page doesn't control (favicon probes, analytics in a built site).
 const IGNORED_REQUEST_PATTERN = /favicon\.ico|stats\.keenmate\.services|plausible/;
 
@@ -96,7 +98,7 @@ export function getPageProblems(pageReport) {
   for (const { selector, host } of pageReport.shadowOnlyRules || []) {
     problems.push(`page CSS "${selector}" only matches inside <${host}>'s shadow root — page styles can't reach it (use a CSS variable, ::part or the component's styles hook)`);
   }
-  if (pageReport.undefinedElements.length) problems.push(`never defined: <${pageReport.undefinedElements.join('>, <')}>`);
+  if (pageReport.undefinedElements.length) problems.push(`never defined: <${pageReport.undefinedElements.join('>, <')}> (left undefined on purpose? add ${UNDEFINED_ON_PURPOSE_ATTRIBUTE})`);
   if (pageReport.scrollWidth > pageReport.clientWidth) {
     const offenderText = pageReport.offenders.length ? ` — widest: ${pageReport.offenders.join(', ')}` : '';
     problems.push(`page is ${pageReport.scrollWidth}px wide in a ${pageReport.clientWidth}px viewport${offenderText}`);
@@ -108,9 +110,10 @@ export function getPageProblems(pageReport) {
  * Runs in the page: overflow, undefined custom elements. A culprit is the deepest
  * element — or the text — past the right edge, outside anything that scrolls or
  * clips on purpose (a code block, a table wrapper) and outside hidden or fixed
- * layers (a closed nav panel, a toast), which don't widen the page.
+ * layers (a closed nav panel, a toast), which don't widen the page. Undefined elements
+ * carrying `undefinedAttribute` are left undefined on purpose and don't count.
  */
-function inspectPage(maxOffenders) {
+function inspectPage({ maxOffenders, undefinedAttribute }) {
   const viewportWidth = document.documentElement.clientWidth;
   // Shadow roots count: a component's own internals can widen the page too.
   const getParent = (element) => element.parentElement || element.getRootNode().host || null;
@@ -157,7 +160,7 @@ function inspectPage(maxOffenders) {
       offenders.push(`${describe(parent)} "${textNode.textContent.trim().slice(0, 40)}"`);
     }
   }
-  const undefinedElements = [...new Set([...document.querySelectorAll(':not(:defined)')].map((element) => element.localName).filter((name) => name.includes('-')))];
+  const undefinedElements = [...new Set([...document.querySelectorAll(`:not(:defined):not([${undefinedAttribute}])`)].map((element) => element.localName).filter((name) => name.includes('-')))];
   return {
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: viewportWidth,
@@ -182,7 +185,7 @@ async function loadPageReport(browser, pageUrl, width, pageRules = []) {
   try {
     await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 30_000 });
     await page.waitForTimeout(SETTLE_MS);
-    const inspection = await page.evaluate(inspectPage, MAX_OFFENDERS);
+    const inspection = await page.evaluate(inspectPage, { maxOffenders: MAX_OFFENDERS, undefinedAttribute: UNDEFINED_ON_PURPOSE_ATTRIBUTE });
     const shadowOnlyRules = pageRules.length ? await page.evaluate(findShadowOnlyRules, pageRules) : [];
     return { width, errors: [...new Set(errors)], ...inspection, shadowOnlyRules };
   } catch (error) {

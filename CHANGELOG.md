@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.0.0-rc10] - 2026-11-05
+
+### Added
+
+- **Doctor runs the variable-manifest check.** `kmwc check-vars` only ran inside `npm run build`, so a
+  red manifest went unseen until a build: web-treeview's `check:vars` failed on core's
+  non-contract `--base-accent-color` while doctor passed. Doctor now reports the same verdict
+  (`vars`): missing / dead `--base-*` and dead `--<prefix>-*` entries are errors, undocumented
+  `--<prefix>-*` a warning. `loadManifestVerdict()` is shared by both.
+- **Opt-outs for markup that is right on purpose:**
+  - an element whose own `style="…"` sets fixed colours carries `data-kmwc-fixed-colors` (doctor's
+    colour check). Markup a render callback draws inside a shadow root can't be styled by page CSS,
+    so inline is the only way there (web-treeview's context-menu role chips);
+  - `data-kmwc-undefined` on an element a demo leaves undefined on purpose — check-pages no longer
+    reports it (core's PG01 registers its element on a button press). The "never defined" problem
+    names the attribute;
+  - `<!-- kmwc-other-ports: why -->` in a doc that names other repos' ports on purpose (a dated
+    plan, a cross-repo review) — doctor's port scan skips it.
+
+### Changed
+
+- **Doctor: the loader check tells a collision from a rename.** On a core that still draws
+  `<prefix>-loader`, CSS that styles both classes has its own element called `<prefix>__loader`
+  (web-multiselect's loading-state row). That was reported as a rename done too early (error); it is
+  now a warning that core's loader takes the name — and those rules — with the bump, so rename the
+  component's element in the same change.
+
+### Fixed
+
+- **Fragment pages: `<link>` / `<style>` text inside an attribute value stayed put.** The composer
+  moved a `<link>` it found in a tooltip (`title="…the <link> in <head>"`) into `<head>` as an empty
+  element, and the tooltip lost its text (web-multiselect). It now reads whole start tags, quoted
+  attribute values included, and moves only real `<link>` / `<style>` elements.
+- **Inline code in light mode** read at ~3.3:1 — the raw accent on the pale chip. The text keeps the
+  accent hue at most 0.5 lightness (≥ 4.5:1 for every accent the spec tries, light and dark).
+
 ## [1.0.0-rc09] - 2026-11-04 [PUBLISHED]
 
 ### Added
