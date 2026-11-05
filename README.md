@@ -389,6 +389,9 @@ and the e2e suite before building and publishing.
 base-variables, color-scheme, readme-structure, custom-elements-manifest,
 responsive-overlay, publish-command, example-pages) with `bash`, passing `kmwc.prefix`, and
 reports each `FAIL` as an error pointing at the matching `.checks.md` entry.
+On Windows that is Git for Windows' bash (a bare `bash` may be WSL's, which can't
+read `C:/` paths); `KMWC_BASH` overrides it. A suite that exits with anything but 0,
+or 1 with `FAIL` lines, never ran — a warning, never a pass.
 A `library` runs only naming-conventions, readme-structure, publish-command
 and example-pages; the others check what a custom element ships (its CSS,
 manifest, overlay).

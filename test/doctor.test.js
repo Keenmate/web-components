@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { getKmwcConfig } from '../src/config.js';
 import { getSyncPlan, getScriptsPlan } from '../src/cli/sync-plan.js';
-import { checkComponent, run } from '../src/cli/commands/doctor.js';
+import { checkComponent, getBashPath, run } from '../src/cli/commands/doctor.js';
 
 const FIXTURE_ID = 'web-multiselect';
 const RULEBOOK_SCRIPT = [
@@ -268,9 +268,15 @@ test('doctor e2e: rulebook — failures error, VALIDATION-NOTES accepts, a suite
     assert.ok(findLine(passes, /^\[rulebook:readme-structure\] C-RS-3 accepted deviation \(VALIDATION-NOTES\.md\): no badges/));
     assert.equal(findLine(errors, /C-RS-3/), undefined);
   });
-  withRepo({ files: { 'rulebook-output.txt': 'usage: needs a prefix\n', 'rulebook-exit.txt': '2' } }, (repo) => {
-    assert.ok(findLine(checkRepo(repo, { shouldRunRulebook: true }).warnings, /^\[rulebook:readme-structure\] suite could not run: usage: needs a prefix/));
-  });
+  // A suite that never ran warns — whatever the exit code — and is never counted as a pass.
+  for (const [exitCode, output] of [['2', 'usage: needs a prefix'], ['127', 'bash: C:/rulebook/x.checks.sh: No such file or directory'], ['1', 'something broke']]) {
+    withRepo({ files: { 'rulebook-output.txt': `${output}\n`, 'rulebook-exit.txt': exitCode } }, (repo) => {
+      const { warnings, passes } = checkRepo(repo, { shouldRunRulebook: true });
+      const reasonPattern = output.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      assert.ok(findLine(warnings, new RegExp(`^\\[rulebook:readme-structure\\] suite could not run \\(exit ${exitCode}\\): ${reasonPattern}`)), `exit ${exitCode}`);
+      assert.equal(findLine(passes, /^\[rulebook:readme-structure\]/), undefined, `exit ${exitCode} is not a pass`);
+    });
+  }
   withRepo({ kmwc: { rulebook: { skippedChecks: ['readme-structure', 'naming-conventions'] } }, files: { 'rulebook-output.txt': 'FAIL C-RS-2 — x\n', 'rulebook-exit.txt': '1' } }, (repo) => {
     assert.equal(findLine(checkRepo(repo, { shouldRunRulebook: true }).errors, /^\[rulebook/), undefined);
   });
@@ -323,6 +329,19 @@ test('doctor e2e: run() prints the findings and exits 1 on an error, 0 when clea
     if (previousRulebookPath === undefined) delete process.env.KMWC_RULEBOOK_PATH;
     else process.env.KMWC_RULEBOOK_PATH = previousRulebookPath;
   }
+});
+
+test("doctor: the rulebook runs on Git for Windows' bash, never a bare `bash` that may be WSL's", () => {
+  const gitBash = join('C:\\Program Files\\Git', 'bin', 'bash.exe');
+  const checkExists = (path) => path === gitBash;
+  // Found from Git's PATH entry, even when WSL's System32 bash comes first.
+  assert.equal(getBashPath({ platform: 'win32', env: { PATH: 'C:\\Windows\\system32;C:\\Program Files\\Git\\cmd' }, checkExists }), gitBash);
+  // Found from the install root when PATH has no Git entry.
+  assert.equal(getBashPath({ platform: 'win32', env: { PATH: 'C:\\Windows\\system32', ProgramFiles: 'C:\\Program Files' }, checkExists }), gitBash);
+  // KMWC_BASH wins; elsewhere, and with no Git found, plain bash.
+  assert.equal(getBashPath({ platform: 'win32', env: { KMWC_BASH: 'D:\\tools\\bash.exe', PATH: 'C:\\Program Files\\Git\\cmd' }, checkExists }), 'D:\\tools\\bash.exe');
+  assert.equal(getBashPath({ platform: 'linux', env: { PATH: '/usr/bin' }, checkExists }), 'bash');
+  assert.equal(getBashPath({ platform: 'win32', env: { PATH: 'C:\\Windows\\system32' }, checkExists: () => false }), 'bash');
 });
 
 // Keep the fixture honest: it must look like what `kmwc new` produces, not drift into its own shape.

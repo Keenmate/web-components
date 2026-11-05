@@ -101,11 +101,32 @@ export function getSuiteFailures(suiteOutput) {
     .map((match) => ({ checkId: match[1], reason: match[2].trim() }));
 }
 
+const GIT_BASH_RELATIVE_PATH = join('bin', 'bash.exe');
+// PATH entries Git for Windows adds — each sits one or two levels under the install root.
+const GIT_PATH_ENTRY_PATTERN = /^(.*[\\/]Git)[\\/](?:cmd|bin|usr[\\/]bin|mingw64[\\/]bin)[\\/]?$/i;
+
+/**
+ * The bash that runs the rulebook scripts. On Windows a bare `bash` can resolve to WSL's
+ * (`System32\bash.exe`, `WindowsApps\bash.exe`), which can't read `C:/…` paths: every suite
+ * exits 127 and the rulebook never runs. So: KMWC_BASH when set, else Git for Windows'
+ * bash (found from PATH or the usual install roots), else `bash`. Exported for tests.
+ */
+export function getBashPath({ platform = process.platform, env = process.env, checkExists = existsSync } = {}) {
+  if (env.KMWC_BASH) return env.KMWC_BASH;
+  if (platform !== 'win32') return 'bash';
+  const pathEntries = (env.PATH || env.Path || '').split(';').filter(Boolean);
+  const gitRoots = [
+    ...pathEntries.map((entry) => entry.match(GIT_PATH_ENTRY_PATTERN)?.[1]).filter(Boolean),
+    ...[env.ProgramFiles, env.ProgramW6432, env.LOCALAPPDATA && join(env.LOCALAPPDATA, 'Programs')].filter(Boolean).map((directory) => join(directory, 'Git')),
+  ];
+  return gitRoots.map((gitRoot) => join(gitRoot, GIT_BASH_RELATIVE_PATH)).find((bashPath) => checkExists(bashPath)) || 'bash';
+}
+
 function runRulebookSuite(config, suite) {
   const scriptPath = join(config.rulebook.path, `${suite.name}.checks.sh`).replace(/\\/g, '/');
   const scriptArgs = [scriptPath, config.root.replace(/\\/g, '/')];
   if (suite.isPrefixed && config.prefix) scriptArgs.push(config.prefix);
-  return spawnSync('bash', scriptArgs, { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
+  return spawnSync(getBashPath(), scriptArgs, { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
 }
 
 /** Run every check; returns [{ level: 'pass'|'warning'|'error', checkName, message, fixHint? }]. */
@@ -448,18 +469,22 @@ function checkRulebook(config, { addPass, addWarning, addError }) {
       return;
     }
     const checkName = `rulebook:${suite.name}`;
-    if (suiteResult.status === 2) {
-      const reason = mapToPlainText(suiteResult.stderr || suiteResult.stdout).trim().split(/\r?\n/)[0];
-      addWarning(checkName, `suite could not run: ${reason}`);
+    const failures = getSuiteFailures(suiteResult.stdout);
+    // A suite passes with exit 0 and fails with exit 1 + FAIL lines. Anything else (2 = usage,
+    // 127 = the script wasn't found — WSL's bash on a C:/ path) means it never ran: say so,
+    // never count it as a pass.
+    const hasRun = suiteResult.status === 0 || (suiteResult.status === 1 && failures.length > 0);
+    if (!hasRun) {
+      const reason = mapToPlainText(suiteResult.stderr || suiteResult.stdout).trim().split(/\r?\n/)[0] || 'no output';
+      addWarning(checkName, `suite could not run (exit ${suiteResult.status}): ${reason}`, `bash used: ${getBashPath()} — set KMWC_BASH to Git for Windows' bash.exe if this is WSL's`);
       continue;
     }
-    const failures = getSuiteFailures(suiteResult.stdout);
     for (const failure of failures) {
       // An architectural decision recorded in VALIDATION-NOTES.md (the rulebook's accepted-deviation file).
       if (acceptedCheckIds.has(failure.checkId)) addPass(checkName, `${failure.checkId} accepted deviation (${VALIDATION_NOTES_FILE}): ${failure.reason}`);
       else addError(checkName, `${failure.checkId} ${failure.reason}`, `see ${suite.name}.checks.md → ${failure.checkId}`);
     }
-    if (!failures.length) addPass(checkName, suiteResult.status === 0 ? 'all auto checks pass' : `exit ${suiteResult.status}`);
+    if (!failures.length) addPass(checkName, 'all auto checks pass');
   }
 }
 

@@ -35,6 +35,11 @@
   attribute values included, and moves only real `<link>` / `<style>` elements.
 - **Inline code in light mode** read at ~3.3:1 — the raw accent on the pale chip. The text keeps the
   accent hue at most 0.5 lightness (≥ 4.5:1 for every accent the spec tries, light and dark).
+- **Doctor: a rulebook suite that never ran counted as a pass.** Only exit 2 was read as "could
+  not run"; any other exit without `FAIL` lines passed. On Windows a bare `bash` can be WSL's, which
+  can't read `C:/…` paths — every suite exited 127 and doctor reported the rulebook green (found when
+  `make publish-rc` ran the tests from PowerShell). Doctor now runs Git for Windows' bash (from PATH
+  or the install root; `KMWC_BASH` overrides) and warns on any exit but 0, or 1 with `FAIL` lines.
 
 ### Internal
 
