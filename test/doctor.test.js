@@ -3,8 +3,9 @@
  * their own tests in devkit.test.js; these cover the wiring — which finding each broken repo
  * produces, at which level, and that a healthy repo comes out clean.
  *
- * The fixture is registered as web-multiselect (prefix `ms`, block 12100) so the registry and
- * port checks run. The rulebook is a stand-in directory whose `.checks.sh` prints what the
+ * The fixture is web-doctor-fixture (prefix `dfx`, block 12100) in a test-only registry next to a
+ * sibling, web-doctor-sibling (block 12200), so the registry and port checks run without touching —
+ * or depending on — any real repo's entry in components.json. The rulebook is a stand-in directory whose `.checks.sh` prints what the
  * fixture's `rulebook-output.txt` says — no BlissFramework checkout needed.
  */
 import { test } from 'node:test';
@@ -16,7 +17,14 @@ import { getKmwcConfig } from '../src/config.js';
 import { getSyncPlan, getScriptsPlan } from '../src/cli/sync-plan.js';
 import { checkComponent, getBashPath, run } from '../src/cli/commands/doctor.js';
 
-const FIXTURE_ID = 'web-multiselect';
+const FIXTURE_ID = 'web-doctor-fixture';
+const SIBLING_ID = 'web-doctor-sibling';
+const FIXTURE_REGISTRY = {
+  components: [
+    { id: FIXTURE_ID, kind: 'component', prefix: 'dfx', port: 12100, path: `../${FIXTURE_ID}` },
+    { id: SIBLING_ID, kind: 'component', prefix: 'dfs', port: 12200, path: `../${SIBLING_ID}` },
+  ],
+};
 const RULEBOOK_SCRIPT = [
   '#!/usr/bin/env bash',
   'output="$1/rulebook-output.txt"',
@@ -31,14 +39,14 @@ const HEALTHY_PACKAGE_JSON = {
   type: 'module',
   files: ['dist', '!**/CLAUDE.md', '!**/.claude'],
   devDependencies: { '@keenmate/web-components-devkit': '^1.0.0-rc10', vite: '^7.0.0' },
-  kmwc: { title: 'Web Multiselect', prefix: 'ms', ports: { dev: 12100, image: 12110 } },
+  kmwc: { title: 'Web Doctor Fixture', prefix: 'dfx', ports: { dev: 12100, image: 12110 } },
 };
 
 const HEALTHY_FILES = {
   'vite.config.ts': "import { defineComponentConfig } from '@keenmate/web-components-devkit/vite';\nexport default defineComponentConfig();\n",
   'examples-basic.html': '<meta name="kmwc:title" content="Basic">\n<h2>BU01 · Hello</h2>\n<div class="card">x</div>\n',
-  'src/css/multiselect.css': '.ms { --ms-gap: 4px; gap: var(--ms-gap); color: var(--base-text-color); }\n.ms-loader { inline-size: 1em; }\n',
-  'component-variables.manifest.json': JSON.stringify({ prefix: 'ms', baseVariables: [{ name: 'base-text-color' }], componentVariables: [{ name: 'ms-gap' }] }),
+  'src/css/fixture.css': '.dfx { --dfx-gap: 4px; gap: var(--dfx-gap); color: var(--base-text-color); }\n.dfx-loader { inline-size: 1em; }\n',
+  'component-variables.manifest.json': JSON.stringify({ prefix: 'dfx', baseVariables: [{ name: 'base-text-color' }], componentVariables: [{ name: 'dfx-gap' }] }),
   'node_modules/@keenmate/web-components-core/package.json': JSON.stringify({ name: '@keenmate/web-components-core', version: '1.0.0-rc17' }),
   'node_modules/@keenmate/web-components-core/dist/dom/render-loader.js': 'span.className = `${prefix}-loader`;\n',
 };
@@ -76,7 +84,7 @@ function createRepo({ packageJson = {}, files = {}, kmwc = {}, isSynced = true }
 function checkRepo(repo, { shouldCheckPackage = false, shouldRunRulebook = false, rulebookPath = repo.rulebookPath } = {}) {
   const config = getKmwcConfig(repo.root);
   config.rulebook.path = rulebookPath;
-  const results = checkComponent(config, { shouldCheckPackage, shouldRunRulebook });
+  const results = checkComponent(config, { shouldCheckPackage, shouldRunRulebook, registry: FIXTURE_REGISTRY });
   const getLines = (level) => results.filter((result) => result.level === level).map((result) => `[${result.checkName}] ${result.message}`);
   return { errors: getLines('error'), warnings: getLines('warning'), passes: getLines('pass'), results };
 }
@@ -133,7 +141,7 @@ test('doctor e2e: configs off the presets — the old UMD global is named before
   withRepo({ files }, (repo) => {
     const { errors, warnings } = checkRepo(repo);
     assert.ok(findLine(errors, /^\[vite\] vite\.config\.ts doesn't use the devkit preset/));
-    assert.ok(findLine(errors, /^\[vite\] the UMD global is "MultiSelect" today; the preset would make it "WebMultiselect"/));
+    assert.ok(findLine(errors, /^\[vite\] the UMD global is "MultiSelect" today; the preset would make it "WebDoctorFixture"/));
     assert.ok(findLine(warnings, /^\[playwright\] playwright\.config\.ts doesn't use the devkit preset/));
   });
   withRepo({ files: { 'vite.config.ts': null } }, (repo) => {
@@ -180,19 +188,19 @@ test('doctor e2e: registry and ports — block, prefix, scripts, configs, docs, 
   withRepo({ kmwc: { prefix: 'xx', ports: { dev: 12200, image: 12210 } } }, (repo) => {
     const { errors } = checkRepo(repo);
     assert.ok(findLine(errors, /^\[registry\] ports\.dev 12200 ≠ registry 12100; ports\.image 12210 ≠ registry 12110/));
-    assert.ok(findLine(errors, /^\[registry\] kmwc\.prefix "xx" ≠ registry prefix "ms"/));
+    assert.ok(findLine(errors, /^\[registry\] kmwc\.prefix "xx" ≠ registry prefix "dfx"/));
   });
   const files = {
     'README.md': 'Run it: the dev server listens on port 21111.\n',
-    'docs/old-plan.md': '<!-- kmwc-other-ports: a dated cross-repo plan -->\nweb-treeview ran on port 12300.\n',
+    'docs/old-plan.md': '<!-- kmwc-other-ports: a dated cross-repo plan -->\nweb-doctor-sibling ran on port 12200.\n',
     'playwright.config.ts': "import { definePlaywrightConfig } from '@keenmate/web-components-devkit/playwright';\nexport default definePlaywrightConfig({ webServer: { port: 4000 } });\n",
   };
   withRepo({ files, packageJson: { scripts: { dev: 'vite --port 21111' } } }, (repo) => {
     // A sibling checkout inside this repo's block.
-    mkdirSync(join(repo.workspaceRoot, 'web-treeview'));
+    mkdirSync(join(repo.workspaceRoot, SIBLING_ID));
     writeFileSync(
-      join(repo.workspaceRoot, 'web-treeview', 'package.json'),
-      JSON.stringify({ name: '@keenmate/web-treeview', scripts: { dev: 'vite --port 12150' }, kmwc: { analytics: { plausibleSiteId: 'pa-shared' } } })
+      join(repo.workspaceRoot, SIBLING_ID, 'package.json'),
+      JSON.stringify({ name: `@keenmate/${SIBLING_ID}`, scripts: { dev: 'vite --port 12150' }, kmwc: { analytics: { plausibleSiteId: 'pa-shared' } } })
     );
     const packagePath = join(repo.root, 'package.json');
     const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
@@ -200,8 +208,8 @@ test('doctor e2e: registry and ports — block, prefix, scripts, configs, docs, 
     const { errors, warnings } = checkRepo(repo);
     assert.ok(findLine(errors, /^\[ports\] script "dev" pins --port 21111; kmwc\.ports gives 12100/));
     assert.ok(findLine(errors, /^\[ports\] playwright\.config\.ts uses port 4000, outside this repo's block 12100–12199/));
-    assert.ok(findLine(errors, /^\[ports\] web-treeview uses port 12150 \(package\.json#scripts\.dev\) — inside this repo's block/));
-    assert.ok(findLine(errors, /^\[analytics\] Plausible site id pa-shared is also used by web-treeview/));
+    assert.ok(findLine(errors, /^\[ports\] web-doctor-sibling uses port 12150 \(package\.json#scripts\.dev\) — inside this repo's block/));
+    assert.ok(findLine(errors, /^\[analytics\] Plausible site id pa-shared is also used by web-doctor-sibling/));
     // README warns; the marked plan doesn't.
     assert.ok(findLine(warnings, /^\[ports\] docs mention ports outside 12100–12199: README\.md 21111$/));
   });
@@ -212,20 +220,20 @@ test('doctor e2e: registry and ports — block, prefix, scripts, configs, docs, 
 
 test('doctor e2e: package.json targets the library build does not emit', () => {
   withRepo({ packageJson: { main: './dist/other.umd.js' } }, (repo) => {
-    assert.ok(findLine(checkRepo(repo).errors, /^\[library\] package\.json#main → dist\/other\.umd\.js, but the library build emits dist\/web-multiselect\.js/));
+    assert.ok(findLine(checkRepo(repo).errors, /^\[library\] package\.json#main → dist\/other\.umd\.js, but the library build emits dist\/web-doctor-fixture\.js/));
   });
 });
 
 test('doctor e2e: loader — a rename on the wrong side of the core bump errors, an own __loader warns', () => {
   const newCore = { 'node_modules/@keenmate/web-components-core/dist/dom/render-loader.js': 'span.className = `${prefix}__loader`;\n' };
   withRepo({ files: newCore }, (repo) => {
-    assert.ok(findLine(checkRepo(repo).errors, /^\[loader\] src\/css\/multiselect\.css styles \.ms-loader, but core 1\.0\.0-rc17 draws the default loader as <span class="ms__loader">/));
+    assert.ok(findLine(checkRepo(repo).errors, /^\[loader\] src\/css\/fixture.css styles \.dfx-loader, but core 1\.0\.0-rc17 draws the default loader as <span class="dfx__loader">/));
   });
-  withRepo({ files: { 'src/css/loading.css': '.ms__loader { display: flex; min-height: 4rem; }' } }, (repo) => {
+  withRepo({ files: { 'src/css/loading.css': '.dfx__loader { display: flex; min-height: 4rem; }' } }, (repo) => {
     const { errors, warnings, passes } = checkRepo(repo);
     assert.equal(findLine(errors, /^\[loader\]/), undefined);
-    assert.ok(findLine(warnings, /^\[loader\] src\/css\/loading\.css styles \.ms__loader next to core's \.ms-loader/));
-    assert.ok(findLine(passes, /^\[loader\] CSS styles \.ms-loader, the class core 1\.0\.0-rc17 draws/));
+    assert.ok(findLine(warnings, /^\[loader\] src\/css\/loading\.css styles \.dfx__loader next to core's \.dfx-loader/));
+    assert.ok(findLine(passes, /^\[loader\] CSS styles \.dfx-loader, the class core 1\.0\.0-rc17 draws/));
   });
   // A library draws no loader of its own: not checked.
   withRepo({ files: newCore, kmwc: { kind: 'library' } }, (repo) => {
@@ -234,13 +242,13 @@ test('doctor e2e: loader — a rename on the wrong side of the core bump errors,
 });
 
 test('doctor e2e: the variable manifest — dead entries error, undocumented ones warn, a bad source errors', () => {
-  const manifest = { prefix: 'ms', baseVariables: [{ name: 'base-text-color' }, { name: 'base-gone' }], componentVariables: [{ name: 'ms-gap' }, { name: 'ms-dead' }] };
-  withRepo({ files: { 'component-variables.manifest.json': JSON.stringify(manifest), 'src/css/extra.css': '.ms { padding: var(--ms-pad); border-color: var(--base-accent-color); }' } }, (repo) => {
+  const manifest = { prefix: 'dfx', baseVariables: [{ name: 'base-text-color' }, { name: 'base-gone' }], componentVariables: [{ name: 'dfx-gap' }, { name: 'dfx-dead' }] };
+  withRepo({ files: { 'component-variables.manifest.json': JSON.stringify(manifest), 'src/css/extra.css': '.dfx { padding: var(--dfx-pad); border-color: var(--base-accent-color); }' } }, (repo) => {
     const { errors, warnings } = checkRepo(repo);
     assert.ok(findLine(errors, /^\[vars\] --base-\* read in CSS but missing from the manifest: --base-accent-color$/));
     assert.ok(findLine(errors, /^\[vars\] --base-\* in the manifest but not read in CSS: --base-gone$/));
-    assert.ok(findLine(errors, /^\[vars\] --ms-\* in the manifest but not in CSS: --ms-dead$/));
-    assert.ok(findLine(warnings, /^\[vars\] --ms-\* in CSS but missing from the manifest: --ms-pad$/));
+    assert.ok(findLine(errors, /^\[vars\] --dfx-\* in the manifest but not in CSS: --dfx-dead$/));
+    assert.ok(findLine(warnings, /^\[vars\] --dfx-\* in CSS but missing from the manifest: --dfx-pad$/));
   });
   withRepo({ kmwc: { cssVariables: { sources: ['src/missing'] } } }, (repo) => {
     assert.ok(findLine(checkRepo(repo).errors, /^\[vars\] kmwc check-vars can't run: cssVariables source not found/));
@@ -304,24 +312,24 @@ test('doctor e2e: run() prints the findings and exits 1 on an error, 0 when clea
   try {
     await withRepo({ files: { 'examples-shared.css': 'body {}' } }, async (repo) => {
       process.env.KMWC_RULEBOOK_PATH = repo.rulebookPath;
-      const { exitCode, output } = await captureConsole(() => run({ root: repo.root, 'no-pack': true }));
+      const { exitCode, output } = await captureConsole(() => run({ root: repo.root, 'no-pack': true }, { registry: FIXTURE_REGISTRY }));
       assert.equal(exitCode, 1);
       assert.match(output, /✗ \[legacy\] examples-shared\.css is a local copy of a devkit-owned file\n {4}→ delete it/);
       assert.match(output, /✗ 1 error\(s\), 0 warning\(s\) \(--verbose lists passing checks\)/);
       assert.doesNotMatch(output, /✓ \[/, 'passes are hidden without --verbose');
 
-      const jsonRun = await captureConsole(() => run({ root: repo.root, 'no-pack': true, json: true }));
+      const jsonRun = await captureConsole(() => run({ root: repo.root, 'no-pack': true, json: true }, { registry: FIXTURE_REGISTRY }));
       const report = JSON.parse(jsonRun.output);
       assert.equal(jsonRun.exitCode, 1);
       assert.deepEqual([report.id, report.errorCount, report.warningCount], [FIXTURE_ID, 1, 0]);
     });
     await withRepo({ files: { 'rulebook-output.txt': 'FAIL C-RS-3 — no badges\n', 'rulebook-exit.txt': '1', 'VALIDATION-NOTES.md': '## C-RS-3 — on the docs site\n' } }, async (repo) => {
       process.env.KMWC_RULEBOOK_PATH = repo.rulebookPath;
-      const { exitCode, output } = await captureConsole(() => run({ root: repo.root, 'no-pack': true }));
+      const { exitCode, output } = await captureConsole(() => run({ root: repo.root, 'no-pack': true }, { registry: FIXTURE_REGISTRY }));
       assert.equal(exitCode, 0);
       // Both stand-in suites print the same output: one accepted failure each.
       assert.match(output, /ℹ 2 rulebook failure\(s\) accepted in VALIDATION-NOTES\.md \(--verbose lists them\)/);
-      const verboseRun = await captureConsole(() => run({ root: repo.root, 'no-pack': true, verbose: true }));
+      const verboseRun = await captureConsole(() => run({ root: repo.root, 'no-pack': true, verbose: true }, { registry: FIXTURE_REGISTRY }));
       assert.match(verboseRun.output, /✓ \[rulebook:readme-structure\] C-RS-3 accepted deviation/);
       assert.match(verboseRun.output, /✓ 0 error\(s\), 0 warning\(s\)$/);
     });
@@ -342,11 +350,4 @@ test("doctor: the rulebook runs on Git for Windows' bash, never a bare `bash` th
   assert.equal(getBashPath({ platform: 'win32', env: { KMWC_BASH: 'D:\\tools\\bash.exe', PATH: 'C:\\Program Files\\Git\\cmd' }, checkExists }), 'D:\\tools\\bash.exe');
   assert.equal(getBashPath({ platform: 'linux', env: { PATH: '/usr/bin' }, checkExists }), 'bash');
   assert.equal(getBashPath({ platform: 'win32', env: { PATH: 'C:\\Windows\\system32' }, checkExists: () => false }), 'bash');
-});
-
-// Keep the fixture honest: it must look like what `kmwc new` produces, not drift into its own shape.
-test('doctor e2e: the healthy fixture uses the registry entry it claims', () => {
-  const registry = JSON.parse(readFileSync(new URL('../components.json', import.meta.url), 'utf8'));
-  const entry = registry.components.find((component) => component.id === FIXTURE_ID);
-  assert.deepEqual([entry.prefix, entry.port], [HEALTHY_PACKAGE_JSON.kmwc.prefix, HEALTHY_PACKAGE_JSON.kmwc.ports.dev]);
 });

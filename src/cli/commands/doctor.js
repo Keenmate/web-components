@@ -129,8 +129,12 @@ function runRulebookSuite(config, suite) {
   return spawnSync(getBashPath(), scriptArgs, { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
 }
 
-/** Run every check; returns [{ level: 'pass'|'warning'|'error', checkName, message, fixHint? }]. */
+/**
+ * Run every check; returns [{ level: 'pass'|'warning'|'error', checkName, message, fixHint? }].
+ * `doctorConfig.registry` replaces components.json (tests use a registry of fixture repos).
+ */
 export function checkComponent(config, doctorConfig = {}) {
+  const registry = doctorConfig.registry || getRegistry();
   const results = [];
   const addPass = (checkName, message) => results.push({ level: 'pass', checkName, message });
   const addWarning = (checkName, message, fixHint) => results.push({ level: 'warning', checkName, message, fixHint });
@@ -264,7 +268,7 @@ export function checkComponent(config, doctorConfig = {}) {
   }
 
   // ── registry cross-check ─────────────────────────────────────────────────
-  const registryEntry = getRegistry().components.find((component) => component.id === config.id);
+  const registryEntry = registry.components.find((component) => component.id === config.id);
   if (!registryEntry) {
     addWarning('registry', `"${config.id}" is not in the devkit components.json`, 'add an entry (README catalogue + port allocation)');
   } else {
@@ -278,7 +282,7 @@ export function checkComponent(config, doctorConfig = {}) {
           `set package.json#kmwc.ports to { "dev": ${registryPorts.dev}, "image": ${registryPorts.image} } (components.json port block ${registryEntry.port})`
         );
       } else addPass('registry', `ports match the registry (dev ${config.ports.dev}, image ${config.ports.image})`);
-      checkPorts(config, registryEntry.port, { addPass, addWarning, addError });
+      checkPorts(config, registryEntry.port, registry, { addPass, addWarning, addError });
     }
     if (registryEntry.prefix && config.prefix && registryEntry.prefix !== config.prefix) {
       addError('registry', `kmwc.prefix "${config.prefix}" ≠ registry prefix "${registryEntry.prefix}"`, 'use the reserved prefix');
@@ -306,7 +310,7 @@ export function checkComponent(config, doctorConfig = {}) {
 
   // ── analytics ────────────────────────────────────────────────────────────
   const plausibleSiteId = loadPlausibleSiteId(config.root);
-  const sharingRepoIds = loadSharedPlausibleSiteIds(config, getRegistry(), plausibleSiteId);
+  const sharingRepoIds = loadSharedPlausibleSiteIds(config, registry, plausibleSiteId);
   if (sharingRepoIds.length) {
     addError(
       'analytics',
@@ -325,7 +329,7 @@ export function checkComponent(config, doctorConfig = {}) {
 }
 
 /** Ports: script --port flags, own configs and docs outside the block, siblings inside it. */
-function checkPorts(config, portBlock, { addPass, addWarning, addError }) {
+function checkPorts(config, portBlock, registry, { addPass, addWarning, addError }) {
   const [firstPort, lastPort] = getPortBlockRange(portBlock);
   const blockLabel = `${firstPort}–${lastPort}`;
   const scriptPortMismatches = getScriptPortMismatches(config.packageJson.scripts, config.ports);
@@ -334,7 +338,7 @@ function checkPorts(config, portBlock, { addPass, addWarning, addError }) {
   }
   const ownStrayPorts = loadOwnPortsOutsideBlock(config, portBlock).filter(({ file }) => !file.startsWith('package.json#scripts.'));
   for (const { port, file } of ownStrayPorts) addError('ports', `${file} uses port ${port}, outside this repo's block ${blockLabel}`, 'take ports from kmwc.ports (the devkit presets do)');
-  const siblingCollisions = loadSiblingPortCollisions(config, getRegistry());
+  const siblingCollisions = loadSiblingPortCollisions(config, registry);
   for (const { id, port, file } of siblingCollisions) {
     addError('ports', `${id} uses port ${port} (${file}) — inside this repo's block ${blockLabel}`, `move ${id} to its own components.json block`);
   }
@@ -488,9 +492,10 @@ function checkRulebook(config, { addPass, addWarning, addError }) {
   }
 }
 
-export async function run(args) {
+/** `registry` is for tests (fixture repos); the CLI always uses components.json. */
+export async function run(args, { registry } = {}) {
   const config = getKmwcConfig(args.root);
-  const results = checkComponent(config, { shouldRunRulebook: !args['no-rulebook'], shouldCheckPackage: !args['no-pack'] });
+  const results = checkComponent(config, { shouldRunRulebook: !args['no-rulebook'], shouldCheckPackage: !args['no-pack'], registry });
   const errorCount = results.filter((result) => result.level === 'error').length;
   const warningCount = results.filter((result) => result.level === 'warning').length;
 
