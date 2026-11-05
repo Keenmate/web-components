@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0-rc10] - 2026-11-05
+## [1.0.0-rc10] - 2026-11-05 [PUBLISHED]
 
 ### Added
 
@@ -35,6 +35,19 @@
   attribute values included, and moves only real `<link>` / `<style>` elements.
 - **Inline code in light mode** read at ~3.3:1 — the raw accent on the pale chip. The text keeps the
   accent hue at most 0.5 lightness (≥ 4.5:1 for every accent the spec tries, light and dark).
+
+### Internal
+
+- **Tests on the critical paths.** Doctor end to end on fixture repos (a healthy repo is clean, each
+  broken one gets its finding; `doctor.js` 26% → 98% of lines); a real `vite build` of the playground
+  must emit exactly what doctor checks package.json against, with the UMD global and every export
+  `index.d.ts` declares; `kmwc new` (full and `--minimal`) scaffolds a repo doctor finds clean;
+  `kmwc sync` rewrites only what it owns and `--check` writes nothing; `check-release` keeps an rc off
+  `latest`. Composer cases for single-quoted values, `<style>` text and a `>` inside an attribute.
+- **`npm run test:e2e:coverage`** (maintainer) — the dev-server e2e run with line coverage of the
+  kit's browser code (`src/examples/*.js`, 84%), snapshot before every navigation.
+- **README:** a sentence about `data-kmwc-undefined` had landed inside the rc09 What's New bullet;
+  it's back in the check-pages docs.
 
 ## [1.0.0-rc09] - 2026-11-04 [PUBLISHED]
 
