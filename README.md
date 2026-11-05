@@ -534,6 +534,7 @@ registry edits), and move the component's own code into that layout with
 npm install
 npm test                 # unit tests (config, registry, templates, sync, checks, intake, plugin, kit)
 npm run test:e2e         # playground: the kit + scaffold in a real browser, dev server AND built site
+npm run test:e2e:coverage   # the same specs on the dev server + line coverage of the kit's browser code
 npm run readme           # regenerate the catalogue
 npm run check:spotlight-mirror   # what changed in web-commandpalette since the spotlight was aligned
 make dev                 # the playground's dev server

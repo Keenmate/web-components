@@ -99,6 +99,7 @@ scripts/                 maintainer scripts, not shipped (spotlight ↔ web-comm
 make dev              # playground (the demo site) dev server, http://localhost:17300
 npm test              # unit tests
 npm run test:e2e      # playground e2e — dev server AND built site (Chromium)
+npm run test:e2e:coverage   # dev-server e2e + line coverage of src/examples/*.js
 npm run readme        # regenerate catalogue (readme:check in CI)
 npm run check:contract   # --base-* reads / sets in kit, templates, playground vs the contract
 cd playground && npx kmwc doctor --verbose     # every rulebook suite must be green

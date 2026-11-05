@@ -6,3 +6,4 @@ playground/dist/
 playground/dist-examples/
 playground/test-results/
 playground/playwright-report/
+playground/coverage-e2e/

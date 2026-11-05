@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { test, expect } from './coverage-fixture';
 
 // Dark-mode signals (rulebook color-scheme.md): page color-scheme, framework
 // class on an ancestor, and the per-instance data-theme attribute.

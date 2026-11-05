@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { test, expect } from '@playwright/test';
+import { test, expect } from './coverage-fixture';
 import { findShadowOnlyRules } from '../../src/cli/commands/check-pages.js';
 
 // The devkit repo's own version (the playground links it via file:..).

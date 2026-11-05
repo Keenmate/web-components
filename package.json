@@ -47,6 +47,7 @@
     "readme:check": "node src/cli/kmwc.js readme --check",
     "test": "node --test \"test/**/*.test.js\"",
     "test:e2e": "cd playground && npx playwright test",
+    "test:e2e:coverage": "node scripts/e2e-coverage.js",
     "check:contract": "base-contract-check src templates playground",
     "check:spotlight-mirror": "node scripts/check-spotlight-mirror.js",
     "playground": "cd playground && vite",

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './coverage-fixture';
 
 test.describe('<web-playground>', () => {
   test('renders the label and reacts to attribute changes', async ({ page }) => {
