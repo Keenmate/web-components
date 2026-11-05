@@ -13,10 +13,25 @@ export const test = base.extend<{ recordCoverage: void }>({
   recordCoverage: [
     async ({ page, browserName }, use, testInfo) => {
       const isRecording = !!COVERAGE_DIR && browserName === 'chromium' && testInfo.project.name === 'dev';
-      if (isRecording) await page.coverage.startJSCoverage({ resetOnNavigation: false });
+      if (!isRecording) return use();
+      // Chromium only reports the scripts of the CURRENT document (resetOnNavigation: false
+      // doesn't bring back a replaced one), so take a snapshot before every navigation the
+      // test starts. A link click that navigates still loses what ran on the page it left.
+      const entries: Awaited<ReturnType<typeof page.coverage.stopJSCoverage>> = [];
+      const takeSnapshot = async () => {
+        entries.push(...(await page.coverage.stopJSCoverage()).filter((entry) => COVERED_URL_PATTERN.test(entry.url)));
+        await page.coverage.startJSCoverage({ resetOnNavigation: false });
+      };
+      for (const methodName of ['goto', 'reload', 'goBack', 'goForward'] as const) {
+        const navigate = page[methodName].bind(page) as (...args: unknown[]) => Promise<unknown>;
+        (page as unknown as Record<string, unknown>)[methodName] = async (...args: unknown[]) => {
+          await takeSnapshot();
+          return navigate(...args);
+        };
+      }
+      await page.coverage.startJSCoverage({ resetOnNavigation: false });
       await use();
-      if (!isRecording) return;
-      const entries = (await page.coverage.stopJSCoverage()).filter((entry) => COVERED_URL_PATTERN.test(entry.url));
+      entries.push(...(await page.coverage.stopJSCoverage()).filter((entry) => COVERED_URL_PATTERN.test(entry.url)));
       mkdirSync(COVERAGE_DIR, { recursive: true });
       writeFileSync(`${COVERAGE_DIR}/${randomUUID()}.json`, JSON.stringify(entries));
     },
