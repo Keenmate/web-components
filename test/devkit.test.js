@@ -457,6 +457,26 @@ test('composer: fragments get the layout, full documents pass through', () => {
   assert.ok(!attributeTextHtml.split('</head>')[0].includes('<link>'), 'no empty <link> carved out of the tooltip');
   assert.ok(attributeTextHtml.includes('<span title="put the <link> in <head>">tip</span>'));
 
+  // The other shapes: single quotes, <style> as attribute text, and a `>` before the real end of a tag.
+  const attributeShapesHtml = composePage(
+    [
+      '<meta name="kmwc:title" content="X">',
+      `<abbr title='a <link rel="x"> tag'>single</abbr>`,
+      '<code data-note="<style>.x{}</style> goes in head">style text</code>',
+      '<div data-rule="a > b"><link rel="stylesheet" href="after-gt.css"></div>',
+      '<style>.page{}</style>',
+    ].join('\n'),
+    { config, pagePath: '/examples-x.html' }
+  );
+  const [headHtml, bodyHtml] = attributeShapesHtml.split('</head>');
+  assert.ok(bodyHtml.includes(`<abbr title='a <link rel="x"> tag'>single</abbr>`));
+  assert.ok(bodyHtml.includes('<code data-note="<style>.x{}</style> goes in head">style text</code>'));
+  assert.ok(!headHtml.includes('rel="x"') && !headHtml.includes('.x{}'), 'attribute text never reaches <head>');
+  // A real element after a `>` inside an attribute value still moves; real <style> too.
+  assert.match(headHtml, /<link rel="stylesheet" href="after-gt\.css">/);
+  assert.match(headHtml, /<style>\.page\{\}<\/style>/);
+  assert.ok(bodyHtml.includes('<div data-rule="a > b"></div>'));
+
   const bareHtml = composePage('<meta name="kmwc:layout" content="bare">\n<meta name="kmwc:entry" content="none">\n<p>index</p>', { config, pagePath: '/index.html' });
   assert.ok(!bareHtml.includes('<header>') && !bareHtml.includes('src="/src/index.ts"'));
   assert.throws(() => composePage('<p>no title</p>', { config, pagePath: '/x.html' }), /needs <meta name="kmwc:title"/);
