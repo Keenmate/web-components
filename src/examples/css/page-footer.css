@@ -1,0 +1,19 @@
+/* ==============================================================================
+   EXAMPLES KIT — PAGE FOOTER
+   ==============================================================================
+   The footer the kit appends to every example page but the index
+   (page-footer.js); the same line as the index footer. */
+@layer kmwc {
+    .kmwc-page-footer {
+        text-align: center;
+        margin-top: 3rem;
+        padding: 1.5rem 0 1rem;
+        border-top: 1px solid var(--kmwc-border-color);
+        color: var(--kmwc-text-color-3);
+        font-size: 0.875rem;
+    }
+
+    .kmwc-page-footer p {
+        margin: 0;
+    }
+}

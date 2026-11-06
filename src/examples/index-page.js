@@ -19,6 +19,7 @@
 import { getPageConfig } from './page-config.js';
 import { getVersionLabel } from './version-badge.js';
 import { INDEX_PAGE_CLASSES } from './constants.js';
+import { renderFooterLineHtml } from './page-footer.js';
 
 const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const mapToEscapedHtml = (text) => String(text ?? '').replace(/[&<>"']/g, (character) => HTML_ESCAPES[character]);
@@ -32,10 +33,6 @@ export function renderExamplesIndex(indexConfig) {
   const pages = indexConfig.pages || [];
   const title = indexConfig.title ?? pageConfig.title;
   const tagline = indexConfig.tagline ?? pageConfig.tagline;
-  const footerLinks = [
-    ...(pageConfig.repository ? [{ label: 'GitHub', href: pageConfig.repository }] : []),
-    ...(indexConfig.links || []),
-  ];
   const classes = INDEX_PAGE_CLASSES;
 
   document.body.classList.add(classes.body);
@@ -63,13 +60,7 @@ export function renderExamplesIndex(indexConfig) {
         .join('')}
     </div>
     <footer class="${classes.footer}">
-      <p>Created by <a href="https://github.com/keenmate" target="_blank" rel="noopener">Keenmate s.r.o.</a>${footerLinks
-        .map((link) => ` | <a href="${mapToEscapedHtml(link.href)}" target="_blank" rel="noopener">${mapToEscapedHtml(link.label)}</a>`)
-        .join('')}${
-        pageConfig.devkitVersion
-          ? ` | <a class="${classes.devkit}" href="${mapToEscapedHtml(pageConfig.devkitHomepage)}" target="_blank" rel="noopener">web-components-devkit v${mapToEscapedHtml(pageConfig.devkitVersion)}</a>`
-          : ''
-      }</p>
+      ${renderFooterLineHtml(pageConfig, { links: indexConfig.links, devkitClass: classes.devkit })}
     </footer>`;
   containerEl.prepend(pageElement);
 

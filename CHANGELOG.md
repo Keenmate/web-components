@@ -17,6 +17,11 @@
   Doctor warns when npm workspaces aren't all listed, errors on a listed path without a
   package.json, and never packs a private workspace root. Without `packages` a repo is one package
   at its root, as before.
+- **Every example page gets the footer.** Only the index had one ("Created by Keenmate s.r.o. |
+  GitHub | web-components-devkit vX"); the other pages just ended. The kit now appends the same
+  line to every page but the index (`mountPageFooter()`, `.kmwc-page-footer`), inside the layout's
+  container. The index and the page footer render it from one function (`renderFooterLineHtml()`),
+  so they can't drift.
 
 ## [1.0.0-rc10] - 2026-11-05 [PUBLISHED]
 

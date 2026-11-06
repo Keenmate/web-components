@@ -97,6 +97,12 @@ export const INDEX_PAGE_CLASSES = {
   devkit: 'kmwc-index__devkit',
 };
 
+/** The footer the kit appends to every example page but the index (page-footer.js). */
+export const PAGE_FOOTER_CLASSES = {
+  root: 'kmwc-page-footer',
+  devkit: 'kmwc-page-footer__devkit',
+};
+
 /** <kmwc-demo> output (rendered at build time by page-composer.js) + the kit's copy button. */
 export const DEMO_CLASSES = {
   root: 'kmwc-demo',

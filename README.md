@@ -106,7 +106,7 @@ in `package.json#kmwc`, and gets the rest.
 | Piece | Import / command | Replaces |
 |---|---|---|
 | Vite preset | `@keenmate/web-components-devkit/vite` → `defineComponentConfig()` | per-repo `vite.config.ts`, `vite.examples.config.ts` |
-| Examples kit (auto-injected) | shared styles, chapter nav, copy-link buttons, theme switch, version badge, analytics | `examples-shared.css`, `examples-chapter-nav.js`, `examples-copy-link.js`, `plausible-snippet.html`, Dockerfile `sed` |
+| Examples kit (auto-injected) | shared styles, chapter nav, copy-link buttons, theme switch, version badge, page footer, analytics | `examples-shared.css`, `examples-chapter-nav.js`, `examples-copy-link.js`, `plausible-snippet.html`, Dockerfile `sed` |
 | Fragment pages | `<meta name="kmwc:title">` pages + `<kmwc-include>` partials + `<kmwc-demo>` (live markup = snippet) | the head / header / container boilerplate copied into every page, hand-copied `.code-block` snippets |
 | Examples helpers | `@keenmate/web-components-devkit/examples` → `attachControlsPersistence`, `renderExamplesIndex`, `mountExamplesKit` | `examples-controls-store.js`, 150 lines of inline index-page CSS |
 | Playwright preset | `@keenmate/web-components-devkit/playwright` → `definePlaywrightConfig()` | per-repo `playwright.config.ts` |
@@ -350,6 +350,9 @@ doctor` lists the ones still repeating the head/header boilerplate.
   shows `v1.2.3`, or `v1.2.3 (built …)` in a built site.
 - **Landing page**: `renderExamplesIndex({ pages })` renders the header, cards,
   footer and cross-page nav from the registry plus `kmwc` config.
+- **Page footer**: every other example page ends with the same line as the
+  index footer — Keenmate, the repo's GitHub link, the devkit version — inside
+  the layout's container (`.kmwc-page-footer`).
 - **Late content**: the kit mounts one task after DOM-ready. Pages that render
   sections after a fetch call `mountExamplesKit()`.
 - **Analytics**: the Plausible snippet goes into **built** pages only, and only

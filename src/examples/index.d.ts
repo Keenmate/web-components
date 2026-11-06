@@ -11,7 +11,7 @@ export interface KmwcPageConfig {
   isSpotlightEnabled: boolean;
   repository: string;
   homepage: string;
-  /** The @keenmate/web-components-devkit version that built the page (shown in the index footer). */
+  /** The @keenmate/web-components-devkit version that built the page (shown in the page footers). */
   devkitVersion: string;
   devkitHomepage: string;
 }
@@ -93,6 +93,10 @@ export function renderVersionBadges(root?: ParentNode): void;
 export function attachDemoCopyButtons(root?: ParentNode): void;
 export function getVersionLabel(pageConfig?: KmwcPageConfig): string;
 
+/** Append the footer (Keenmate | GitHub | devkit version) to an example page; none on the index. */
+export function mountPageFooter(): HTMLElement | null;
+/** The footer line the index and the page footer share. */
+export function renderFooterLineHtml(pageConfig: KmwcPageConfig, footerConfig: { links?: Array<{ label: string; href: string }>; devkitClass: string }): string;
 export function mountThemeSwitch(): { unmount(): void };
 export function applyTheme(theme: Theme): void;
 export function getSavedTheme(): Theme;
@@ -118,6 +122,7 @@ export const SPOTLIGHT_FULLSCREEN_MEDIA: string;
 export const CHAPTER_CODE_PATTERN: RegExp;
 export const COPY_LINK_CLASSES: Record<string, string>;
 export const INDEX_PAGE_CLASSES: Record<string, string>;
+export const PAGE_FOOTER_CLASSES: { root: string; devkit: string };
 export const THEME_SWITCH_CLASSES: Record<string, string>;
 export const DEMO_CLASSES: Record<string, string>;
 export const THEMES: Theme[];

@@ -166,6 +166,20 @@ test.describe('examples kit', () => {
     await expect(devkitLink).toHaveAttribute('href', 'https://github.com/keenmate/web-components');
     await expect(page.locator('.kmwc-chapter-nav__item')).toHaveCount(6);
     await expect(page.locator('.kmwc-copy-link')).toHaveCount(0);
+    // The index keeps its own footer; the kit's page footer is for the other pages.
+    await expect(page.locator('.kmwc-page-footer')).toHaveCount(0);
+  });
+
+  test('every example page ends with the footer', async ({ page }) => {
+    await page.goto('/examples-basic.html');
+    const footer = page.locator('.kmwc-page-footer');
+    await expect(footer).toHaveCount(1);
+    // Inside the layout's container, after the page's own content.
+    await expect(page.locator('body > .container > .kmwc-page-footer:last-child')).toHaveCount(1);
+    await expect(footer).toContainText('Created by Keenmate s.r.o.');
+    const devkitLink = footer.locator('.kmwc-page-footer__devkit');
+    await expect(devkitLink).toHaveText(`web-components-devkit v${DEVKIT_VERSION}`);
+    await expect(devkitLink).toHaveAttribute('href', 'https://github.com/keenmate/web-components');
   });
 
   test('form controls: one height, accent states, opt-out with .kmwc-native', async ({ page }) => {
