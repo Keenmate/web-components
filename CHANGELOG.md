@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0-rc11] - 2026-11-06
+
+### Added
+
+- **Doctor understands monorepos: `kmwc.packages`.** Doctor assumed the repo root was the package.
+  In web-dropzone (npm workspaces: a private root holding the example site,
+  `packages/web-dropzone` the component, `packages/web-dropzone-core` a headless library) that gave
+  113 errors that said little: `npm pack` on the private root "leaked" 101 files npm never publishes,
+  six rulebook suites couldn't find a component at the root, the overlay suite scanned
+  `node_modules`, and the loader check silently skipped — while the component's real findings
+  (129 non-BEM classes, no Custom Elements Manifest setup …) never showed. `"packages": [{ "path",
+  "kind": "component" | "library" }]` lists what the repo publishes: doctor packs each package, runs
+  the rulebook suites for its kind inside it (`rulebook:<suite>@<path>`; publish-command and
+  example-pages stay repo-wide at the root), and checks the loader class per component package.
+  Doctor warns when npm workspaces aren't all listed, errors on a listed path without a
+  package.json, and never packs a private workspace root. Without `packages` a repo is one package
+  at its root, as before.
+
 ## [1.0.0-rc10] - 2026-11-05 [PUBLISHED]
 
 ### Added

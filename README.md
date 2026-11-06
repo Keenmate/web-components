@@ -44,7 +44,7 @@ them in the same shape: `@keenmate/web-components-devkit`.
 | **web-daterangepicker** | `@keenmate/web-daterangepicker` | `drp` | 12200 | [repo](https://github.com/keenmate/web-daterangepicker) · [docs](https://web-daterangepicker.keenmate.dev) · `web-daterangepicker-showcase` | ✅ | Lightweight date picker web component with excellent keyboard navigation and range selection |
 | **web-treeview** | `@keenmate/web-treeview` | `wtv` | 12300 | [repo](https://github.com/keenmate/web-treeview) · `web-treeview-showcase` | ✅ | Lightweight treeview web component with hierarchical data display, search, expand/collapse, drag-drop, and… |
 | **web-commandpalette** | `@keenmate/web-commandpalette` | `cp` | 12400 | [repo](https://github.com/keenmate/web-commandpalette) · [examples](https://examples.web-commandpalette.keenmate.dev) | ✅ | Framework-agnostic command-palette web component — modes, multi-step commands, scoped + global search,… |
-| **web-dropzone** | `@keenmate/web-dropzone` | `dz` | 12500 | [repo](https://github.com/keenmate/web-dropzone) | — | Lightweight file dropzone web component with drag-drop, previews, validation, and multiple display modes. |
+| **web-dropzone** | `@keenmate/web-dropzone` | `dz` | 12500 | [repo](https://github.com/keenmate/web-dropzone) | ✅ | Lightweight file dropzone web component with drag-drop, previews, validation, and multiple display modes. |
 | **web-grid** | `@keenmate/web-grid` | `wg` | 12600 | [repo](https://github.com/keenmate/web-grid) · [docs](https://web-grid.keenmate.com) · [showcase](https://web-grid.keenmate.com) | — | Framework-agnostic data grid web component with sorting, filtering, inline editing, and keyboard navigation |
 | **web-editor** | `@keenmate/web-editor` | `km` | 12700 | [examples](https://examples.web-editor.keenmate.dev) | ✅ | Keenmate Web Editor — a framework-agnostic WYSIWYG / Markdown editor built on ProseMirror. |
 | **web-switch** | `@keenmate/web-switch` | — | 12800 | [repo](https://github.com/keenmate/web-switch) | — | Framework-agnostic web component wrapper for @keenmate/svelte-switch. Works with React, Vue, Angular, or… |
@@ -179,7 +179,11 @@ Every field is optional. Defaults are derived from the package.
                                                  // BlissFramework checkout above it. env KMWC_RULEBOOK_PATH wins
     "skippedChecks": []                          // e.g. ["responsive-overlay"]
   },
-  "sync": { "skippedFiles": [] }                 // e.g. ["Makefile"] to opt a file out
+  "sync": { "skippedFiles": [] },                // e.g. ["Makefile"] to opt a file out
+  "packages": [                                  // monorepos only (npm workspaces): what doctor checks
+    { "path": "packages/web-dropzone", "kind": "component" },
+    { "path": "packages/web-dropzone-core", "kind": "library" }
+  ]
 }
 ```
 
@@ -192,6 +196,16 @@ proposes a `build: vite build` script. `"cssVariables": false` turns off the
 manifest check (no `check:vars` script, `kmwc check-vars` skips), for variables
 the checker can't see, such as names built by string interpolation. Doctor runs
 only the rulebook suites that apply to a library (see below).
+
+**A monorepo** (npm workspaces, e.g. web-dropzone: a private root with the example
+site, `packages/web-dropzone` + `packages/web-dropzone-core`) lists its published
+packages in `kmwc.packages`, each with its kind. The root keeps the devkit's
+example site, generated files, ports and registry checks; doctor packs each
+package (`npm pack`), runs the rulebook suites for its kind *in* the package
+(reported as `rulebook:<suite>@<path>`), and checks the loader class in each
+component package. publish-command and example-pages stay repo-wide, at the root.
+Without `packages` the root is the one package — doctor warns when npm workspaces
+exist but aren't listed, and doesn't pack a private workspace root.
 
 ### Vite preset
 

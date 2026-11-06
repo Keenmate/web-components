@@ -73,6 +73,19 @@ export interface KmwcPackageConfig {
     skippedChecks?: string[];
   };
   sync?: { skippedFiles?: string[] };
+  /**
+   * The packages this repo publishes, for a monorepo whose root is not the package (npm
+   * workspaces): doctor runs the package-contents check and the rulebook suites for each one's
+   * kind there. Default: one package, the repo root, with the repo's kind.
+   */
+  packages?: Array<{ path: string; kind: 'component' | 'library' }>;
+}
+
+/** One package doctor checks: `path` as configured, `root` resolved. */
+export interface KmwcPackage {
+  path: string;
+  root: string;
+  kind: 'component' | 'library';
 }
 
 export interface KmwcConfig {
@@ -131,6 +144,7 @@ export interface KmwcConfig {
   };
   rulebook: { path: string; skippedChecks: string[] };
   sync: { skippedFiles: string[] };
+  packages: KmwcPackage[];
 }
 
 export const DEVKIT_ROOT: string;

@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { getKmwcConfig } from '../src/config.js';
+import { getKmwcConfig, mapKmwcConfig } from '../src/config.js';
 import { getSyncPlan, getScriptsPlan } from '../src/cli/sync-plan.js';
 import { checkComponent, getBashPath, run } from '../src/cli/commands/doctor.js';
 
@@ -337,6 +337,78 @@ test('doctor e2e: run() prints the findings and exits 1 on an error, 0 when clea
     if (previousRulebookPath === undefined) delete process.env.KMWC_RULEBOOK_PATH;
     else process.env.KMWC_RULEBOOK_PATH = previousRulebookPath;
   }
+});
+
+// ── monorepo (kmwc.packages) ─────────────────────────────────────────────────
+
+const MONOREPO_PACKAGES = [
+  { path: 'packages/web-doctor-fixture', kind: 'component' },
+  { path: 'packages/web-doctor-fixture-core', kind: 'library' },
+];
+const COMPONENT_PACKAGE_FILES = {
+  'packages/web-doctor-fixture/package.json': JSON.stringify({ name: '@keenmate/web-doctor-fixture', version: '1.0.0', files: ['dist', 'src'] }),
+  'packages/web-doctor-fixture/src/index.ts': 'customElements.define("web-doctor-fixture", class extends HTMLElement {});\n',
+  'packages/web-doctor-fixture/src/css/loading.css': '.dfx-loader { inline-size: 1em; }\n',
+  'packages/web-doctor-fixture-core/package.json': JSON.stringify({ name: '@keenmate/web-doctor-fixture-core', version: '1.0.0', files: ['dist'] }),
+  'packages/web-doctor-fixture-core/src/index.ts': 'export const store = {};\n',
+};
+const MONOREPO_CONFIG = {
+  packageJson: { private: true, workspaces: ['packages/*'] },
+  kmwc: { packages: MONOREPO_PACKAGES, cssVariables: false },
+};
+
+test('doctor e2e: monorepo — each package is packed and checked for its kind, the repo-wide suites run once at the root', () => {
+  const files = {
+    ...COMPONENT_PACKAGE_FILES,
+    // The root has no component CSS of its own — the loader class must be found in the package.
+    'src/css/fixture.css': null,
+    // A leak in the component package; the private root (no "files") would leak everything but is never packed.
+    'packages/web-doctor-fixture/src/CLAUDE.md': '# notes',
+    'packages/web-doctor-fixture/rulebook-output.txt': 'FAIL C-NC-8 — 3 class(es) don\'t follow BEM\n',
+    'packages/web-doctor-fixture/rulebook-exit.txt': '1',
+    'rulebook-output.txt': 'FAIL C-PC-4 — canonical bullets differ\n',
+    'rulebook-exit.txt': '1',
+  };
+  withRepo({ ...MONOREPO_CONFIG, files }, (repo) => {
+    writeFileSync(join(repo.rulebookPath, 'publish-command.checks.sh'), readFileSync(join(repo.rulebookPath, 'readme-structure.checks.sh'), 'utf8'));
+    const { errors, warnings, passes } = checkRepo(repo, { shouldCheckPackage: true, shouldRunRulebook: true });
+
+    // The root isn't a listed package, so it isn't packed (its missing "files" would "leak" everything).
+    assert.equal(findLine([...errors, ...passes], /^\[package\] (?!packages\/)/), undefined, 'the root is not packed');
+    assert.ok(findLine(errors, /^\[package\] packages\/web-doctor-fixture\/src\/CLAUDE\.md would be published/));
+    assert.ok(findLine(passes, /^\[package\] packages\/web-doctor-fixture-core: \d+ packed file\(s\), no dev-only files$/));
+    assert.equal(errors.filter((line) => line.startsWith('[package]')).length, 1, 'only the real leak');
+
+    // Package suites run inside each package, named after it; the repo-wide ones once at the root.
+    assert.ok(findLine(errors, /^\[rulebook:naming-conventions@packages\/web-doctor-fixture\] C-NC-8 3 class\(es\)/));
+    assert.ok(findLine(passes, /^\[rulebook:naming-conventions@packages\/web-doctor-fixture-core\] all auto checks pass$/));
+    assert.ok(findLine(passes, /^\[rulebook@packages\/web-doctor-fixture-core\] library: component-only suites not run/));
+    assert.ok(findLine(errors, /^\[rulebook:publish-command\] C-PC-4 canonical bullets differ$/));
+    assert.equal(findLine([...errors, ...passes], /^\[rulebook:publish-command@/), undefined, 'publish-command is not run per package');
+
+    // The loader check reads the component package's CSS (core is found up the tree), not the core library's.
+    assert.ok(findLine(passes, /^\[loader\] CSS styles \.dfx-loader, the class core 1\.0\.0-rc17 draws/));
+    assert.ok(findLine(passes, /^\[packages\] kmwc\.packages lists every workspace package/));
+    assert.deepEqual(warnings, []);
+  });
+});
+
+test('doctor e2e: monorepo — an unlisted workspace package warns, a listed path that does not exist errors', () => {
+  withRepo({ packageJson: MONOREPO_CONFIG.packageJson, kmwc: { cssVariables: false }, files: COMPONENT_PACKAGE_FILES }, (repo) => {
+    const { warnings, errors, passes } = checkRepo(repo, { shouldCheckPackage: true });
+    // Without kmwc.packages the root is the package — a private workspace root isn't packed.
+    assert.ok(findLine(passes, /^\[package\] private workspace root — never published, contents not checked$/));
+    assert.equal(findLine(errors, /^\[package\]/), undefined);
+    assert.ok(findLine(warnings, /^\[packages\] npm workspaces \(packages\/web-doctor-fixture, packages\/web-doctor-fixture-core\) but no kmwc\.packages — doctor checks the root as the package$/));
+  });
+  withRepo({ ...MONOREPO_CONFIG, kmwc: { ...MONOREPO_CONFIG.kmwc, packages: [MONOREPO_PACKAGES[0], { path: 'packages/web-gone', kind: 'library' }] }, files: COMPONENT_PACKAGE_FILES }, (repo) => {
+    const { errors, warnings } = checkRepo(repo);
+    assert.ok(findLine(errors, /^\[packages\] kmwc\.packages lists packages\/web-gone, which has no package\.json$/));
+    assert.ok(findLine(warnings, /^\[packages\] workspace package packages\/web-doctor-fixture-core is not in kmwc\.packages/));
+  });
+  assert.throws(() => mapKmwcConfig({ name: 'x', kmwc: { packages: [{ path: 'packages/a', kind: 'widget' }] } }), /kmwc\.packages: .* needs a "path" and a "kind" \(component \| library\)/);
+  assert.throws(() => mapKmwcConfig({ name: 'x', kmwc: { packages: [] } }), /expected a non-empty array/);
+  assert.deepEqual(mapKmwcConfig({ name: 'x', kmwc: { kind: 'library' } }, '/repo').packages.map(({ path, kind }) => [path, kind]), [['.', 'library']]);
 });
 
 test("doctor: the rulebook runs on Git for Windows' bash, never a bare `bash` that may be WSL's", () => {

@@ -14,7 +14,7 @@
  * Errors fail (exit 1); warnings don't.
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { getKmwcConfig, getPortsForBlock, getRegistry, LEGACY_FILES, NON_PAGE_HTML_FILES, PACKAGE_LEAK_RULES, PACKAGE_FILES_EXCLUSIONS } from '../../config.js';
 import { getSyncPlan, getScriptsPlan, CLAUDE_BLOCK_START } from '../sync-plan.js';
@@ -66,8 +66,9 @@ export const RULEBOOK_SUITES = [
   { name: 'readme-structure', isPrefixed: false, isComponentOnly: false },
   { name: 'custom-elements-manifest', isPrefixed: false, isComponentOnly: true },
   { name: 'responsive-overlay', isPrefixed: true, isComponentOnly: true },
-  { name: 'publish-command', isPrefixed: false, isComponentOnly: false },
-  { name: 'example-pages', isPrefixed: false, isComponentOnly: false },
+  // Repo-wide: one /publish command and one example site per repo, checked at its root.
+  { name: 'publish-command', isPrefixed: false, isComponentOnly: false, isRepoWide: true },
+  { name: 'example-pages', isPrefixed: false, isComponentOnly: false, isRepoWide: true },
 ];
 
 const LIBRARY_KIND = 'library';
@@ -122,9 +123,9 @@ export function getBashPath({ platform = process.platform, env = process.env, ch
   return gitRoots.map((gitRoot) => join(gitRoot, GIT_BASH_RELATIVE_PATH)).find((bashPath) => checkExists(bashPath)) || 'bash';
 }
 
-function runRulebookSuite(config, suite) {
+function runRulebookSuite(config, suite, checkedRoot) {
   const scriptPath = join(config.rulebook.path, `${suite.name}.checks.sh`).replace(/\\/g, '/');
-  const scriptArgs = [scriptPath, config.root.replace(/\\/g, '/')];
+  const scriptArgs = [scriptPath, checkedRoot.replace(/\\/g, '/')];
   if (suite.isPrefixed && config.prefix) scriptArgs.push(config.prefix);
   return spawnSync(getBashPath(), scriptArgs, { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
 }
@@ -302,8 +303,15 @@ export function checkComponent(config, doctorConfig = {}) {
     if (!outputMismatches.length) addPass('library', 'package.json targets match the library build outputs');
   }
 
+  // ── monorepo: the workspace packages doctor checks ───────────────────────
+  checkWorkspacePackages(config, { addPass, addWarning, addError });
+
   // ── core's default loader class ──────────────────────────────────────────
-  if (config.prefix && config.kind !== LIBRARY_KIND) checkLoaderClass(config, { addPass, addWarning, addError });
+  if (config.prefix && config.kind !== LIBRARY_KIND) {
+    for (const checkedPackage of config.packages.filter((packageEntry) => packageEntry.kind === 'component')) {
+      checkLoaderClass(config, checkedPackage, { addPass, addWarning, addError });
+    }
+  }
 
   // ── variable manifest (what `kmwc check-vars` checks; it only runs in the build) ──
   if (config.hasPackageConfig) checkVariableManifest(config, { addPass, addWarning, addError });
@@ -320,7 +328,9 @@ export function checkComponent(config, doctorConfig = {}) {
   } else if (plausibleSiteId) addPass('analytics', `Plausible site id ${plausibleSiteId} is this repo's own`);
 
   // ── package contents ─────────────────────────────────────────────────────
-  if (doctorConfig.shouldCheckPackage !== false) checkPackageContents(config, { addPass, addWarning, addError });
+  if (doctorConfig.shouldCheckPackage !== false) {
+    for (const checkedPackage of config.packages) checkPackageContents(checkedPackage, { addPass, addWarning, addError });
+  }
 
   // ── rulebook suites ──────────────────────────────────────────────────────
   if (doctorConfig.shouldRunRulebook !== false) checkRulebook(config, { addPass, addWarning, addError });
@@ -361,11 +371,15 @@ function checkPorts(config, portBlock, registry, { addPass, addWarning, addError
  * before (or after) the core bump leaves the default loader unstyled, and no rulebook
  * check sees that (a VALIDATION-NOTES `## C-NC-8` even hides a leftover old class).
  */
-function checkLoaderClass(config, { addPass, addWarning, addError }) {
-  const coreLoader = loadCoreLoader(config.root);
+function checkLoaderClass(config, checkedPackage, { addPass, addWarning, addError }) {
+  const coreLoader = loadCoreLoader(checkedPackage.root);
   if (!coreLoader?.separator) return;
   const coreClassName = `${config.prefix}${coreLoader.separator}loader`;
-  const { isCoreClassStyled, renamedClasses, collidingClasses } = getLoaderClassVerdict(coreLoader.separator, loadStyledLoaderClasses(config.root, config.prefix));
+  const styledLoaderClasses = loadStyledLoaderClasses(checkedPackage.root, config.prefix).map((styledClass) => ({
+    ...styledClass,
+    file: getPackageFilePath(checkedPackage, styledClass.file),
+  }));
+  const { isCoreClassStyled, renamedClasses, collidingClasses } = getLoaderClassVerdict(coreLoader.separator, styledLoaderClasses);
   for (const { file, className } of collidingClasses) {
     addWarning(
       'loader',
@@ -418,10 +432,56 @@ export function getPackageLeaks(packedPaths) {
     });
 }
 
+/** `src/x.css` in a workspace package → `packages/web-x/src/x.css`; unchanged at the repo root. */
+function getPackageFilePath(checkedPackage, filePath) {
+  return checkedPackage.path === '.' ? filePath : `${checkedPackage.path.replace(/\\/g, '/').replace(/\/$/, '')}/${filePath}`;
+}
+
+/** The workspace directories package.json declares (`packages/*` → each subdirectory with a package.json). */
+function getWorkspaceRoots(config) {
+  const workspaces = config.packageJson.workspaces;
+  const workspacePatterns = Array.isArray(workspaces) ? workspaces : workspaces?.packages || [];
+  return workspacePatterns.flatMap((pattern) => {
+    if (!pattern.endsWith('/*')) return [resolve(config.root, pattern)];
+    const parentPath = resolve(config.root, pattern.slice(0, -2));
+    if (!existsSync(parentPath)) return [];
+    return readdirSync(parentPath)
+      .map((entryName) => join(parentPath, entryName))
+      .filter((entryPath) => existsSync(join(entryPath, 'package.json')));
+  });
+}
+
+/**
+ * A monorepo lists its packages in kmwc.packages, or doctor checks only the root (which a
+ * private workspace root never publishes). Every workspace package is listed; every listed one exists.
+ */
+function checkWorkspacePackages(config, { addPass, addWarning, addError }) {
+  for (const checkedPackage of config.packages) {
+    if (!existsSync(join(checkedPackage.root, 'package.json'))) addError('packages', `kmwc.packages lists ${checkedPackage.path}, which has no package.json`, 'fix the path');
+  }
+  const workspaceRoots = getWorkspaceRoots(config);
+  if (!workspaceRoots.length) return;
+  const toRepoPath = (absolutePath) => relative(config.root, absolutePath).replace(/\\/g, '/');
+  if (!config.packageJson.kmwc?.packages) {
+    addWarning(
+      'packages',
+      `npm workspaces (${workspaceRoots.map(toRepoPath).join(', ')}) but no kmwc.packages — doctor checks the root as the package`,
+      `list them: "packages": [${workspaceRoots.map((workspaceRoot) => `{ "path": "${toRepoPath(workspaceRoot)}", "kind": "component" | "library" }`).join(', ')}]`
+    );
+    return;
+  }
+  const listedRoots = new Set(config.packages.map((checkedPackage) => checkedPackage.root));
+  const unlistedRoots = workspaceRoots.filter((workspaceRoot) => !listedRoots.has(workspaceRoot));
+  for (const workspaceRoot of unlistedRoots) {
+    addWarning('packages', `workspace package ${toRepoPath(workspaceRoot)} is not in kmwc.packages — doctor doesn't check it`, `add { "path": "${toRepoPath(workspaceRoot)}", "kind": … }`);
+  }
+  if (!unlistedRoots.length) addPass('packages', `kmwc.packages lists every workspace package (${config.packages.map((checkedPackage) => `${checkedPackage.path} ${checkedPackage.kind}`).join(', ')})`);
+}
+
 /** The file list `npm publish` would ship (no lifecycle scripts, nothing written). */
-function getPackedPaths(config) {
+function getPackedPaths(packageRoot) {
   const packResult = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
-    cwd: config.root,
+    cwd: packageRoot,
     encoding: 'utf8',
     shell: process.platform === 'win32',
   });
@@ -430,26 +490,37 @@ function getPackedPaths(config) {
   return packReport[0].files.map((file) => file.path);
 }
 
-function checkPackageContents(config, { addPass, addWarning, addError }) {
+/**
+ * One package's `npm pack` list. A private workspace root is skipped: npm never publishes it and,
+ * having no `files`, it would "leak" everything (list the packages in kmwc.packages). A private
+ * single package (the devkit playground) is still checked — it stands in for a real one.
+ */
+function checkPackageContents(checkedPackage, { addPass, addWarning, addError }) {
+  const packageLabel = checkedPackage.path === '.' ? '' : `${checkedPackage.path}: `;
+  const packageJson = JSON.parse(readFileSync(join(checkedPackage.root, 'package.json'), 'utf8'));
+  if (packageJson.private && packageJson.workspaces) {
+    addPass('package', `${packageLabel}private workspace root — never published, contents not checked`);
+    return;
+  }
   let packedPaths;
   try {
-    packedPaths = getPackedPaths(config);
+    packedPaths = getPackedPaths(checkedPackage.root);
   } catch {
     packedPaths = null;
   }
   if (!packedPaths) {
-    addWarning('package', 'npm pack --dry-run failed — package contents not checked');
+    addWarning('package', `${packageLabel}npm pack --dry-run failed — package contents not checked`);
     return;
   }
   const packageLeaks = getPackageLeaks(packedPaths);
   for (const packageLeak of packageLeaks) {
     addError(
       'package',
-      `${packageLeak.path} would be published (${packageLeak.label})`,
-      `exclude it in package.json "files" (e.g. ${PACKAGE_FILES_EXCLUSIONS.map((exclusion) => `"${exclusion}"`).join(', ')}) or narrow the glob`
+      `${getPackageFilePath(checkedPackage, packageLeak.path)} would be published (${packageLeak.label})`,
+      `exclude it in ${packageLabel ? `${checkedPackage.path}/` : ''}package.json "files" (e.g. ${PACKAGE_FILES_EXCLUSIONS.map((exclusion) => `"${exclusion}"`).join(', ')}) or narrow the glob`
     );
   }
-  if (!packageLeaks.length) addPass('package', `${packedPaths.length} packed file(s), no dev-only files`);
+  if (!packageLeaks.length) addPass('package', `${packageLabel}${packedPaths.length} packed file(s), no dev-only files`);
 }
 
 function checkRulebook(config, { addPass, addWarning, addError }) {
@@ -458,21 +529,32 @@ function checkRulebook(config, { addPass, addWarning, addError }) {
     return;
   }
   const skippedSuites = new Set(config.rulebook.skippedChecks);
-  const acceptedCheckIds = loadAcceptedCheckIds(config.root);
-  const suites = getRulebookSuites(config.kind);
-  if (suites.length < RULEBOOK_SUITES.length) {
-    const componentOnlySuiteNames = RULEBOOK_SUITES.filter((suite) => !suites.includes(suite)).map((suite) => suite.name);
-    addPass('rulebook', `${config.kind}: component-only suites not run (${componentOnlySuiteNames.join(', ')})`);
+  const isMonorepo = config.packages.some((checkedPackage) => checkedPackage.path !== '.');
+  // [{ suite, checkedRoot, checkName, acceptedCheckIds }]: a package's suites run in the package
+  // (for its kind), the repo-wide ones once at the root. A single-package repo runs all at the root.
+  const suiteRuns = [];
+  for (const checkedPackage of config.packages) {
+    const suites = getRulebookSuites(checkedPackage.kind).filter((suite) => !isMonorepo || !suite.isRepoWide);
+    const packageSuffix = isMonorepo ? `@${checkedPackage.path}` : '';
+    if (suites.length < RULEBOOK_SUITES.filter((suite) => !isMonorepo || !suite.isRepoWide).length) {
+      const componentOnlySuiteNames = RULEBOOK_SUITES.filter((suite) => suite.isComponentOnly).map((suite) => suite.name);
+      addPass(`rulebook${packageSuffix}`, `${checkedPackage.kind}: component-only suites not run (${componentOnlySuiteNames.join(', ')})`);
+    }
+    const acceptedCheckIds = new Set([...loadAcceptedCheckIds(config.root), ...loadAcceptedCheckIds(checkedPackage.root)]);
+    for (const suite of suites) suiteRuns.push({ suite, checkedRoot: checkedPackage.root, checkName: `rulebook:${suite.name}${packageSuffix}`, acceptedCheckIds });
   }
-  for (const suite of suites) {
+  if (isMonorepo) {
+    const acceptedCheckIds = loadAcceptedCheckIds(config.root);
+    for (const suite of RULEBOOK_SUITES.filter((repoSuite) => repoSuite.isRepoWide)) suiteRuns.push({ suite, checkedRoot: config.root, checkName: `rulebook:${suite.name}`, acceptedCheckIds });
+  }
+  for (const { suite, checkedRoot, checkName, acceptedCheckIds } of suiteRuns) {
     if (skippedSuites.has(suite.name)) continue;
     if (!existsSync(join(config.rulebook.path, `${suite.name}.checks.sh`))) continue;
-    const suiteResult = runRulebookSuite(config, suite);
+    const suiteResult = runRulebookSuite(config, suite, checkedRoot);
     if (suiteResult.error) {
       addWarning('rulebook', `cannot run bash (${suiteResult.error.code}) — rulebook checks skipped`, 'install Git Bash / run from a POSIX shell');
       return;
     }
-    const checkName = `rulebook:${suite.name}`;
     const failures = getSuiteFailures(suiteResult.stdout);
     // A suite passes with exit 0 and fails with exit 1 + FAIL lines. Anything else (2 = usage,
     // 127 = the script wasn't found — WSL's bash on a C:/ path) means it never ran: say so,

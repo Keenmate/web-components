@@ -183,6 +183,23 @@ export function getKmwcConfig(root = process.cwd()) {
   return mapKmwcConfig(getJsonFile(packageJsonPath), root);
 }
 
+const PACKAGE_KINDS = ['component', 'library'];
+
+/**
+ * `kmwc.packages` → [{ path, root, kind }]; without it, one package at the repo root with the
+ * repo's kind (a showcase / docs / test repo checks as a component, as before).
+ */
+function mapPackages(packageEntries, root, repoKind) {
+  if (!packageEntries) return [{ path: '.', root, kind: repoKind === 'library' ? 'library' : 'component' }];
+  if (!Array.isArray(packageEntries) || !packageEntries.length) throw new Error('kmwc.packages: expected a non-empty array of { path, kind }');
+  return packageEntries.map((packageEntry) => {
+    if (!packageEntry?.path || !PACKAGE_KINDS.includes(packageEntry.kind)) {
+      throw new Error(`kmwc.packages: ${JSON.stringify(packageEntry)} needs a "path" and a "kind" (${PACKAGE_KINDS.join(' | ')})`);
+    }
+    return { path: packageEntry.path, root: resolve(root, packageEntry.path), kind: packageEntry.kind };
+  });
+}
+
 /** Map a parsed package.json to the resolved config (pure — used by tests). */
 export function mapKmwcConfig(packageJson, root = process.cwd()) {
   const packageConfig = packageJson.kmwc || {};
@@ -199,6 +216,7 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
   const cssVariables = packageConfig.cssVariables === false ? { checkMode: 'off' } : packageConfig.cssVariables || {};
   const rulebook = packageConfig.rulebook || {};
   const devPort = ports.dev ?? 5173;
+  const kind = packageConfig.kind || getRegistryKind(id);
 
   return {
     root,
@@ -206,7 +224,7 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
     packageJson,
     id,
     packageName: packageJson.name || id,
-    kind: packageConfig.kind || getRegistryKind(id),
+    kind,
     version: packageJson.version || '0.1.0',
     title: packageConfig.title || mapToTitleCase(id),
     tagline: packageConfig.tagline || packageJson.description || '',
@@ -275,6 +293,7 @@ export function mapKmwcConfig(packageJson, root = process.cwd()) {
     sync: {
       skippedFiles: packageConfig.sync?.skippedFiles || [],
     },
+    packages: mapPackages(packageConfig.packages, root, kind),
   };
 }
 
