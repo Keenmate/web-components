@@ -1,5 +1,24 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Doctor flags hand-copied snippets of a live demo.** The README and every component's CLAUDE.md
+  say "never hand-copy a demo into a `.code-block`", but doctor didn't check it, so older pages
+  still carry dozens of `<details><summary>Show code</summary><pre>…` and
+  `<div class="code-block"><pre>…` copies that drift from the demo next to them. Doctor now reads
+  each page's hand-written code blocks (a `<pre>` in a `<details>` or a `.code-block`, outside
+  comments), decodes them and warns under `pages` when one copies the page's live content: a tag
+  carrying a live element's `id`, code that reaches a live id (`getElementById('x')` /
+  `querySelector('#x')`), a tag whose ≥ 2 valued attributes all sit on a live tag of the same
+  name, or ≥ 3 non-trivial lines repeated from the page's markup / scripts (2 when they are ≥ 30 %
+  of the snippet). One warning per page lists the lines; the fix is `<kmwc-demo>`. A reference
+  snippet that mirrors no demo on purpose carries `data-kmwc-snippet` on the block (or its
+  `<pre>`). A warning, not an error: pages migrate one at a time. First runs: web-daterangepicker
+  17, web-dropzone 23, web-treeview 13, web-components-core 3 copies; generic API listings and
+  data shapes stay quiet.
+
 ## [1.0.0-rc11] - 2026-11-06 [PUBLISHED]
 
 ### Added

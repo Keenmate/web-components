@@ -39,6 +39,8 @@ import {
   FIXED_COLORS_ATTRIBUTE,
   FIXED_COLORS_MARKER,
   getHardcodedColors,
+  SNIPPET_ATTRIBUTE,
+  getCopiedDemoSnippets,
   loadCoreLoader,
   getLoaderClassVerdict,
   loadStyledLoaderClasses,
@@ -247,6 +249,20 @@ export function checkComponent(config, doctorConfig = {}) {
     );
   }
   if (pageFiles.length && !hardcodedColorSources.length) addPass('pages', 'page CSS colours follow the theme');
+
+  // Hand-written code blocks that copy a live demo — they drift; <kmwc-demo> shows the demo's own markup.
+  const copiedSnippetSources = pageFiles
+    .map((pageFile) => ({ file: pageFile, copiedSnippets: getCopiedDemoSnippets(readFileSync(join(config.root, pageFile), 'utf8')) }))
+    .filter((source) => source.copiedSnippets.length);
+  for (const { file, copiedSnippets } of copiedSnippetSources) {
+    const lineList = copiedSnippets.map(({ line }) => line).join(', ');
+    addWarning(
+      'pages',
+      `${file} line(s) ${lineList}: ${copiedSnippets.length} hand-copied snippet(s) of a live demo (first: ${copiedSnippets[0].reason})`,
+      `wrap the demo in <kmwc-demo> (see README › Fragment pages); a reference snippet that mirrors no demo on purpose: ${SNIPPET_ATTRIBUTE} on the block`
+    );
+  }
+  if (pageFiles.length && !copiedSnippetSources.length) addPass('pages', 'no hand-copied snippets of a live demo');
 
   // ── generated files ──────────────────────────────────────────────────────
   if (config.hasPackageConfig) {

@@ -42,6 +42,9 @@ import {
   getKitDuplicates,
   checkIsHardcodedColor,
   getHardcodedColors,
+  getCopiedDemoSnippets,
+  mapToDecodedHtml,
+  SNIPPET_ATTRIBUTE,
   getCoreLoaderSeparator,
   getStyledLoaderClasses,
   loadCoreLoader,
@@ -802,6 +805,55 @@ test('doctor: hard-coded page colours — literals warn, var() fallbacks / light
   assert.deepEqual(getHardcodedColors('.swatch { color: #fff; }', { isStylesheet: true }).map(({ found }) => found), ['.swatch { color: #fff }']);
   const markedStylesheet = '/* plain */ .a { color: #111; } /* kmwc-fixed-colors: fixture */ .b { color: #222; } .c { color: #333; }';
   assert.deepEqual(getHardcodedColors(markedStylesheet, { isStylesheet: true }).map(({ found }) => found), ['.a { color: #111 }', '.c { color: #333 }']);
+});
+
+test('doctor: a hand-written code block that copies a live demo — id, tag, shared lines; reference snippets and opt-outs pass', () => {
+  assert.equal(mapToDecodedHtml('&lt;web-x id=&quot;a&quot;&gt; &amp;&#39;&#x41;&nbsp;&unknown;'), '<web-x id="a"> &\'A &unknown;');
+  const linesOf = (page) => getCopiedDemoSnippets(page).map(({ line }) => line);
+
+  // A copy of the demo element (by id), and a script that reaches it (by id).
+  const idPage = [
+    '<web-x id="picker" mode="single"></web-x>',
+    '<details><summary>Show code</summary>',
+    '<pre><code>&lt;web-x id="picker" mode="single"&gt;&lt;/web-x&gt;</code></pre>',
+    '</details>',
+    '<div class="code-block"><button class="copy-button">Copy</button>',
+    "<pre>const el = document.querySelector('#picker');\nel.open();</pre></div>",
+  ].join('\n');
+  assert.deepEqual(getCopiedDemoSnippets(idPage), [
+    { line: 2, reason: '<web-x id="picker"> is live on the page' },
+    { line: 5, reason: 'targets the live #picker' },
+  ]);
+
+  // The demo's element with the id stripped: ≥ 2 valued attributes all on a live tag. A bare boolean doesn't count.
+  const tagPage = '<web-x id="a" mode="range" locale="cs"></web-x>\n<web-x id="b" multiple></web-x>\n<div class="code-block"><pre>&lt;web-x mode="range" locale="cs"&gt;</pre></div>\n<div class="code-block"><pre>&lt;web-x id="other" multiple&gt;</pre></div>';
+  assert.deepEqual(linesOf(tagPage), [3]);
+
+  // Lines the page's own script repeats (comments, quotes, whitespace and `;` don't matter).
+  const script = "<script type=\"module\">\n  const tree = document.querySelector('web-tree');\n  tree.nodes = [\n    { id: 1, path: '1', name: 'Root' },\n    { id: 2, path: '1.1', name: 'Child' },\n  ];\n</script>";
+  const linesPage = `<web-tree></web-tree>\n<div class="code-block"><pre>tree.nodes = [\n  { id: 1, path: "1", name: "Root" },   // the root\n  { id: 2, path: "1.1", name: "Child" }\n];</pre></div>\n${script}`;
+  assert.deepEqual(linesOf(linesPage), [2]);
+
+  // A reference snippet: a data shape / API listing that mirrors no demo.
+  const referencePage = `<web-tree></web-tree>\n<details><summary>Show code</summary><pre><code>el.open();\nel.scrollToValue('redis', { block: 'center' });\nel.clearSearch();</code></pre></details>\n${script}`;
+  assert.deepEqual(linesOf(referencePage), []);
+  // A long API listing that shares one or two option lines with a demo stays quiet too.
+  const listing = Array.from({ length: 8 }, (_, index) => `  optionNumber${index}: true,`).join('\n');
+  const listingPage = `<script>\nconst a = { optionNumber0: true, };\nfoo({\n  optionNumber0: true,\n  optionNumber1: true,\n});\n</script>\n<div class="code-block"><pre>create({\n${listing}\n});</pre></div>`;
+  assert.deepEqual(linesOf(listingPage), []);
+
+  // Opt-outs: the attribute on the container or the <pre>; a block inside a comment is never read.
+  const optOutPage = [
+    '<web-x id="picker"></web-x>',
+    `<details ${SNIPPET_ATTRIBUTE}><pre>&lt;web-x id="picker"&gt;</pre></details>`,
+    `<div class="code-block"><pre ${SNIPPET_ATTRIBUTE}>document.getElementById('picker')</pre></div>`,
+    '<!-- <div class="code-block"><pre>&lt;web-x id="picker"&gt;</pre></div> -->',
+  ].join('\n');
+  assert.deepEqual(linesOf(optOutPage), []);
+
+  // A <kmwc-demo> page: the composer draws the code block at build time — the source has none.
+  const demoPage = "<kmwc-demo>\n  <web-x id=\"picker\" mode=\"single\"></web-x>\n  <script type=\"module\" data-kmwc-show>document.getElementById('picker').open();</script>\n</kmwc-demo>";
+  assert.deepEqual(linesOf(demoPage), []);
 });
 
 test('doctor: the loader class the installed core draws vs the one the CSS styles', () => {

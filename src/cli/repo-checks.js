@@ -1,9 +1,9 @@
 /**
  * Repo checks behind `kmwc doctor` that read a component's own files (and its
  * registry siblings): accepted rulebook deviations, library output names, ports,
- * analytics ids and page CSS the kit already covers. Each check is a pure
- * function over text / config where it can be (unit-tested), plus a thin
- * file-reading wrapper.
+ * analytics ids, page CSS the kit already covers and hand-copied demo snippets.
+ * Each check is a pure function over text / config where it can be
+ * (unit-tested), plus a thin file-reading wrapper.
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -322,6 +322,125 @@ export function getHardcodedColors(pageText, { isStylesheet = false } = {}) {
     }
   }
   return hardcodedColors;
+}
+
+// ── hand-copied demo snippets ────────────────────────────────────────────────
+
+/**
+ * A hand-written code block that deliberately doesn't mirror a demo (an API reference,
+ * a config shape): the attribute on the `<details>`, the `.code-block` div or the `<pre>`.
+ */
+export const SNIPPET_ATTRIBUTE = 'data-kmwc-snippet';
+// A hand-written code block: a <details> (the "Show code" disclosure) or a <div class="code-block">.
+const CODE_CONTAINER_PATTERN = /<details\b[^>]*>[\s\S]*?<\/details>|<div\b[^>]*\bclass="[^"]*\bcode-block\b[^"]*"[^>]*>(?:(?!<\/div>)[\s\S])*?<pre\b[\s\S]*?<\/pre>/gi;
+const PRE_PATTERN = /<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi;
+// Not live markup: comments, scripts, styles and templates are blanked before live tags are read.
+const NON_LIVE_PATTERN = /<!--[\s\S]*?-->|<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<template\b[^>]*>[\s\S]*?<\/template>/gi;
+const START_TAG_PATTERN = /<([a-zA-Z][\w-]*)((?:\s+[^\s=>/"']+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>"']+))?)*)\s*\/?>/g;
+const TAG_ATTRIBUTE_PATTERN = /([^\s=>/"']+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"']+)))?/g;
+// Tags that look alike on every page (head elements, the layout's own) — never evidence of a copy.
+const IGNORED_SNIPPET_TAGS = new Set(['html', 'head', 'body', 'meta', 'link', 'script', 'style', 'template']);
+const ELEMENT_ID_REFERENCE_PATTERN = /getElementById\(\s*['"`]([\w-]+)['"`]\s*\)|querySelector(?:All)?\(\s*['"`]#([\w-]+)['"`]\s*\)/g;
+const MIN_SHARED_LINE_LENGTH = 16;
+const MIN_SHARED_LINES = 2;
+// Fewer than STRONG_SHARED_LINES shared lines count only when they are this share of the snippet (a long API listing shares a few option lines with any demo).
+const STRONG_SHARED_LINES = 3;
+const MIN_SHARED_LINE_RATIO = 0.3;
+const MIN_MATCHED_ATTRIBUTES = 2;
+
+const HTML_ENTITIES = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'", nbsp: ' ' };
+/** `&lt;web-x id=&quot;a&quot;&gt;` → `<web-x id="a">`. Pure. */
+export function mapToDecodedHtml(text) {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, name) => {
+    if (name[0] === '#') return String.fromCodePoint(name[1] === 'x' || name[1] === 'X' ? parseInt(name.slice(2), 16) : Number(name.slice(1)));
+    return HTML_ENTITIES[name.toLowerCase()] ?? entity;
+  });
+}
+
+/** Start tags in `html` → [{ tagName, attributes: Map(name → value | '') }]. */
+function getStartTags(html) {
+  return [...html.matchAll(START_TAG_PATTERN)].map(([, tagName, attributeText]) => ({
+    tagName: tagName.toLowerCase(),
+    attributes: new Map([...attributeText.matchAll(TAG_ATTRIBUTE_PATTERN)].map((match) => [match[1].toLowerCase(), match[2] ?? match[3] ?? match[4] ?? ''])),
+  }));
+}
+
+/** A code line compared across snippet and page: no `//` comment, single quotes, collapsed whitespace, no trailing `;` / `,`. */
+function mapToComparedLine(line) {
+  return line
+    .replace(/(^|\s)\/\/.*$/, '')
+    .replace(/"/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[;,]$/, '');
+}
+
+const getComparedLines = (text) => text.split(/\r?\n/).map(mapToComparedLine).filter((line) => line.length >= MIN_SHARED_LINE_LENGTH && /[a-z]/i.test(line));
+
+/** Blank a range of `text` but keep its newlines, so line numbers and offsets stay valid. */
+const mapToBlanked = (match) => match.replace(/[^\n]/g, ' ');
+
+/**
+ * Hand-written code blocks on an example page that copy one of the page's live demos —
+ * the drift `<kmwc-demo>` makes impossible. A block is a `<pre>` inside a `<details>` or a
+ * `<div class="code-block">` (outside comments; a `data-kmwc-snippet` block is skipped).
+ * Its text is entity-decoded and compared with the page's live content (everything outside
+ * comments and those blocks). It is a copy when ANY of:
+ *   - a tag in it carries an `id` that a live element has, or the code reaches a live id
+ *     through `getElementById('x')` / `querySelector('#x')` — it shows THAT demo;
+ *   - a tag in it with ≥ 2 valued attributes (a bare `selected` is no evidence) matches a live tag of the same name carrying all of
+ *     them (same values) — the demo's element with the id stripped;
+ *   - ≥ 3 of its non-trivial lines (≥ 16 chars, compared without `//` comments, quote style,
+ *     whitespace and a trailing `;` / `,`) also appear in the page's markup or scripts — or 2,
+ *     when they are ≥ 30 % of the snippet (a long API listing shares an option line or two).
+ * A generic reference snippet (`el.open();`, a data shape, an API listing) matches none of
+ * these. Returns [{ line, reason }] — `line` is the block's 1-based line. Pure.
+ */
+export function getCopiedDemoSnippets(pageText) {
+  const pageWithoutComments = pageText.replace(/<!--[\s\S]*?-->/g, mapToBlanked);
+  const codeBlocks = [...pageWithoutComments.matchAll(CODE_CONTAINER_PATTERN)];
+  if (!codeBlocks.length) return [];
+  let livePage = pageWithoutComments;
+  for (const block of codeBlocks) {
+    livePage = livePage.slice(0, block.index) + block[0].replace(PRE_PATTERN, mapToBlanked) + livePage.slice(block.index + block[0].length);
+  }
+  const liveMarkup = livePage.replace(NON_LIVE_PATTERN, mapToBlanked);
+  const liveTags = getStartTags(liveMarkup);
+  const liveIds = new Set(liveTags.map((tag) => tag.attributes.get('id')).filter(Boolean));
+  const liveLines = new Set(getComparedLines(livePage));
+
+  const copiedSnippets = [];
+  for (const block of codeBlocks) {
+    const containerStartTag = block[0].slice(0, block[0].indexOf('>') + 1);
+    if (containerStartTag.includes(SNIPPET_ATTRIBUTE)) continue;
+    const shownPres = [...block[0].matchAll(PRE_PATTERN)].filter(([, preAttributes]) => !preAttributes.includes(SNIPPET_ATTRIBUTE));
+    if (!shownPres.length) continue;
+    const codeText = mapToDecodedHtml(shownPres.map(([, , preBody]) => preBody.replace(/<\/?code\b[^>]*>/gi, '')).join('\n'));
+    const reason = getCopyReason(codeText, { liveTags, liveIds, liveLines });
+    if (reason) copiedSnippets.push({ line: pageText.slice(0, block.index).split('\n').length, reason });
+  }
+  return copiedSnippets;
+}
+
+function getCopyReason(codeText, { liveTags, liveIds, liveLines }) {
+  const snippetTags = getStartTags(codeText).filter((tag) => !IGNORED_SNIPPET_TAGS.has(tag.tagName));
+  const copiedIdTag = snippetTags.find((tag) => liveIds.has(tag.attributes.get('id')));
+  if (copiedIdTag) return `<${copiedIdTag.tagName} id="${copiedIdTag.attributes.get('id')}"> is live on the page`;
+  for (const [, getByIdTarget, selectorTarget] of codeText.matchAll(ELEMENT_ID_REFERENCE_PATTERN)) {
+    const targetId = getByIdTarget || selectorTarget;
+    if (liveIds.has(targetId)) return `targets the live #${targetId}`;
+  }
+  const copiedTag = snippetTags.find(
+    (tag) =>
+      [...tag.attributes.values()].filter(Boolean).length >= MIN_MATCHED_ATTRIBUTES &&
+      liveTags.some((liveTag) => liveTag.tagName === tag.tagName && [...tag.attributes].every(([name, value]) => liveTag.attributes.has(name) && liveTag.attributes.get(name) === value))
+  );
+  if (copiedTag) return `<${copiedTag.tagName} ${[...copiedTag.attributes.keys()].join(' ')}> matches a live element`;
+  const snippetLines = [...new Set(getComparedLines(codeText))];
+  const sharedLines = snippetLines.filter((line) => liveLines.has(line));
+  const isLineCopy = sharedLines.length >= STRONG_SHARED_LINES || (sharedLines.length >= MIN_SHARED_LINES && sharedLines.length / snippetLines.length >= MIN_SHARED_LINE_RATIO);
+  if (isLineCopy) return `${sharedLines.length} line(s) repeat the page's markup / scripts`;
+  return null;
 }
 
 // ── core's default loader class ──────────────────────────────────────────────

@@ -166,6 +166,23 @@ test('doctor e2e: legacy files and pages — helpers, boilerplate, kit duplicate
   });
 });
 
+test('doctor e2e: pages — a hand-copied demo snippet warns; <kmwc-demo>, a reference snippet and the opt-out pass', () => {
+  const copiedPage = '<meta name="kmwc:title" content="S">\n<h2>SN01 · Demo</h2>\n<web-x id="demo" mode="range"></web-x>\n<details><summary>Show code</summary><pre><code>&lt;web-x id="demo" mode="range"&gt;&lt;/web-x&gt;</code></pre></details>\n';
+  const files = {
+    'examples-copied.html': copiedPage,
+    'examples-demo.html': '<meta name="kmwc:title" content="D">\n<kmwc-demo><web-x id="demo"></web-x></kmwc-demo>\n<div class="code-block"><pre>el.open();</pre></div>\n',
+    'examples-opted-out.html': copiedPage.replace('<details>', '<details data-kmwc-snippet>'),
+  };
+  withRepo({ files }, (repo) => {
+    const { warnings } = checkRepo(repo);
+    const snippetWarnings = warnings.filter((line) => line.includes('hand-copied snippet'));
+    assert.deepEqual(snippetWarnings, ['[pages] examples-copied.html line(s) 4: 1 hand-copied snippet(s) of a live demo (first: <web-x id="demo"> is live on the page)']);
+  });
+  withRepo({}, (repo) => {
+    assert.ok(findLine(checkRepo(repo).passes, /^\[pages\] no hand-copied snippets of a live demo$/));
+  });
+});
+
 test('doctor e2e: generated files and standard scripts', () => {
   withRepo({ files: { Makefile: 'edited\n', 'CLAUDE.md': '# CLAUDE.md\n<!-- kmwc:devkit:start — managed by `kmwc sync`, do not edit inside -->\nold\n<!-- kmwc:devkit:end -->\n' }, packageJson: { scripts: { dev: 'vite --open' } } }, (repo) => {
     const { errors, warnings } = checkRepo(repo);

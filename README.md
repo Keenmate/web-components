@@ -276,12 +276,15 @@ back link / title / subtitle, container). The whole file:
 | `<link>` / `<style>` anywhere in a fragment | moved into `<head>` |
 | `<kmwc-include src="partials/x.html" some-param="v">inner</kmwc-include>` | the partial with `{{someParam}}` and `{{content}}` filled in; nests; cycles are an error; unknown `{{…}}` stay as written |
 | `<kmwc-demo>markup</kmwc-demo>` | the markup live **and** as a code block of exactly that markup (copy button included) — a snippet can't drift from its demo. `<script data-kmwc-show>` inside runs and is shown too. Attributes: `preview-class`, `markup-hidden`, `code-hidden` |
+| `data-kmwc-snippet` on a hand-written `<details>` / `.code-block` (or its `<pre>`) | a reference snippet that mirrors no demo on purpose (an API listing that happens to name a live id) — doctor's hand-copied-snippet check skips it |
 
 Tags inside HTML comments are never expanded. Partials live in the repo's
 `partials/` folder (a change reloads the dev server page); shared demo data
 belongs in `examples-data/*.js` modules imported by pages. Full documents
 (`<html>…`) pass through untouched, so pages migrate one at a time — `kmwc
-doctor` lists the ones still repeating the head/header boilerplate.
+doctor` lists the ones still repeating the head/header boilerplate, and warns
+about every hand-written code block that copies a live demo on its page (wrap
+the demo in `<kmwc-demo>` instead).
 
 - **Styles** live in `@layer kmwc`, so any unlayered rule beats them
   regardless of order (and the layered reset can never clobber a component).
@@ -444,6 +447,14 @@ generated files:
   gets a `/* kmwc-fixed-colors: why */` comment right before it. An element whose
   `style="…"` sets them on purpose carries the same attribute — markup a render
   callback draws inside a shadow root can't be reached by page CSS at all.
+- **Hand-copied demo snippets** — a `<pre>` in a `<details>` or `.code-block`
+  that copies the page's live content is a warning (one per page, with the
+  lines): it carries a live element's `id`, reaches one with
+  `getElementById('x')` / `querySelector('#x')`, repeats a live tag with ≥ 2 of
+  its attribute values, or repeats ≥ 3 non-trivial lines of the page's markup /
+  scripts (2 when they're ≥ 30 % of the snippet). Generic reference code (a data
+  shape, `el.open()`, an API listing) doesn't match. The fix is `<kmwc-demo>`; a
+  reference snippet that trips it on purpose carries `data-kmwc-snippet`.
 - **Loader class** — the component CSS styles the class the *installed* core gives
   its default loader (`<prefix>__loader` from core 6d6b768 on, `<prefix>-loader`
   before). Renaming the selector on one side of the core bump leaves the loader
