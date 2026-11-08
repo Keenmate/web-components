@@ -19,6 +19,19 @@
   17, web-dropzone 23, web-treeview 13, web-components-core 3 copies; generic API listings and
   data shapes stay quiet.
 
+### Fixed
+
+- **`<kmwc-demo>` with an HTML comment inside it was never expanded.** The composer split the page
+  at comments before matching demos (the way includes skip commented-out tags), so a `<!-- … -->`
+  inside a demo left its opening and closing tags in different pieces. The page kept the raw
+  `<kmwc-demo>` with no code block, and nothing reported it (three agents hit it in one day while
+  converting web-multiselect). The composer now scans once, left to right, and consumes a comment
+  or a whole demo, whichever comes first. A comment inside a demo stays in its live markup and in
+  the shown code (a `</kmwc-demo>` written inside that comment doesn't close the demo); a demo that
+  is itself commented out is still ignored. A `<kmwc-demo` left outside comments and scripts after
+  rendering (no closing tag, or a demo nested in a demo) is now an error that names the page, like
+  the include errors.
+
 ## [1.0.0-rc11] - 2026-11-06 [PUBLISHED]
 
 ### Added

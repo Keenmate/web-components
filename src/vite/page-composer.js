@@ -36,7 +36,9 @@ const DEFAULT_LAYOUT = 'page';
 const LAYOUTS = ['page', 'bare'];
 
 const INCLUDE_PATTERN = /<kmwc-include\b([^>]*?)(?:\/>|>([\s\S]*?)<\/kmwc-include>)/g;
-const DEMO_PATTERN = /<kmwc-demo\b([^>]*)>([\s\S]*?)<\/kmwc-demo>/g;
+// A whole comment (no groups), or a whole demo whose body may hold comments — a
+// `</kmwc-demo>` inside such a comment doesn't close the demo.
+const COMMENT_OR_DEMO_PATTERN = /<!--[\s\S]*?-->|<kmwc-demo\b([^>]*)>((?:<!--[\s\S]*?-->|(?!<\/kmwc-demo>)[\s\S])*?)<\/kmwc-demo>/g;
 const SHOWN_SCRIPT_PATTERN = /<script\b([^>]*\bdata-kmwc-show\b[^>]*)>([\s\S]*?)<\/script>/g;
 const PAGE_META_PATTERN = /<meta\s+name="kmwc:([a-z-]+)"\s+content="([^"]*)"\s*\/?>\s*/g;
 // A <style> element, or ANY start tag (quoted attribute values may hold `>` and `<link>`):
@@ -154,9 +156,23 @@ function renderCodeBlock(codeText, language) {
  * Turn every <kmwc-demo> into live markup + the code that produced it.
  * Attributes: `preview-class` (default "demo-area"), `markup-hidden` (show
  * only the scripts' code), `code-hidden` (live only — rarely what you want).
+ *
+ * One left-to-right scan: whichever starts first — a comment or a demo — is consumed
+ * whole. A demo inside a comment is never expanded; a comment inside a demo stays in its
+ * live markup and shown code (splitting at comments, as includes do, left such a demo's
+ * tags unpaired and the page silently showed the raw <kmwc-demo>). A `<kmwc-demo` left
+ * after that (no closing tag, a nested demo) is an error, never passed through.
  */
-export function renderDemos(html) {
-  return mapOutsideComments(html, (text) => text.replace(DEMO_PATTERN, renderDemo));
+export function renderDemos(html, { pagePath = 'page' } = {}) {
+  const renderedHtml = html.replace(COMMENT_OR_DEMO_PATTERN, (match, attributeText, innerHtml) =>
+    attributeText === undefined ? match : renderDemo(match, attributeText, innerHtml)
+  );
+  mapOutsideComments(renderedHtml, (text) => {
+    const unexpanded = text.match(/<kmwc-demo\b[^>]*>?/);
+    if (unexpanded) throw new Error(`kmwc: ${pagePath}: ${unexpanded[0]} was not expanded — every <kmwc-demo> needs its own </kmwc-demo> (demos don't nest)`);
+    return text;
+  }, COMMENT_OR_SCRIPT_PATTERN);
+  return renderedHtml;
 }
 
 function renderDemo(demoTag, attributeText, innerHtml) {
@@ -245,6 +261,6 @@ export function renderLayout(fragmentHtml, { config, pagePath }) {
 /** The whole pipeline: includes → demos → layout (fragments only). */
 export function composePage(html, { config, pagePath, readFile }) {
   let composedHtml = resolveIncludes(html, { root: config.root, readFile });
-  composedHtml = renderDemos(composedHtml);
+  composedHtml = renderDemos(composedHtml, { pagePath });
   return checkIsFragment(composedHtml) ? renderLayout(composedHtml, { config, pagePath }) : composedHtml;
 }

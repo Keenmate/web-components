@@ -431,6 +431,26 @@ test('composer: demos render live markup + escaped, dedented code', () => {
   assert.equal(mapToDedentedText('\n    a\n      b\n'), 'a\n  b');
 });
 
+test('composer: a comment inside a demo stays in it; a commented-out demo is ignored; an unexpanded demo throws', () => {
+  // A comment inside the demo (even one naming </kmwc-demo>) is kept in the live markup and the shown code.
+  const commentedHtml = renderDemos('<kmwc-demo>\n    <!-- the default: no </kmwc-demo> here -->\n    <web-x id="a"></web-x>\n</kmwc-demo>');
+  assert.ok(!commentedHtml.includes('<kmwc-demo'), 'the demo is expanded');
+  assert.match(commentedHtml, /kmwc-demo__preview demo-area">\s*<!-- the default: no <\/kmwc-demo> here -->\s*<web-x id="a"><\/web-x>/);
+  assert.match(commentedHtml, /data-language="html"><pre><code>&lt;!-- the default: no &lt;\/kmwc-demo&gt; here --&gt;\n&lt;web-x id=&quot;a&quot;&gt;/);
+
+  // A whole demo inside a comment is left as written; the live demo after it still expands.
+  const pageHtml = '<!-- <kmwc-demo><web-x id="old"></web-x></kmwc-demo> -->\n<kmwc-demo><web-x id="new"></web-x></kmwc-demo>';
+  const renderedHtml = renderDemos(pageHtml);
+  assert.ok(renderedHtml.startsWith('<!-- <kmwc-demo><web-x id="old"></web-x></kmwc-demo> -->'));
+  assert.match(renderedHtml, /kmwc-demo__preview demo-area"><web-x id="new"><\/web-x>/);
+
+  // No closing tag, or a nested demo: an error naming the page, never a raw <kmwc-demo> in the page.
+  assert.throws(() => renderDemos('<kmwc-demo preview-class="x"><web-x></web-x>', { pagePath: '/examples-a.html' }), /kmwc: \/examples-a\.html: <kmwc-demo preview-class="x"> was not expanded/);
+  assert.throws(() => renderDemos('<kmwc-demo><kmwc-demo><web-x></web-x></kmwc-demo></kmwc-demo>'), /was not expanded/);
+  // A `<kmwc-demo` that is a string in a page script is not markup.
+  assert.doesNotThrow(() => renderDemos("<script>const tag = '<kmwc-demo>';</script>"));
+});
+
 test('composer: fragments get the layout, full documents pass through', () => {
   const config = mapKmwcConfig(createPackageJson({ title: 'Web Sample' }), '/x');
   const pageHtml = composePage(

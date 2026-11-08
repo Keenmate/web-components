@@ -278,7 +278,9 @@ back link / title / subtitle, container). The whole file:
 | `<kmwc-demo>markup</kmwc-demo>` | the markup live **and** as a code block of exactly that markup (copy button included) — a snippet can't drift from its demo. `<script data-kmwc-show>` inside runs and is shown too. Attributes: `preview-class`, `markup-hidden`, `code-hidden` |
 | `data-kmwc-snippet` on a hand-written `<details>` / `.code-block` (or its `<pre>`) | a reference snippet that mirrors no demo on purpose (an API listing that happens to name a live id) — doctor's hand-copied-snippet check skips it |
 
-Tags inside HTML comments are never expanded. Partials live in the repo's
+Tags inside HTML comments are never expanded; a comment *inside* a
+`<kmwc-demo>` stays in its live markup and shown code. A `<kmwc-demo>` without
+its own `</kmwc-demo>` (or nested in another) fails the page. Partials live in the repo's
 `partials/` folder (a change reloads the dev server page); shared demo data
 belongs in `examples-data/*.js` modules imported by pages. Full documents
 (`<html>…`) pass through untouched, so pages migrate one at a time — `kmwc
