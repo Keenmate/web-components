@@ -7,7 +7,9 @@
  * per-repo copies of scripts/check-variable-manifest.mjs.)
  *
  * Contract (prefix = kmwc.prefix or manifest.prefix, e.g. `ms`):
- *   - every `--base-*` read via var() must be in baseVariables, and vice versa
+ *   - every `--base-*` read via var() must be in baseVariables, and vice versa —
+ *     except an entry with `"readBy"`: a core module rendered inside the component
+ *     reads it, not the component's CSS (rulebook base-variables.md "Input variables")
  *   - checkMode "declared" (default): every `--<prefix>-*` DECLARED (`--x:`) or
  *     READ (`var(--x)`) must be in componentVariables, and vice versa. A read
  *     without a declaration is an input variable — a public knob that is unset by
@@ -64,11 +66,12 @@ export function checkManifestVariables({ cssText, manifest, prefix, internalVari
   const internalVariableSet = new Set(internalVariables);
   const manifestComponentVariables = new Set((manifest.componentVariables || []).map((entry) => entry.name));
   const manifestBaseVariables = new Set((manifest.baseVariables || []).map((entry) => entry.name));
+  const readElsewhereBaseVariables = new Set((manifest.baseVariables || []).filter((entry) => entry.readBy).map((entry) => entry.name));
   const getDifference = (left, right) => [...left].filter((name) => !right.has(name)).sort();
 
   return {
     missingBaseVariables: getDifference(consumedBaseVariables, manifestBaseVariables),
-    unusedBaseVariables: getDifference(manifestBaseVariables, consumedBaseVariables),
+    unusedBaseVariables: getDifference(manifestBaseVariables, consumedBaseVariables).filter((name) => !readElsewhereBaseVariables.has(name)),
     unusedComponentVariables: getDifference(manifestComponentVariables, componentVariablesInCss),
     undocumentedComponentVariables: getDifference(componentVariablesInCss, manifestComponentVariables).filter(
       (name) => !internalVariableSet.has(name)
@@ -97,7 +100,7 @@ export function loadManifestVerdict(config) {
     internalVariables: config.cssVariables.internalVariables,
     checkMode: config.cssVariables.checkMode,
   });
-  return { verdict, prefix };
+  return { verdict, prefix, schemaUrl: manifest.$schema };
 }
 
 export async function run(args) {

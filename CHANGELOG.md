@@ -27,6 +27,16 @@
   (the devkit's Makefile runs the playground). First run: web-grid's docs on 12400
   (web-commandpalette's block), web-component-framework-test on 12300 (web-treeview's),
   web-switch on 21112, and the four showcases on Vite's defaults and 8080.
+- **The variable manifest points at the published schema.** `kmwc new`, both scaffold templates
+  and the playground write `"$schema": "https://schemas.keenmate.dev/component-variables/v1.schema.json"`
+  (`MANIFEST_SCHEMA_URL`), served from the KeenMate/schemas repo. The old raw-GitHub URL never
+  resolved, so no editor ever validated a manifest. Doctor warns under `vars` when a manifest has
+  no `$schema` or a different one — today every component still carries the old URL.
+- **`readBy` base entries.** A `--base-*` read by a core module the component renders, not by its
+  own CSS (core's menu reads `--base-dropdown-*`), carries `"readBy": "@keenmate/web-components-core"`
+  in the manifest; `check-vars` and doctor no longer call it dead. The rulebook's matching
+  `"input": true` for unset-by-design component variables needed no change here — check-vars
+  already counts a read as present.
 
 ### Fixed
 

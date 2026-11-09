@@ -469,7 +469,10 @@ generated files:
   core's loader takes that name (and those rules) with the bump.
 - **Variable manifest** — the same verdict as `kmwc check-vars`, which otherwise
   only runs inside `npm run build`: `--base-*` reads and the manifest agree, no
-  dead `--<prefix>-*` entries (errors), no undocumented ones (warning).
+  dead `--<prefix>-*` entries (errors), no undocumented ones (warning). A
+  `--base-*` entry marked `"readBy"` (read by a core module, not the component's
+  CSS) is not dead. The manifest's `$schema` must be the published schema,
+  `https://schemas.keenmate.dev/component-variables/v1.schema.json` (warning).
 
 `kmwc check-pages` is the browser half: it loads every example page and reports
 what doctor can't see in the source — a script error, a 404, a fixed width that

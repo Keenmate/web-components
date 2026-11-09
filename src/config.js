@@ -111,6 +111,9 @@ export const PACKAGE_FILES_EXCLUSIONS = ['!**/CLAUDE.md', '!**/.claude'];
 /** Root-level HTML files that are fragments, not pages (never built as entries). */
 export const NON_PAGE_HTML_FILES = ['plausible-snippet.html'];
 
+/** The variable manifest's `$schema` (KeenMate/schemas, served by schemas.keenmate.dev). */
+export const MANIFEST_SCHEMA_URL = 'https://schemas.keenmate.dev/component-variables/v1.schema.json';
+
 /**
  * Peer dependencies (vite, @playwright/test) must come from the COMPONENT's
  * node_modules, not the devkit's: when the devkit is a `file:`/`npm link`

@@ -16,7 +16,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { getKmwcConfig, getPortsForBlock, getRegistry, LEGACY_FILES, NON_PAGE_HTML_FILES, PACKAGE_LEAK_RULES, PACKAGE_FILES_EXCLUSIONS } from '../../config.js';
+import { getKmwcConfig, getPortsForBlock, getRegistry, LEGACY_FILES, MANIFEST_SCHEMA_URL, NON_PAGE_HTML_FILES, PACKAGE_LEAK_RULES, PACKAGE_FILES_EXCLUSIONS } from '../../config.js';
 import { getSyncPlan, getScriptsPlan, CLAUDE_BLOCK_START } from '../sync-plan.js';
 import { checkIsFragment } from '../../vite/page-composer.js';
 import { loadManifestVerdict } from './check-vars.js';
@@ -424,8 +424,15 @@ function checkVariableManifest(config, { addPass, addWarning, addError }) {
     addError('vars', `kmwc check-vars can't run: ${error.message}`, 'fix kmwc.cssVariables (sources / manifest / prefix)');
     return;
   }
-  const { verdict, prefix, skippedReason } = manifestVerdict;
+  const { verdict, prefix, schemaUrl, skippedReason } = manifestVerdict;
   if (skippedReason) return;
+  if (schemaUrl !== MANIFEST_SCHEMA_URL) {
+    addWarning(
+      'vars',
+      schemaUrl ? `the manifest's $schema is ${schemaUrl}, not the published schema` : "the manifest has no $schema — editors can't validate or autocomplete it",
+      `set "$schema": "${MANIFEST_SCHEMA_URL}"`
+    );
+  }
   const fixHint = 'edit the manifest to match the CSS (npm run check:vars lists every name)';
   const listNames = (names) => names.map((name) => `--${name}`).join(', ');
   if (verdict.missingBaseVariables.length) addError('vars', `--base-* read in CSS but missing from the manifest: ${listNames(verdict.missingBaseVariables)}`, fixHint);

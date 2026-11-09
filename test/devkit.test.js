@@ -176,11 +176,11 @@ test('check-vars: declared-or-read vs consumed modes, input variables, internals
     :host { --ms-gap: 4px; --ms-internal-width: 0; color: var(--base-text-color, red); --_km-menu-bg: var(--ms-menu-bg); }
     .x { padding: var(--ms-pad, 2px); }`;
   const manifest = {
-    baseVariables: [{ name: 'base-text-color' }, { name: 'base-dead' }],
-    componentVariables: [{ name: 'ms-gap' }, { name: 'ms-gone' }, { name: 'ms-menu-bg' }],
+    baseVariables: [{ name: 'base-text-color' }, { name: 'base-dead' }, { name: 'base-dropdown-bg', readBy: '@keenmate/web-components-core' }],
+    componentVariables: [{ name: 'ms-gap' }, { name: 'ms-gone' }, { name: 'ms-menu-bg', input: true }],
   };
   // Default: declared OR read. --ms-menu-bg is an input (read, never declared) → alive;
-  // --ms-pad is read with a fallback but undocumented.
+  // --ms-pad is read with a fallback but undocumented; --base-dropdown-bg is read by core, not this CSS.
   const declaredVerdict = checkManifestVariables({ cssText, manifest, prefix: 'ms', internalVariables: ['ms-internal-width'] });
   assert.deepEqual(declaredVerdict.unusedBaseVariables, ['base-dead']);
   assert.deepEqual(declaredVerdict.missingBaseVariables, []);

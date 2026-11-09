@@ -13,7 +13,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { getKmwcConfig, mapKmwcConfig } from '../src/config.js';
+import { getKmwcConfig, mapKmwcConfig, MANIFEST_SCHEMA_URL } from '../src/config.js';
 import { getSyncPlan, getScriptsPlan } from '../src/cli/sync-plan.js';
 import { checkComponent, getBashPath, run } from '../src/cli/commands/doctor.js';
 
@@ -46,7 +46,7 @@ const HEALTHY_FILES = {
   'vite.config.ts': "import { defineComponentConfig } from '@keenmate/web-components-devkit/vite';\nexport default defineComponentConfig();\n",
   'examples-basic.html': '<meta name="kmwc:title" content="Basic">\n<h2>BU01 · Hello</h2>\n<div class="card">x</div>\n',
   'src/css/fixture.css': '.dfx { --dfx-gap: 4px; gap: var(--dfx-gap); color: var(--base-text-color); }\n.dfx-loader { inline-size: 1em; }\n',
-  'component-variables.manifest.json': JSON.stringify({ prefix: 'dfx', baseVariables: [{ name: 'base-text-color' }], componentVariables: [{ name: 'dfx-gap' }] }),
+  'component-variables.manifest.json': JSON.stringify({ $schema: MANIFEST_SCHEMA_URL, prefix: 'dfx',baseVariables: [{ name: 'base-text-color' }], componentVariables: [{ name: 'dfx-gap' }] }),
   'node_modules/@keenmate/web-components-core/package.json': JSON.stringify({ name: '@keenmate/web-components-core', version: '1.0.0-rc17' }),
   'node_modules/@keenmate/web-components-core/dist/dom/render-loader.js': 'span.className = `${prefix}-loader`;\n',
 };
@@ -266,6 +266,11 @@ test('doctor e2e: the variable manifest — dead entries error, undocumented one
     assert.ok(findLine(errors, /^\[vars\] --base-\* in the manifest but not read in CSS: --base-gone$/));
     assert.ok(findLine(errors, /^\[vars\] --dfx-\* in the manifest but not in CSS: --dfx-dead$/));
     assert.ok(findLine(warnings, /^\[vars\] --dfx-\* in CSS but missing from the manifest: --dfx-pad$/));
+    assert.ok(findLine(warnings, /^\[vars\] the manifest has no \$schema/));
+  });
+  const oldSchemaManifest = { $schema: 'https://raw.githubusercontent.com/keenmate/schemas/main/component-variables.schema.json', prefix: 'dfx', baseVariables: [{ name: 'base-text-color' }], componentVariables: [{ name: 'dfx-gap' }] };
+  withRepo({ files: { 'component-variables.manifest.json': JSON.stringify(oldSchemaManifest) } }, (repo) => {
+    assert.ok(findLine(checkRepo(repo).warnings, /^\[vars\] the manifest's \$schema is https:\/\/raw\.githubusercontent\.com\/.*, not the published schema$/));
   });
   withRepo({ kmwc: { cssVariables: { sources: ['src/missing'] } } }, (repo) => {
     assert.ok(findLine(checkRepo(repo).errors, /^\[vars\] kmwc check-vars can't run: cssVariables source not found/));
