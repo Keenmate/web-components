@@ -189,3 +189,34 @@
         <p id="wg-long-code">Call <code>resolvePresentation(mode, environment, presentationMap)</code> once per render.</p>
     </kmwc-demo>
 </div>
+
+<div class="card">
+    <h2>WG09 · Writing event-log lines from script</h2>
+    <p><code>appendLogLine(panel, { name, detail, variant })</code> from
+        <code>@keenmate/web-components-devkit/examples</code> adds one timeline line (time, name, detail) to a
+        <code>.log-panel</code> and scrolls it into view. A <code>detail</code> that isn't text is pretty-printed
+        JSON. <code>variant</code> takes the contract's role names — <code>info</code>, <code>success</code>,
+        <code>warning</code>, <code>danger</code> — and colours the line. Use it instead of building entries with
+        <code>innerHTML</code>: every component's log then looks the same and follows the theme.</p>
+    <div class="controls">
+        <button type="button" id="wg-append-log-button">Log an event</button>
+    </div>
+    <kmwc-demo>
+        <div class="log-panel log-panel--dark" id="wg-append-log" data-empty="(no events yet)"></div>
+        <script type="module" data-kmwc-show>
+            import { appendLogLine } from '@keenmate/web-components-devkit/examples';
+            const log = document.getElementById('wg-append-log');
+            const events = [
+                { name: 'change', detail: { value: ['2026-11-20', '2026-11-29'], isRange: true } },
+                { name: 'month-change', detail: { year: 2026, month: 11 }, variant: 'info' },
+                { name: 'before-select', detail: 'weekend blocked', variant: 'warning' },
+                { name: 'close', detail: {}, variant: 'success' },
+            ];
+            let index = 0;
+            document.getElementById('wg-append-log-button').addEventListener('click', () => {
+                appendLogLine(log, events[index % events.length]);
+                index += 1;
+            });
+        </script>
+    </kmwc-demo>
+</div>

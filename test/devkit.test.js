@@ -53,7 +53,8 @@ import {
   getLoaderClassVerdict,
 } from '../src/cli/repo-checks.js';
 import { parseWidths, getPageProblems, getSelectorSubject, loadPageRules, DEFAULT_WIDTHS } from '../src/cli/commands/check-pages.js';
-import { CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, SPOTLIGHT_CLASSES, THEME_SWITCH_CLASSES } from '../src/examples/constants.js';
+import { CHAPTER_NAV_CLASSES, COPY_LINK_CLASSES, DEMO_CLASSES, INDEX_PAGE_CLASSES, LOG_LINE_CLASSES, LOG_LINE_VARIANT_CLASSES, SPOTLIGHT_CLASSES, THEME_SWITCH_CLASSES } from '../src/examples/constants.js';
+import { appendLogLine } from '../src/examples/log-line.js';
 import { generateChapterIndex, getPageChapters, getHeadingText } from '../src/vite/chapter-index.js';
 import { searchChapters, checkMatchesAny, renderHighlightedText } from '../src/examples/chapter-search.js';
 import { getMovedIndex } from '../src/examples/spotlight.js';
@@ -265,6 +266,15 @@ test('kit: every generated class is kmwc-prefixed BEM', () => {
   for (const className of kitClassNames) {
     assert.match(className, /^kmwc-[a-z]+(-[a-z]+)*(__[a-z]+(-[a-z]+)*)?(--[a-z]+(-[a-z]+)*)?$/, `${className} is not kmwc BEM`);
   }
+});
+
+test('kit: appendLogLine writes styled page vocabulary, variants are the contract roles, a typo throws', () => {
+  const widgetsCss = readFileSync(join(DEVKIT_ROOT, 'src', 'examples', 'css', 'widgets.css'), 'utf8');
+  for (const className of [...Object.values(LOG_LINE_CLASSES), ...Object.values(LOG_LINE_VARIANT_CLASSES)]) {
+    assert.ok(widgetsCss.includes(`.${className}`), `.${className} is not styled in widgets.css`);
+  }
+  assert.deepEqual(Object.keys(LOG_LINE_VARIANT_CLASSES), ['info', 'success', 'warning', 'danger']);
+  assert.throws(() => appendLogLine(null, { name: 'close', variant: 'error' }), /unknown variant "error"/);
 });
 
 test('kit CSS: colour literals live only in tokens.css', () => {

@@ -37,8 +37,24 @@
   in the manifest; `check-vars` and doctor no longer call it dead. The rulebook's matching
   `"input": true` for unset-by-design component variables needed no change here — check-vars
   already counts a read as present.
+- **`appendLogLine(panel, { name, detail, variant })` — event-log lines from the kit.** The kit
+  styled log panels and `.log-line` timelines, but had no way to write a line, so about 20 pages
+  across daterangepicker, multiselect, web-components-core and dropzone each built entries with
+  their own `innerHTML` template and hard-coded colours. The new function in `/examples` appends
+  one timeline line — time, name, then the detail (text as-is, anything else pretty-printed JSON)
+  — and keeps it in view. `variant` takes the contract's role names (`info` | `success` |
+  `warning` | `danger`, rulebook D-NC-23) and maps onto the existing `.log-line--info|ok|warn|err`;
+  an unknown one throws. Playground WG09 shows it.
 
 ### Fixed
+
+- **An event-log entry built from an indented template showed the template's whitespace.** The
+  kit kept line breaks (`white-space: pre-wrap`) on every child of a log panel, meant for text
+  lines. A page that wrote a structured entry from an indented `innerHTML` template
+  (daterangepicker's events page) got the template's own newlines and indentation as visible
+  gaps: the time indented, the name on its own line, the payload far below. Line breaks are now
+  kept on `.log-line` / `.event-entry` lines and on elements holding only text (a JSON detail),
+  not on a container of other elements.
 
 - **`<kmwc-demo>` with an HTML comment inside it was never expanded.** The composer split the page
   at comments before matching demos (the way includes skip commented-out tags), so a `<!-- … -->`

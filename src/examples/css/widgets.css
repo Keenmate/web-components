@@ -66,8 +66,16 @@
     }
 
     :is(.log-panel, .event-log) > * {
-        white-space: pre-wrap;
         overflow-wrap: anywhere;
+    }
+
+    /* Line breaks and indentation survive in text — a line, or any element holding
+       only text (a JSON detail). Not on a container of other elements: an entry a
+       page builds from an indented innerHTML template would show the template's
+       own whitespace as gaps. */
+    :is(.log-panel, .event-log) > :is(.log-line, .event-entry),
+    :is(.log-panel, .event-log) :not(:has(*)) {
+        white-space: pre-wrap;
     }
 
     :is(.log-panel, .event-log)[data-empty]:empty::before {

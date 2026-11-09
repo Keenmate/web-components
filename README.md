@@ -324,7 +324,11 @@ the demo in `<kmwc-demo>` instead).
   `.log-line` takes one tone — `--ok`, `--info`, `--warn`, `--err`, `--muted`,
   the same five as `.pill` / `.status-dot` — and `--action` marks a "you clicked
   X" line. Timeline cells (`.log-line__seq`, `__time`, `__source`, `__name`)
-  turn a line into aligned columns. A `<pre class="log-panel">` is a text-fed
+  turn a line into aligned columns. **Write event-log lines with
+  `appendLogLine(panel, { name, detail, variant })`** (`/examples`): one timeline
+  line (time, name, detail — anything that isn't text is pretty-printed JSON),
+  `variant` = `info` | `success` | `warning` | `danger`. Don't build entries with
+  `innerHTML` templates. A `<pre class="log-panel">` is a text-fed
   log; `data-empty` shows while a panel is empty. Also `.mono`, `.check-list`
   (options one per line), `td.is-highlight`, `.display-sliders` and
   `.css-readout`. The playground's `examples-widgets.html` shows them all.

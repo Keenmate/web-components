@@ -64,6 +64,16 @@ export interface Section {
 
 export type Theme = 'light' | 'dark' | 'auto';
 
+/** One event-log line: the event `name`, its `detail` (text, or anything JSON-able — pretty-printed). */
+export interface LogLineSpec {
+  name: string;
+  detail?: unknown;
+  /** The contract's role names (D-NC-23); no variant = the panel's default colour. */
+  variant?: 'info' | 'success' | 'warning' | 'danger';
+  /** Defaults to the current local time. */
+  time?: string;
+}
+
 export function attachControlsPersistence(pageId: string, root?: ParentNode): { clear(): void };
 export function getControlsStorageKey(pageId: string, storagePrefix?: string): string;
 
@@ -97,6 +107,8 @@ export function getVersionLabel(pageConfig?: KmwcPageConfig): string;
 export function mountPageFooter(): HTMLElement | null;
 /** The footer line the index and the page footer share. */
 export function renderFooterLineHtml(pageConfig: KmwcPageConfig, footerConfig: { links?: Array<{ label: string; href: string }>; devkitClass: string }): string;
+/** Append a `.log-line` (time, name, detail) to a `.log-panel` and keep it in view. Throws on an unknown variant. */
+export function appendLogLine(panel: HTMLElement, line: LogLineSpec): HTMLElement;
 export function mountThemeSwitch(): { unmount(): void };
 export function applyTheme(theme: Theme): void;
 export function getSavedTheme(): Theme;
@@ -123,6 +135,8 @@ export const CHAPTER_CODE_PATTERN: RegExp;
 export const COPY_LINK_CLASSES: Record<string, string>;
 export const INDEX_PAGE_CLASSES: Record<string, string>;
 export const PAGE_FOOTER_CLASSES: { root: string; devkit: string };
+export const LOG_LINE_CLASSES: { root: string; time: string; name: string };
+export const LOG_LINE_VARIANT_CLASSES: Record<'info' | 'success' | 'warning' | 'danger', string>;
 export const THEME_SWITCH_CLASSES: Record<string, string>;
 export const DEMO_CLASSES: Record<string, string>;
 export const THEMES: Theme[];

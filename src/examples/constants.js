@@ -103,6 +103,25 @@ export const PAGE_FOOTER_CLASSES = {
   devkit: 'kmwc-page-footer__devkit',
 };
 
+/**
+ * appendLogLine() (log-line.js). The one exception to "kit DOM is kmwc-prefixed":
+ * it writes the `.log-line` page vocabulary (widgets.css) so a line it adds is the
+ * same markup a page writes by hand. `variant` is the contract's role name
+ * (D-NC-23); it maps onto the existing line modifiers.
+ */
+export const LOG_LINE_CLASSES = {
+  root: 'log-line',
+  time: 'log-line__time',
+  name: 'log-line__name',
+};
+
+export const LOG_LINE_VARIANT_CLASSES = {
+  info: 'log-line--info',
+  success: 'log-line--ok',
+  warning: 'log-line--warn',
+  danger: 'log-line--err',
+};
+
 /** <kmwc-demo> output (rendered at build time by page-composer.js) + the kit's copy button. */
 export const DEMO_CLASSES = {
   root: 'kmwc-demo',

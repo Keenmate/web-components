@@ -82,12 +82,12 @@ test.describe('examples kit', () => {
     await expect(container).toBeVisible();
     await expect(input).toBeFocused();
     await expect(page.locator('.kmwc-spotlight__home-heading').first()).toHaveText('Basic Usage · this page');
-    await expect(items).toHaveCount(38);
+    await expect(items).toHaveCount(39);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden'); // body scroll locked
 
     // wcp keys: ↑ wraps to the end, PgDn steps 8, Home back to the top.
     await page.keyboard.press('ArrowUp');
-    await expect(activeItem).toHaveAttribute('data-index', '37');
+    await expect(activeItem).toHaveAttribute('data-index', '38');
     await page.keyboard.press('Home');
     await page.keyboard.press('PageDown');
     await expect(activeItem).toHaveAttribute('data-index', '8');
@@ -302,6 +302,44 @@ test.describe('examples kit', () => {
     const monoFont = await page.locator('#wg-mono').evaluate((element) => getComputedStyle(element).fontFamily);
     expect(monoFont).toBe(await page.locator('#wg-json').evaluate((element) => getComputedStyle(element).fontFamily));
     expect(monoFont).not.toBe(await page.locator('h1').evaluate((element) => getComputedStyle(element).fontFamily));
+  });
+
+  test('appendLogLine: timeline lines with variants and JSON detail; an indented innerHTML entry shows no gaps', async ({ page }) => {
+    await page.goto('/examples-widgets.html');
+    const log = page.locator('#wg-append-log');
+    for (let click = 0; click < 4; click += 1) await page.locator('#wg-append-log-button').click();
+    const lines = log.locator('.log-line');
+    await expect(lines).toHaveCount(4);
+    // A timeline row: time, name, then the detail.
+    await expect(lines.first()).toHaveCSS('display', 'flex');
+    await expect(lines.first().locator('.log-line__name')).toHaveText('change');
+    await expect(lines.first().locator('.log-line__time')).toHaveText(/\d/);
+    // A JSON detail is pretty-printed and keeps its line breaks.
+    const detail = lines.first().locator('> :last-child');
+    await expect(detail).toHaveText(/\{\n {2}"value": \[/);
+    const [detailHeight, lineHeight] = await detail.evaluate((cell) => [cell.getBoundingClientRect().height, parseFloat(getComputedStyle(cell).lineHeight)]);
+    expect(detailHeight).toBeGreaterThan(lineHeight * 3);
+    // variant → the line's modifier; the name takes the line's colour.
+    expect(await lines.evaluateAll((elements) => elements.map((element) => element.className))).toEqual([
+      'log-line', 'log-line log-line--info', 'log-line log-line--warn', 'log-line log-line--ok',
+    ]);
+    const warning = lines.nth(2);
+    expect(await warning.locator('.log-line__name').evaluate((cell) => getComputedStyle(cell).color))
+      .toBe(await warning.evaluate((line) => getComputedStyle(line).color));
+    // A page's own entry built from an indented template: its whitespace doesn't render as gaps.
+    const heights = await page.locator('#wg-event-log').evaluate((panel) => {
+      const add = (html: string) => { panel.insertAdjacentHTML('beforeend', html); return (panel.lastElementChild as HTMLElement).getBoundingClientRect().height; };
+      const indented = add(`
+        <div class="event-log-item">
+          <div>
+            <span class="event-time">21:12:33</span>
+            <span class="event-name">close</span>
+          </div>
+        </div>`);
+      const compact = add('<div class="event-log-item"><div><span class="event-time">21:12:33</span> <span class="event-name">close</span></div></div>');
+      return { indented, compact };
+    });
+    expect(heights.indented).toBe(heights.compact);
   });
 
   test('check list and a highlighted table cell', async ({ page }) => {

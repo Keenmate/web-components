@@ -16,6 +16,7 @@ export { attachCopyLinks, copyText, getSectionUrl } from './copy-link.js';
 export { renderVersionBadges, getVersionLabel } from './version-badge.js';
 export { attachDemoCopyButtons } from './demo-code.js';
 export { mountPageFooter, renderFooterLineHtml } from './page-footer.js';
+export { appendLogLine } from './log-line.js';
 export { mountThemeSwitch, applyTheme, getSavedTheme } from './theme-switch.js';
 export { ensureSectionAnchors, generateSlug, getHeadingLabel, getChapterCode, mapToCodeKey, findSectionByHash } from './sections.js';
 export { getPageConfig, attachDomReadyHandler } from './page-config.js';
