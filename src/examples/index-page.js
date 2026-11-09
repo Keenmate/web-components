@@ -20,9 +20,7 @@ import { getPageConfig } from './page-config.js';
 import { getVersionLabel } from './version-badge.js';
 import { INDEX_PAGE_CLASSES } from './constants.js';
 import { renderFooterLineHtml } from './page-footer.js';
-
-const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-const mapToEscapedHtml = (text) => String(text ?? '').replace(/[&<>"']/g, (character) => HTML_ESCAPES[character]);
+import { mapToEscapedHtml } from './chapter-search.js';
 
 /**
  * @param {import('./index.js').ExamplesIndexConfig} indexConfig

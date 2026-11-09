@@ -179,7 +179,7 @@
     .note.warning { --kmwc-note-color: var(--kmwc-warning-color); }
     .note.info { --kmwc-note-color: var(--kmwc-info-color); }
     .note.success { --kmwc-note-color: var(--kmwc-success-color); }
-    .note.error { --kmwc-note-color: var(--kmwc-danger-color); }
+    .note.danger { --kmwc-note-color: var(--kmwc-danger-color); }
 
     .note-title {
         font-weight: 600;

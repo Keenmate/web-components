@@ -295,9 +295,9 @@ the demo in `<kmwc-demo>` instead).
   together with the component; colour literals live only in `tokens.css`.
   Re-theme a site with `kmwc.theme.accentColor`. The page vocabulary is
   unchanged from the old shared CSS — `.card`, `.example-section`, `.controls`,
-  `.demo-area`, `.demo-card`, `.code-block`, `.note(.warning|.info|.success|.error)`,
+  `.demo-area`, `.demo-card`, `.code-block`, `.note(.info|.success|.warning|.danger)`,
   `.grid`/`.card-grid`, `.reference-table` (+ `.table-*` modifiers), `.log-panel`, `.pill`,
-  `.status-dot`, `.control-group`, buttons (`.btn-secondary`, `.btn-outline`,
+  `.status-dot`, `.control-group`, the theming control panel (`.controls-header`, `.control-section`, `.section-desc`), buttons (`.btn-secondary`, `.btn-outline`,
   `.btn-danger`), `<kbd>` keys and `<mark>` search matches (the spotlight's look),
   `.push-end` (to the end of a flex row) — while everything the kit **generates** is prefixed BEM
   (`kmwc-chapter-nav__item--active`, `kmwc-copy-link--copied`, …).

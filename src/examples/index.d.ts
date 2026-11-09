@@ -94,6 +94,8 @@ export function searchChapters<T extends Pick<Chapter, 'code' | 'title'>>(chapte
 export function checkMatchesAny(fields: readonly unknown[], needle: string): boolean;
 /** Escaped `text` with the occurrences of `needle` in <mark> (web-commandpalette highlight). */
 export function renderHighlightedText(text: string, needle: string): string;
+/** Escape `& < > " '` for HTML text and attribute values — use it whenever a page builds markup from data. */
+export function mapToEscapedHtml(value: unknown): string;
 
 export function attachCopyLinks(): void;
 export function copyText(text: string): Promise<boolean>;

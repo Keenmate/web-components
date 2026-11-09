@@ -5,9 +5,7 @@
  */
 import { getPageConfig } from './page-config.js';
 import { INDEX_PAGE_CLASSES, PAGE_FOOTER_CLASSES } from './constants.js';
-
-const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-const mapToEscapedHtml = (text) => String(text ?? '').replace(/[&<>"']/g, (character) => HTML_ESCAPES[character]);
+import { mapToEscapedHtml } from './chapter-search.js';
 
 /**
  * The footer line: "Created by Keenmate s.r.o. | GitHub | …links | web-components-devkit vX".

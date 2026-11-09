@@ -252,3 +252,31 @@
         </div>
     </kmwc-demo>
 </div>
+
+<div class="card" id="fc-control-panel">
+    <div class="controls-header">
+        <h2>FC13 · A theming control panel</h2>
+        <button type="button" class="btn-outline">Reset</button>
+    </div>
+    <p>The settings card of a theming page: <code>.controls-header</code> (this card's heading) puts the title and its
+        actions on one line, and each <code>.control-section</code> has a small uppercase <code>h3</code>, an optional
+        <code>.section-desc</code> and its <code>.control-row</code>s of <code>.control-group</code>s.</p>
+    <kmwc-demo>
+        <div>
+            <div class="control-section" id="fc-control-colors">
+                <h3>Colours</h3>
+                <p class="section-desc">Sets <strong>--base-accent-color</strong> on the demo only.</p>
+                <div class="control-row">
+                    <div class="control-group"><label for="fc-accent">Accent</label><input type="color" id="fc-accent" value="#3b82f6"></div>
+                    <div class="control-group"><label for="fc-radius">Radius</label><input type="number" class="w-xs" id="fc-radius" value="6"></div>
+                </div>
+            </div>
+            <div class="control-section">
+                <h3>Typography</h3>
+                <div class="control-row">
+                    <div class="control-group"><label for="fc-font">Font family</label><input type="text" id="fc-font" value="Inter"></div>
+                </div>
+            </div>
+        </div>
+    </kmwc-demo>
+</div>

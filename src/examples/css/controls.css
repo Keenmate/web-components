@@ -136,6 +136,53 @@
         font-weight: 500;
     }
 
+    /* Control panel — a theming page's settings card: `.controls-header` (title
+       + actions on one line), then `.control-section`s, each a small uppercase
+       `h3` and an optional `.section-desc` over its `.control-row`s. */
+    .controls-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .controls-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        border: none;
+        padding: 0;
+    }
+
+    .control-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .control-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .control-section h3 {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--kmwc-text-color-3);
+        margin: 0 0 0.75rem;
+        border-bottom: 1px solid var(--kmwc-border-color);
+        padding-bottom: 0.5rem;
+    }
+
+    .section-desc {
+        font-size: 0.75rem;
+        color: var(--kmwc-text-color-3);
+        margin: 0 0 0.75rem;
+        line-height: 1.4;
+    }
+
+    .section-desc strong {
+        color: var(--kmwc-text-color-2);
+    }
+
     .field-row {
         display: flex;
         gap: 0.5rem;

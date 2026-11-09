@@ -11,7 +11,7 @@ export { mountExamplesKit } from './kit.js';
 export { mountChapterNav } from './chapter-nav.js';
 export { mountSpotlight } from './spotlight.js';
 export { attachChapterLinks, scrollToChapterHash } from './chapter-links.js';
-export { searchChapters, checkMatchesAny, renderHighlightedText } from './chapter-search.js';
+export { searchChapters, checkMatchesAny, renderHighlightedText, mapToEscapedHtml } from './chapter-search.js';
 export { attachCopyLinks, copyText, getSectionUrl } from './copy-link.js';
 export { renderVersionBadges, getVersionLabel } from './version-badge.js';
 export { attachDemoCopyButtons } from './demo-code.js';

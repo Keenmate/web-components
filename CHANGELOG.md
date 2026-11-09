@@ -45,6 +45,22 @@
   — and keeps it in view. `variant` takes the contract's role names (`info` | `success` |
   `warning` | `danger`, rulebook D-NC-23) and maps onto the existing `.log-line--info|ok|warn|err`;
   an unknown one throws. Playground WG09 shows it.
+- **The theming control panel is kit CSS.** multiselect, dropzone and daterangepicker each carried
+  the same ~30-line `<style>` block on their theming page (daterangepicker's with hard-coded greys,
+  dropzone's without the section rule). `.controls-header`, `.control-section` (+ `h3`) and
+  `.section-desc` now live in the kit next to `.control-row` / `.control-group`, under the names the
+  pages already use, so the three copies can go. Playground FC13.
+- **`mapToEscapedHtml(value)` is exported from `/examples`.** Pages that build markup from data
+  wrote their own `esc` / `escapeHtml` 14 times (web-components-core 8, dropzone 3, multiselect,
+  treeview); the kit had the function (the spotlight's) but kept it private, plus two more private
+  copies in the index page and the footer, which now import it.
+
+### Changed
+
+- **BREAKING (example pages): `.note.error` is `.note.danger`.** The note variants are now the
+  contract's role names — `.info`, `.success`, `.warning`, `.danger` — like the message `variant`
+  (rulebook D-NC-23). No alias. One page uses the old name: web-treeview `examples-tree-editor.html`.
+  Playground WG10 shows the four.
 
 ### Fixed
 

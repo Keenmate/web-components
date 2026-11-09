@@ -82,12 +82,12 @@ test.describe('examples kit', () => {
     await expect(container).toBeVisible();
     await expect(input).toBeFocused();
     await expect(page.locator('.kmwc-spotlight__home-heading').first()).toHaveText('Basic Usage · this page');
-    await expect(items).toHaveCount(39);
+    await expect(items).toHaveCount(41);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden'); // body scroll locked
 
     // wcp keys: ↑ wraps to the end, PgDn steps 8, Home back to the top.
     await page.keyboard.press('ArrowUp');
-    await expect(activeItem).toHaveAttribute('data-index', '38');
+    await expect(activeItem).toHaveAttribute('data-index', '40');
     await page.keyboard.press('Home');
     await page.keyboard.press('PageDown');
     await expect(activeItem).toHaveAttribute('data-index', '8');
@@ -340,6 +340,28 @@ test.describe('examples kit', () => {
       return { indented, compact };
     });
     expect(heights.indented).toBe(heights.compact);
+  });
+
+  test('notes: the four variants are the contract roles, each its own colour', async ({ page }) => {
+    await page.goto('/examples-widgets.html');
+    const edgeColors = await page.locator('#wg-notes .note').evaluateAll((notes) => notes.map((note) => getComputedStyle(note).borderLeftColor));
+    expect(new Set(edgeColors).size).toBe(5); // accent + info / success / warning / danger
+    const danger = page.locator('#wg-notes .note.danger');
+    expect(await danger.evaluate((note) => getComputedStyle(note).borderLeftColor))
+      .toBe(await danger.locator('.note-title').evaluate((title) => getComputedStyle(title).color));
+  });
+
+  test('theming control panel: header on one line, small uppercase section titles with a rule', async ({ page }) => {
+    await page.goto('/examples-forms.html');
+    const header = page.locator('#fc-control-panel .controls-header');
+    await expect(header).toHaveCSS('display', 'flex');
+    const [titleTop, buttonTop] = await header.evaluate((row) => [row.querySelector('h2')!, row.querySelector('button')!].map((element) => element.getBoundingClientRect().top));
+    expect(Math.abs(titleTop - buttonTop)).toBeLessThan(20); // same line
+    const sectionTitle = page.locator('#fc-control-colors h3');
+    await expect(sectionTitle).toHaveCSS('text-transform', 'uppercase');
+    await expect(sectionTitle).toHaveCSS('border-bottom-style', 'solid');
+    await expect(page.locator('#fc-control-colors .section-desc')).toHaveCSS('font-size', '12px');
+    await expect(page.locator('#fc-control-panel .control-section').last()).toHaveCSS('margin-bottom', '0px');
   });
 
   test('check list and a highlighted table cell', async ({ page }) => {
