@@ -394,6 +394,9 @@ kmwc check-release --tag t    latest ⇔ release version, rc ⇔ -rcN, version n
 kmwc new web-<name>           scaffold a component (--prefix, --title, --tag, --dir, --port, --minimal, --register)
                               --adopt: scaffold an ALREADY registered component (its port/prefix) to migrate into
 kmwc readme [--check]         regenerate this README's catalogue (devkit repo only)
+kmwc ports                    every registry repo checked out next to the devkit keeps to its port
+                              block: kmwc.ports, script flags, vite / playwright configs, Makefile
+                              (devkit repo only; doctor checks one repo)
 kmwc <command> --help         that command's usage — never runs the command
 ```
 

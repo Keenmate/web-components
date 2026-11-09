@@ -62,6 +62,12 @@ const COMMANDS = {
                             --minimal: empty skeleton (no inputs/events) instead of the sample
                             --adopt: an already registered component (migration scratch scaffold)`,
   },
+  ports: {
+    load: () => import('./commands/ports.js'),
+    flags: {},
+    usage: `ports                     Check every registry repo checked out next to the devkit keeps to its
+                            components.json port block (devkit repo).`,
+  },
   readme: {
     load: () => import('./commands/readme.js'),
     flags: { booleans: ['check'] },

@@ -34,6 +34,7 @@ import {
   getMentionedPorts,
   getPortBlockRange,
   loadSiblingPortCollisions,
+  loadRegistryPortStrays,
   loadStalePortMentions,
   OTHER_PORTS_MARKER,
   loadPlausibleSiteId,
@@ -767,6 +768,38 @@ test('doctor: ports — script flags, mentions, sibling collisions, shared Plaus
     assert.equal(loadPlausibleSiteId(config.root), 'pa-shared');
     assert.deepEqual(loadSharedPlausibleSiteIds(config, registry, 'pa-shared'), ['web-other']);
     assert.deepEqual(loadSharedPlausibleSiteIds(config, registry, null), []);
+  } finally {
+    rmSync(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test('ports: every checked-out registry repo keeps to its block — strays, collisions, nested entries', () => {
+  const workspaceRoot = mkdtempSync(join(tmpdir(), 'kmwc-registry-ports-'));
+  try {
+    const writeRepo = (path, packageJson, files = {}) => {
+      mkdirSync(join(workspaceRoot, path), { recursive: true });
+      writeFileSync(join(workspaceRoot, path, 'package.json'), JSON.stringify(packageJson));
+      for (const [fileName, text] of Object.entries(files)) writeFileSync(join(workspaceRoot, path, fileName), text);
+    };
+    writeRepo('web-components', {}, { Makefile: 'dev:\n\t@echo http://localhost:17300' });
+    writeRepo('web-components/playground', { kmwc: { ports: { dev: 17300, image: 17310 } } });
+    writeRepo('web-clean', { kmwc: { ports: { dev: 12100, image: 12110 } } });
+    writeRepo('web-grid', {}, { 'playwright.config.ts': "baseURL: 'http://localhost:12200'" });
+    writeRepo('showcase', { scripts: { dev: 'vite --port 5174' } });
+    const registry = {
+      components: [
+        { id: 'web-clean', port: 12100, path: '../web-clean' },
+        { id: 'web-other', port: 12200, path: '../web-other' },
+        { id: 'web-grid', port: 12300, path: '../web-grid' },
+        { id: 'web-components', port: 15100, path: '.' },
+        { id: 'showcase', port: 16000, path: '../showcase' },
+        { id: 'web-playground', port: 17300, path: 'playground' },
+      ],
+    };
+    assert.deepEqual(loadRegistryPortStrays(registry, join(workspaceRoot, 'web-components')), [
+      { id: 'web-grid', port: 12200, file: 'playwright.config.ts', ownerId: 'web-other' },
+      { id: 'showcase', port: 5174, file: 'package.json#scripts.dev', ownerId: null },
+    ]);
   } finally {
     rmSync(workspaceRoot, { recursive: true, force: true });
   }

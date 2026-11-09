@@ -6,7 +6,7 @@
  * (unit-tested), plus a thin file-reading wrapper.
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { DEVKIT_ROOT } from '../config.js';
 
 export const VALIDATION_NOTES_FILE = 'VALIDATION-NOTES.md';
@@ -169,6 +169,29 @@ export function loadSiblingPortCollisions(config, registry) {
         .filter(({ port }) => checkIsInRange(port, blockRange))
         .map(({ port, file }) => ({ id: entry.id, port, file }));
     });
+}
+
+/**
+ * Every registry entry checked out under `registryRoot` (the devkit checkout — registry paths
+ * are relative to it): ports it uses outside its own block → [{ id, port, file, ownerId }].
+ * `ownerId` is the entry whose block holds the port (a collision), or null. kmwc.ports itself
+ * counts — a stale kmwc.ports is the same drift. A repo may use the blocks of entries that live
+ * inside it (the devkit's Makefile runs the playground).
+ */
+export function loadRegistryPortStrays(registry, registryRoot = DEVKIT_ROOT) {
+  const blockOwners = registry.components
+    .filter((entry) => typeof entry.port === 'number')
+    .map((entry) => ({ ...entry, root: resolve(registryRoot, entry.path || `../${entry.id}`) }));
+  const getOwnerId = (port) => blockOwners.find((owner) => checkIsInRange(port, getPortBlockRange(owner.port)))?.id || null;
+  return blockOwners.flatMap((entry) => {
+    if (!existsSync(join(entry.root, 'package.json'))) return [];
+    const ownBlockRanges = blockOwners
+      .filter((owner) => owner.root === entry.root || owner.root.startsWith(entry.root + sep))
+      .map((owner) => getPortBlockRange(owner.port));
+    return loadRepoPorts(entry.root)
+      .filter(({ port }) => !ownBlockRanges.some((blockRange) => checkIsInRange(port, blockRange)))
+      .map(({ port, file }) => ({ id: entry.id, port, file, ownerId: getOwnerId(port) }));
+  });
 }
 
 /** This repo's own configs naming a port outside its block (a hand-written vite.config before migration). */

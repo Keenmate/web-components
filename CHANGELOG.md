@@ -18,6 +18,15 @@
   `<pre>`). A warning, not an error: pages migrate one at a time. First runs: web-daterangepicker
   17, web-dropzone 23, web-treeview 13, web-components-core 3 copies; generic API listings and
   data shapes stay quiet.
+- **`kmwc ports` — the port check across the whole registry.** Doctor checks one repo: its own
+  configs, and siblings that sit inside its block. A repo that was never migrated was only seen
+  when the repo it collided with ran doctor. `kmwc ports` (run in the devkit checkout) reads every
+  `components.json` entry checked out next to it — kmwc.ports, script `--port` flags, vite /
+  playwright configs, Makefiles — and lists every port outside the entry's block, naming the
+  entry whose block it lands in. Exit 1 on any. A repo may use the blocks of entries inside it
+  (the devkit's Makefile runs the playground). First run: web-grid's docs on 12400
+  (web-commandpalette's block), web-component-framework-test on 12300 (web-treeview's),
+  web-switch on 21112, and the four showcases on Vite's defaults and 8080.
 
 ### Fixed
 
