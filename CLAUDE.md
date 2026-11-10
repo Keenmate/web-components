@@ -118,5 +118,6 @@ prepares a release — version, CHANGELOG, gates, package check, commit — and
 never runs `npm publish` or pushes. It follows the rulebook's canonical
 `/publish` shape: its `[canonical]` blocks are the spec's text
 (`publish-command.md`) — run `bash <rulebook>/publish-command.checks.sh .` after
-editing it. Every publish ships `release-notes/<version>.md` (rulebook
-`release-notes.md`); the first one is due with rc13.
+editing it. Every rc, minor and major ships `release-notes/<version>.md` (rulebook
+`release-notes.md`; a patch with only Fixed / Internal entries may skip it); the first
+one is due with rc13.

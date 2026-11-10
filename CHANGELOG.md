@@ -4,8 +4,9 @@
 
 ### Added
 
-- **Release notes (rulebook `release-notes.md`, 2026-11-10).** Every version published to npm
-  ships `release-notes/<version>.md`, the upgrade guide. Doctor runs the rulebook's
+- **Release notes (rulebook `release-notes.md`, 2026-11-10).** Every rc, minor and major
+  ships `release-notes/<version>.md`, the upgrade guide (a patch with only Fixed / Internal
+  entries may skip it; the scaffold's `/publish` asks). Doctor runs the rulebook's
   `release-notes` suite for every published package (components and libraries). `kmwc new`
   scaffolds the first release's guide (`release-notes/0.1.0.md`; the template file is
   `__VERSION__.md`, named like `__FEATURE__`), lists `release-notes` in `files`, and opens
