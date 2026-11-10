@@ -37,6 +37,7 @@
   "files": [
     "dist",
     "docs",
+    "release-notes",
     "component-variables.manifest.json",
     "custom-elements.json",
     "web-types.json",

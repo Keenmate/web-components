@@ -15,6 +15,8 @@ per-instance dark mode via `data-theme`.
 
 ## What's New in v{{VERSION}}
 
+Upgrade guide: the [{{VERSION}} release notes](release-notes/{{VERSION}}.md); full list: the [CHANGELOG {{VERSION}} section](CHANGELOG.md).
+
 - **`<{{TAG}}>` — initial release** — First version, scaffolded with `kmwc new` from `@keenmate/web-components-devkit`. Ships the Element / Logic / Side-layer split, the canonical eight-file CSS set with `@layer variables, component, overrides`, light/dark defaults through `light-dark()` fallbacks, a Custom Elements Manifest for editor tooling, and a `change` event with an `onChange` property twin. See [CHANGELOG.md](./CHANGELOG.md).
 
 ## Demos & docs

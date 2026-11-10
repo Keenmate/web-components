@@ -15,6 +15,8 @@ per-instance dark mode via `data-theme`.
 
 ## What's New in v0.1.0
 
+Upgrade guide: the [0.1.0 release notes](release-notes/0.1.0.md); full list: the [CHANGELOG 0.1.0 section](CHANGELOG.md).
+
 - **`<web-playground>` — initial release** — First version, scaffolded with `kmwc new` from `@keenmate/web-components-devkit`. Ships the Element / Logic / Side-layer split, the canonical eight-file CSS set with `@layer variables, component, overrides`, light/dark defaults through `light-dark()` fallbacks, a Custom Elements Manifest for editor tooling, and a `change` event with an `onChange` property twin. See [CHANGELOG.md](./CHANGELOG.md).
 
 ## Demos & docs

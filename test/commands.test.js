@@ -61,6 +61,13 @@ for (const isMinimal of [false, true]) {
       const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
       assert.deepEqual([packageJson.kmwc.prefix, packageJson.main, packageJson.kmwc.library.globalName], ['zqx', './dist/web-zz-fixture.umd.js', 'WebZzFixture']);
       assert.ok(packageJson.files.includes('!**/CLAUDE.md') && packageJson.files.includes('!**/.claude'));
+      // The first release's upgrade guide (rulebook release-notes.md): named after the version,
+      // shipped, and linked from What's New.
+      assert.ok(packageJson.files.includes('release-notes'));
+      const releaseNotes = readFileSync(join(root, 'release-notes', `${packageJson.version}.md`), 'utf8');
+      assert.match(releaseNotes, new RegExp(`^# .+ ${packageJson.version.replace(/\./g, '\\.')} — Release Notes`));
+      assert.doesNotMatch(releaseNotes, /\{\{[A-Z_]+\}\}/);
+      assert.match(readFileSync(join(root, 'README.md'), 'utf8'), new RegExp(`Upgrade guide: the \\[${packageJson.version.replace(/\./g, '\\.')} release notes\\]\\(release-notes/`));
     });
   });
 }

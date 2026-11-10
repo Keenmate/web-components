@@ -109,6 +109,7 @@ function writeScaffoldFiles(templateRoot, targetPath, variables, featureName) {
   for (const templatePath of getFilesRecursive(templateRoot)) {
     const relativePath = relative(templateRoot, templatePath)
       .replace(/__FEATURE__/g, featureName)
+      .replace(/__VERSION__/g, variables.VERSION)
       .split(/[\\/]/)
       .map((segment) => FILE_NAME_PLACEHOLDERS[segment] || segment)
       .join('/');
@@ -145,6 +146,7 @@ export function generatePackageJson({ componentId, packageName, tagline, tag, pr
     files: [
       'dist',
       'docs',
+      'release-notes',
       'component-variables.manifest.json',
       'custom-elements.json',
       'web-types.json',
@@ -259,6 +261,7 @@ export async function run(args) {
     PACKAGE_NAME: packageName,
     FILE_NAME: componentId,
     VERSION: '0.1.0',
+    CORE_VERSION: coreVersion,
     TODAY: today,
     YEAR: today.slice(0, 4),
     DEV_PORT: devPort,

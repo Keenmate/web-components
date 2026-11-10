@@ -718,7 +718,7 @@ test('doctor: a library runs only the suites that apply to it', () => {
   assert.equal(mapKmwcConfig(createPackageJson({ kind: 'library' })).kind, 'library');
   assert.deepEqual(getRulebookSuites('component'), RULEBOOK_SUITES);
   const librarySuiteNames = getRulebookSuites('library').map((suite) => suite.name);
-  assert.deepEqual(librarySuiteNames, ['naming-conventions', 'readme-structure', 'publish-command', 'example-pages']);
+  assert.deepEqual(librarySuiteNames, ['naming-conventions', 'readme-structure', 'release-notes', 'publish-command', 'example-pages']);
 });
 
 test('doctor: VALIDATION-NOTES.md headings accept check ids; prose mentions do not', () => {

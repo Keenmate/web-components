@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0-rc13] - 2026-11-10
+
+### Added
+
+- **Release notes (rulebook `release-notes.md`, 2026-11-10).** Every version published to npm
+  ships `release-notes/<version>.md`, the upgrade guide. Doctor runs the rulebook's
+  `release-notes` suite for every published package (components and libraries). `kmwc new`
+  scaffolds the first release's guide (`release-notes/0.1.0.md`; the template file is
+  `__VERSION__.md`, named like `__FEATURE__`), lists `release-notes` in `files`, and opens
+  What's New with the "Upgrade guide:" line; `--minimal` gets its own text.
+
+### Changed
+
+- **The scaffold's `/publish` follows the rulebook spec, not web-multiselect's copy.** Its
+  canonical sections now carry the release-notes wiring (Step 1 drafts the notes, Step 4 keeps
+  the upgrade-guide links, Step 5 validates them, Step 10 stages them; Step 9 ships
+  `release-notes/`). "Or `make publish`." left the Report's canonical text — the spec doesn't
+  have it — and became an extra bullet after it. The rulebook's new C-PC-12 compares every
+  canonical section with `publish-command.md` itself, and the playground's doctor runs it, so
+  the template can't drift from the spec again. The devkit's own `/publish` got the same
+  changes; its first release notes are due with this version.
+
 ## [1.0.0-rc12] - 2026-11-09 [PUBLISHED]
 
 ### Added

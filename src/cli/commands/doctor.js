@@ -66,6 +66,7 @@ export const RULEBOOK_SUITES = [
   { name: 'base-variables', isPrefixed: true, isComponentOnly: true },
   { name: 'color-scheme', isPrefixed: true, isComponentOnly: true },
   { name: 'readme-structure', isPrefixed: false, isComponentOnly: false },
+  { name: 'release-notes', isPrefixed: false, isComponentOnly: false },
   { name: 'custom-elements-manifest', isPrefixed: false, isComponentOnly: true },
   { name: 'responsive-overlay', isPrefixed: true, isComponentOnly: true },
   // Repo-wide: one /publish command and one example site per repo, checked at its root.
