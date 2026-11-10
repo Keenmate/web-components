@@ -21,6 +21,17 @@
   canonical section with `publish-command.md` itself, and the playground's doctor runs it, so
   the template can't drift from the spec again. The devkit's own `/publish` got the same
   changes; its first release notes are due with this version.
+- **The scaffold follows core's theme model (rulebook color-scheme.md, 2026-11-10).**
+  `dark-mode.css` is now the canonical block: `:host([data-context-theme="dark"|"light"])`,
+  which core mirrors from the page or a `theme-source`, then `:host([data-theme=…])` per
+  instance, declared last so it wins. The `:host-context()` rules for `[data-theme]`,
+  `[data-bs-theme]` and `.dark` / `.light` are gone (Firefox doesn't support `:host-context`,
+  Safari only partly), and with them the C-CS-3 / C-CS-11 failures every `kmwc new` started
+  with. The dark-mode fixture and spec test the new paths: a live page class on `<html>`, a
+  `theme-source` that isn't an ancestor (only `data-context-theme` can reach it, so the old CSS
+  fails it), and a per-instance `data-theme="light"` beating a dark page. `docs/theming.md`
+  describes the signals core reads. The core fallback for a devkit without a core checkout
+  beside it is `1.0.0-rc21` (it was rc12; core mirrors `data-context-theme` from rc13).
 
 ## [1.0.0-rc12] - 2026-11-09 [PUBLISHED]
 

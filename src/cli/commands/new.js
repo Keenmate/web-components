@@ -241,7 +241,7 @@ export async function run(args) {
   const portOwner = registry.components.find((entry) => entry.port === devPort && entry.id !== componentId);
   if (portOwner) throw new Error(`port block ${devPort} belongs to ${portOwner.id} — omit --port to take the next free block`);
   const corePackageJsonPath = join(DEVKIT_ROOT, '..', 'web-components-core', 'package.json');
-  const coreVersion = existsSync(corePackageJsonPath) ? getJsonFile(corePackageJsonPath).version : '1.0.0-rc12';
+  const coreVersion = existsSync(corePackageJsonPath) ? getJsonFile(corePackageJsonPath).version : '1.0.0-rc21';
   const today = new Date().toISOString().slice(0, 10);
 
   const variables = {

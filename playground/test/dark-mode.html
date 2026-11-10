@@ -7,9 +7,10 @@
 <body>
     <web-playground id="light-default" label="light default"></web-playground>
     <web-playground id="dark-instance" label="dark instance" data-theme="dark"></web-playground>
-    <div data-theme="dark">
-        <web-playground id="dark-ancestor" label="dark ancestor"></web-playground>
-    </div>
+    <web-playground id="light-instance" label="light instance" data-theme="light"></web-playground>
+    <!-- A theme source that is not an ancestor: only core's data-context-theme reaches it. -->
+    <div id="dark-panel" data-theme="dark"></div>
+    <web-playground id="dark-source" label="dark source" theme-source="#dark-panel"></web-playground>
     <div style="--base-main-bg: rgb(255, 0, 0)">
         <web-playground id="base-themed" label="--base-main-bg"></web-playground>
     </div>

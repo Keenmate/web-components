@@ -3,10 +3,12 @@
 ## Container contract
 
 The theme container is `:host` — the `<{{TAG}}>` element itself. It paints
-its own surface (`--{{PREFIX}}-bg`), so it is visible standalone. Attach
-`data-theme="dark|light"` to the element (per instance) or to any ancestor; the
-framework conventions `[data-bs-theme]` (Bootstrap) and `.dark` / `.light`
-(Tailwind and friends) are honoured too.
+its own surface (`--{{PREFIX}}-bg`), so it is visible standalone. It follows the page's theme:
+`@keenmate/web-components-core` reads the signal once per page (`data-theme`,
+`data-bs-theme`, `.dark` / `.light` on `<html>` or `<body>`, or the element named by
+the `theme-source` attribute) and mirrors it onto the element as
+`data-context-theme`. `data-theme="dark|light"` on the element itself overrides it
+for that instance.
 
 ## Variable contract
 
@@ -31,7 +33,8 @@ follow the page font size).
 
 Strategy B (color-scheme.md): every colour falls back through
 `light-dark(<light>, <dark>)`, and the component sets `color-scheme` on the
-host only when you signal a theme (`data-theme`, `data-bs-theme`, `.dark`).
+host only when there is a signal (`data-context-theme` from the page, or `data-theme`
+on the element).
 Without a signal it inherits the page's `color-scheme` — declare
 `color-scheme: light dark` on your page to follow the OS.
 
