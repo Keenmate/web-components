@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.0-rc13] - 2026-11-10
+## [1.0.0-rc13] - 2026-11-12 [PUBLISHED]
 
 ### Added
 
@@ -33,6 +33,11 @@
   fails it), and a per-instance `data-theme="light"` beating a dark page. `docs/theming.md`
   describes the signals core reads. The core fallback for a devkit without a core checkout
   beside it is `1.0.0-rc21` (it was rc12; core mirrors `data-context-theme` from rc13).
+
+### Internal
+
+- **The devkit ships its own release notes.** `release-notes/` is in `files`;
+  `1.0.0-rc13.md` is the first.
 
 ## [1.0.0-rc12] - 2026-11-09 [PUBLISHED]
 

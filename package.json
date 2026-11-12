@@ -40,7 +40,8 @@
     "templates",
     "components.json",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "release-notes"
   ],
   "scripts": {
     "readme": "node src/cli/kmwc.js readme",
