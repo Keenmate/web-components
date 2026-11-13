@@ -2,6 +2,13 @@
 
 ## [1.0.0-rc15] - 2026-11-13
 
+### Added
+
+- **Doctor warns about a `data-language` code block it can't highlight.** The composer only
+  highlights a block whose code is plain escaped text; one holding markup — leftover
+  highlight spans, a button, an unescaped `<` like `Promise<false>` — stayed plain without a
+  word. `[pages]` now lists those blocks with their lines.
+
 ### Fixed
 
 - **The kit never loaded on a page with `İ` in it.** The kit script went in before the

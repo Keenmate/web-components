@@ -480,6 +480,9 @@ generated files:
   scripts (2 when they're ≥ 30 % of the snippet). Generic reference code (a data
   shape, `el.open()`, an API listing) doesn't match. The fix is `<kmwc-demo>`; a
   reference snippet that trips it on purpose carries `data-kmwc-snippet`.
+- **Unhighlighted code blocks** — a `.code-block[data-language]` whose code holds
+  markup (hand-made highlight spans, a button, an unescaped `<`) is a warning: the
+  composer only highlights plain escaped text, so the block would silently stay plain.
 - **Loader class** — the component CSS styles the class the *installed* core gives
   its default loader (`<prefix>__loader` from core 6d6b768 on, `<prefix>-loader`
   before). Renaming the selector on one side of the core bump leaves the loader

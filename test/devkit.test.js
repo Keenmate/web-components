@@ -44,6 +44,7 @@ import {
   checkIsHardcodedColor,
   getHardcodedColors,
   getCopiedDemoSnippets,
+  getUnhighlightedCodeBlocks,
   mapToDecodedHtml,
   SNIPPET_ATTRIBUTE,
   getCoreLoaderSeparator,
@@ -985,6 +986,25 @@ test('doctor: a hand-written code block that copies a live demo — id, tag, sha
   // A <kmwc-demo> page: the composer draws the code block at build time — the source has none.
   const demoPage = "<kmwc-demo>\n  <web-x id=\"picker\" mode=\"single\"></web-x>\n  <script type=\"module\" data-kmwc-show>document.getElementById('picker').open();</script>\n</kmwc-demo>";
   assert.deepEqual(linesOf(demoPage), []);
+});
+
+test('doctor: a data-language code block the composer cannot highlight (markup in its code) is reported', () => {
+  const page = [
+    '<div class="code-block" data-language="js"><pre><code>const a = 1 &lt; 2;</code></pre></div>',
+    '<div class="code-block" data-language="js"><pre><code>// Promise<false></code></pre></div>',
+    '<div class="code-block mt-1" data-language="html"><pre><span class="tag">&lt;b&gt;</span></pre></div>',
+    '<div class="code-block"><pre><span class="tag">no language — left as written</span></pre></div>',
+    '<!-- <div class="code-block" data-language="js"><pre><b>x</b></pre></div> -->',
+    "<script>el.innerHTML = '<div class=\"code-block\" data-language=\"js\"><pre><b>x</b></pre></div>';</script>",
+    '<div class="code-block" data-language="sh">npm i</div>',
+  ].join('\n');
+  assert.deepEqual(getUnhighlightedCodeBlocks(page), [{ line: 2, language: 'js' }, { line: 3, language: 'html' }]);
+  // What the composer highlights, the check passes — and the other way round.
+  for (const { line } of getUnhighlightedCodeBlocks(page)) {
+    const blockHtml = page.split('\n')[line - 1];
+    assert.equal(renderLanguageCodeBlocks(blockHtml, { highlightCode: () => 'HIGHLIGHTED' }), blockHtml);
+  }
+  assert.match(renderLanguageCodeBlocks(page.split('\n')[0], { highlightCode: () => 'HIGHLIGHTED' }), /HIGHLIGHTED/);
 });
 
 test('doctor: the loader class the installed core draws vs the one the CSS styles', () => {

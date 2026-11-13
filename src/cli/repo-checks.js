@@ -466,6 +466,29 @@ function getCopyReason(codeText, { liveTags, liveIds, liveLines }) {
   return null;
 }
 
+// ── data-language code blocks the composer can't highlight ──────────────────
+
+const COMMENT_OR_SCRIPT_PATTERN = /<!--[\s\S]*?-->|<script\b[^>]*>[\s\S]*?<\/script>/gi;
+const LANGUAGE_CODE_BLOCK_PATTERN = /<div\b([^>]*\bclass="[^"]*\bcode-block\b[^"]*"[^>]*)>([\s\S]*?)<\/div>/gi;
+const CODE_WRAPPER_PATTERN = /^\s*(?:<pre\b[^>]*>)?\s*(?:<code\b[^>]*>)?|(?:<\/code>)?\s*(?:<\/pre>)?\s*$/gi;
+
+/**
+ * `.code-block[data-language]` blocks whose code holds markup — hand-made highlight spans,
+ * a button, an unescaped `<` — which the page composer leaves unhighlighted (it only
+ * highlights plain escaped text). Comments and scripts are skipped. Returns
+ * [{ line, language }] — `line` is the block's 1-based line. Pure.
+ */
+export function getUnhighlightedCodeBlocks(pageText) {
+  const livePage = pageText.replace(COMMENT_OR_SCRIPT_PATTERN, mapToBlanked);
+  const unhighlightedBlocks = [];
+  for (const block of livePage.matchAll(LANGUAGE_CODE_BLOCK_PATTERN)) {
+    const language = getStartTags(`<div${block[1]}>`)[0].attributes.get('data-language');
+    if (!language || !block[2].replace(CODE_WRAPPER_PATTERN, '').includes('<')) continue;
+    unhighlightedBlocks.push({ line: pageText.slice(0, block.index).split('\n').length, language });
+  }
+  return unhighlightedBlocks;
+}
+
 // ── core's default loader class ──────────────────────────────────────────────
 
 const CORE_PACKAGE_PATH = join('node_modules', '@keenmate', 'web-components-core');

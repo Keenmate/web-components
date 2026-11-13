@@ -41,6 +41,7 @@ import {
   getHardcodedColors,
   SNIPPET_ATTRIBUTE,
   getCopiedDemoSnippets,
+  getUnhighlightedCodeBlocks,
   loadCoreLoader,
   getLoaderClassVerdict,
   loadStyledLoaderClasses,
@@ -264,6 +265,19 @@ export function checkComponent(config, doctorConfig = {}) {
     );
   }
   if (pageFiles.length && !copiedSnippetSources.length) addPass('pages', 'no hand-copied snippets of a live demo');
+
+  // data-language promises highlighting; markup in the code (old highlight spans, an unescaped <) silently loses it.
+  const unhighlightedSources = pageFiles
+    .map((pageFile) => ({ file: pageFile, unhighlightedBlocks: getUnhighlightedCodeBlocks(readFileSync(join(config.root, pageFile), 'utf8')) }))
+    .filter((source) => source.unhighlightedBlocks.length);
+  for (const { file, unhighlightedBlocks } of unhighlightedSources) {
+    addWarning(
+      'pages',
+      `${file} line(s) ${unhighlightedBlocks.map(({ line }) => line).join(', ')}: ${unhighlightedBlocks.length} data-language code block(s) left unhighlighted — the code holds markup`,
+      'the code must be plain escaped text: drop hand-made highlight spans and buttons, write < as &lt;'
+    );
+  }
+  if (pageFiles.length && !unhighlightedSources.length) addPass('pages', 'every data-language code block can be highlighted');
 
   // ── generated files ──────────────────────────────────────────────────────
   if (config.hasPackageConfig) {

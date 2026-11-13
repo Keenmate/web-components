@@ -45,7 +45,8 @@ locally — every local fork is how they drifted apart.
   goes in `partials/` via `<kmwc-include>`; show code with `<kmwc-demo>` (the live
   markup IS the snippet) — never hand-copy a demo into a `.code-block`. Its code
   is highlighted at build time; a hand-written `.code-block` gets the same with
-  `data-language="svelte"` (html, js, ts, css, json, sh) — no highlighter on the page.
+  `data-language="svelte"` (html, js, ts, css, json, sh) when its code is plain escaped
+  text (no spans, `<` as `&lt;`) — no highlighter on the page.
 - **Every example has a permanent code:** each `<h2>` starts `TH07 · Title`
   (page prefix + number; a plain `Summary` is exempt). New examples take the
   next free number; never renumber or reuse one — the rules are the rulebook's
