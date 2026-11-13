@@ -281,7 +281,8 @@ back link / title / subtitle, container). The whole file:
 | `<meta name="kmwc:entry" content="none">` | skip the component entry script (default `/<kmwc.library.entry>`, loaded in `<head>` so the element is defined before page scripts run) |
 | `<link>` / `<style>` anywhere in a fragment | moved into `<head>` |
 | `<kmwc-include src="partials/x.html" some-param="v">inner</kmwc-include>` | the partial with `{{someParam}}` and `{{content}}` filled in; nests; cycles are an error; unknown `{{…}}` stay as written |
-| `<kmwc-demo>markup</kmwc-demo>` | the markup live **and** as a code block of exactly that markup (copy button included) — a snippet can't drift from its demo. `<script data-kmwc-show>` inside runs and is shown too. Attributes: `preview-class`, `markup-hidden`, `code-hidden` |
+| `<kmwc-demo>markup</kmwc-demo>` | the markup live **and** as a code block of exactly that markup (copy button included) — a snippet can't drift from its demo. `<script data-kmwc-show>` inside runs and is shown too. Attributes: `preview-class`, `markup-hidden`, `code-hidden`. The code is syntax-highlighted at build time |
+| `<div class="code-block" data-language="svelte"><pre><code>…</code></pre></div>` | a hand-written block highlighted like a demo's code, when its code is plain escaped text: `html`, `js`, `ts`, `css`, `json`, `svelte`, `sh` (and their aliases); another language fails the page. It gets the demo's Copy button too, unless it has a button of its own. Without `data-language` a block stays as written, with no button (it may be an output a script fills) |
 | `data-kmwc-snippet` on a hand-written `<details>` / `.code-block` (or its `<pre>`) | a reference snippet that mirrors no demo on purpose (an API listing that happens to name a live id) — doctor's hand-copied-snippet check skips it |
 
 Tags inside HTML comments are never expanded; a comment *inside* a
@@ -293,6 +294,11 @@ belongs in `examples-data/*.js` modules imported by pages. Full documents
 doctor` lists the ones still repeating the head/header boilerplate, and warns
 about every hand-written code block that copies a live demo on its page (wrap
 the demo in `<kmwc-demo>` instead).
+
+Highlighting is [Shiki](https://shiki.style) at build time (and on each dev
+request), so pages load no highlighter. Its colours are the kit's
+`--kmwc-code-*` tokens (`keyword`, `string`, `function`, `property`, `type`,
+`tag`, `comment`), each at least 4.5:1 on the code surface in both themes.
 
 - **Styles** live in `@layer kmwc`, so any unlayered rule beats them
   regardless of order (and the layered reset can never clobber a component).

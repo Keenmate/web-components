@@ -60,7 +60,8 @@ import { searchChapters, checkMatchesAny, renderHighlightedText } from '../src/e
 import { getMovedIndex } from '../src/examples/spotlight.js';
 import { findSectionByHash, getChapterCode, mapToCodeKey } from '../src/examples/sections.js';
 import { getExamplePages } from '../src/vite/index.js';
-import { composePage, resolveIncludes, renderDemos, mapToDedentedText, checkIsFragment } from '../src/vite/page-composer.js';
+import { composePage, resolveIncludes, renderDemos, renderLanguageCodeBlocks, mapToDedentedText, checkIsFragment } from '../src/vite/page-composer.js';
+import { loadCodeHighlighter } from '../src/vite/code-highlighter.js';
 
 const PLAYGROUND_ROOT = join(DEVKIT_ROOT, 'playground');
 const createPackageJson = (packageConfig = {}) => ({ name: '@keenmate/web-sample', version: '1.2.3', description: 'A sample', kmwc: packageConfig });
@@ -330,11 +331,11 @@ function getHtmlTransformer(pluginConfig, { command = 'serve', mode = 'developme
   return (html, path = '/examples-basic.html') => plugin.transformIndexHtml.handler(html, { path });
 }
 
-test('plugin: injects theme bootstrap, page config + kit into root pages only', () => {
+test('plugin: injects theme bootstrap, page config + kit into root pages only', async () => {
   const transformHtml = getHtmlTransformer({ root: PLAYGROUND_ROOT });
   const pageHtml = '<!DOCTYPE html><html><head><title>x</title></head><body><p>hi</p></body></html>';
 
-  const transformedHtml = transformHtml(pageHtml);
+  const transformedHtml = await transformHtml(pageHtml);
   assert.match(transformedHtml, /<head>\n<script>try\{var t=localStorage\.getItem\("kmwc:examples:theme"\)/);
   assert.match(transformedHtml, /<script>window\.__KMWC__=\{"id":"web-playground"/);
   assert.match(transformedHtml, /<script type="module">import 'virtual:kmwc-examples';<\/script>\n<\/body>/);
@@ -345,38 +346,38 @@ test('plugin: injects theme bootstrap, page config + kit into root pages only', 
   // CSS import (Vite extracts it to a <head> <link>) in builds; never a script-only load.
   const headHtml = transformedHtml.slice(0, transformedHtml.indexOf('</head>'));
   assert.match(headHtml, /<link rel="stylesheet" href="\/@fs\/[^"]*\/src\/examples\/css\/style\.css">/);
-  const builtHtml = getHtmlTransformer({ root: PLAYGROUND_ROOT }, { command: 'build', mode: 'examples' })(pageHtml);
+  const builtHtml = await getHtmlTransformer({ root: PLAYGROUND_ROOT }, { command: 'build', mode: 'examples' })(pageHtml);
   assert.ok(!builtHtml.includes('/@fs/'), 'no dev URL in builds');
   assert.match(builtHtml, /<script type="module">import '[^']*\/src\/examples\/css\/style\.css'; import 'virtual:kmwc-examples';<\/script>/);
 
-  assert.equal(transformHtml(pageHtml, '/test/fixture.html'), pageHtml, 'nested pages untouched');
+  assert.equal(await transformHtml(pageHtml, '/test/fixture.html'), pageHtml, 'nested pages untouched');
   const optedOutHtml = pageHtml.replace('<html>', '<html data-kmwc="off">');
-  assert.equal(transformHtml(optedOutHtml), optedOutHtml, 'data-kmwc="off" opts out');
+  assert.equal(await transformHtml(optedOutHtml), optedOutHtml, 'data-kmwc="off" opts out');
 });
 
-test('plugin: analytics only in builds, and only when configured', () => {
+test('plugin: analytics only in builds, and only when configured', async () => {
   assert.ok(!getPlaygroundConfig().analytics.plausibleSiteId, 'playground has no analytics id');
   const transformBuiltHtml = getHtmlTransformer({ root: PLAYGROUND_ROOT }, { command: 'build', mode: 'examples' });
-  const transformedHtml = transformBuiltHtml('<html><head></head><body></body></html>');
+  const transformedHtml = await transformBuiltHtml('<html><head></head><body></body></html>');
   assert.ok(!transformedHtml.includes('plausible'));
   assert.match(transformedHtml, /"buildTimestamp":"\d{4}-\d\d-\d\dT\d\d:\d\dZ"/);
 });
 
-test('plugin: a configured Plausible id goes into built pages, first in <head>', () => {
+test('plugin: a configured Plausible id goes into built pages, first in <head>', async () => {
   const temporaryRoot = mkdtempSync(join(tmpdir(), 'kmwc-'));
   try {
     writeFileSync(join(temporaryRoot, 'package.json'), JSON.stringify(createPackageJson({ analytics: { plausibleSiteId: 'pa-TEST123' } })));
     const pageHtml = '<html><head></head><body></body></html>';
-    const builtHtml = getHtmlTransformer({ root: temporaryRoot }, { command: 'build', mode: 'examples' })(pageHtml);
+    const builtHtml = await getHtmlTransformer({ root: temporaryRoot }, { command: 'build', mode: 'examples' })(pageHtml);
     assert.match(builtHtml, /<head>\n<!-- Privacy-friendly analytics[^\n]*\n<script async src="https:\/\/stats\.keenmate\.services\/js\/pa-TEST123\.js">/);
     assert.ok(builtHtml.indexOf('pa-TEST123') < builtHtml.indexOf('__KMWC__'));
-    assert.ok(!getHtmlTransformer({ root: temporaryRoot })(pageHtml).includes('pa-TEST123'), 'never in dev');
+    assert.ok(!(await getHtmlTransformer({ root: temporaryRoot })(pageHtml)).includes('pa-TEST123'), 'never in dev');
   } finally {
     rmSync(temporaryRoot, { recursive: true, force: true });
   }
 });
 
-test('plugin: "<head>" / "</body>" as page text never receive the injected snippets', () => {
+test('plugin: "<head>" / "</body>" as page text never receive the injected snippets', async () => {
   // web-multiselect's action-buttons page: a sed on /<head>/ put the Plausible snippet
   // (which opens with an HTML comment) into the page's module script → the script threw.
   const temporaryRoot = mkdtempSync(join(tmpdir(), 'kmwc-'));
@@ -392,7 +393,7 @@ test('plugin: "<head>" / "</body>" as page text never receive the injected snipp
     ].join('\n');
     const documentHtml = `<!-- copy this into <head> -->\n<html><head><title>x</title></head><body><header>h</header>${pageScript}</body></html>`;
 
-    for (const builtHtml of [transformBuiltHtml(fragmentHtml), transformBuiltHtml(documentHtml)]) {
+    for (const builtHtml of [await transformBuiltHtml(fragmentHtml), await transformBuiltHtml(documentHtml)]) {
       assert.equal(builtHtml.split('pa-TEST123').length - 1, 1, 'snippet once');
       assert.equal(builtHtml.split('import \'virtual:kmwc-examples\'').length - 1, 1, 'kit once');
       assert.ok(builtHtml.includes(pageScript), 'page script untouched');
@@ -401,7 +402,7 @@ test('plugin: "<head>" / "</body>" as page text never receive the injected snipp
     }
 
     // No <head> at all: prepended — never into <header>.
-    const headlessHtml = transformBuiltHtml('<html><body><header>h</header></body></html>');
+    const headlessHtml = await transformBuiltHtml('<html><body><header>h</header></body></html>');
     assert.ok(headlessHtml.startsWith('<!-- Privacy-friendly analytics'));
     assert.match(headlessHtml, /<header>h<\/header>/);
   } finally {
@@ -460,6 +461,62 @@ test('composer: a comment inside a demo stays in it; a commented-out demo is ign
   assert.throws(() => renderDemos('<kmwc-demo><kmwc-demo><web-x></web-x></kmwc-demo></kmwc-demo>'), /was not expanded/);
   // A `<kmwc-demo` that is a string in a page script is not markup.
   assert.doesNotThrow(() => renderDemos("<script>const tag = '<kmwc-demo>';</script>"));
+});
+
+test('highlighter: colours come from the kit tokens, the code text survives, an unknown language throws', async () => {
+  const highlightCode = await loadCodeHighlighter();
+  const htmlCode = highlightCode('<button class="a">Hi</button>', 'html');
+  assert.match(htmlCode, /&lt;<span style="color: var\(--kmwc-code-tag-color\)">button<\/span>/);
+  assert.match(htmlCode, /<span style="color: var\(--kmwc-code-string-color\)">&quot;a&quot;<\/span>/);
+  assert.match(highlightCode('a(); // note', 'js'), /<span style="color: var\(--kmwc-code-comment-color\); font-style: italic">\/\/ note<\/span>/);
+  assert.ok(!/#[\da-f]{3,6}\b/i.test(htmlCode), 'no colour literal in the output');
+  // Aliases and Svelte resolve; anything else is a clear error.
+  for (const language of ['js', 'ts', 'sh', 'svelte', 'css', 'json']) assert.doesNotThrow(() => highlightCode('x', language), language);
+  assert.throws(() => highlightCode('x', 'rust'), /code language "rust" is not highlighted/);
+});
+
+test('composer: a highlighted page shows exactly the code text it would without highlighting', async () => {
+  // The demo Copy button copies textContent: highlighting may only add spans.
+  const highlightCode = await loadCodeHighlighter();
+  const config = getPlaygroundConfig();
+  // What the browser shows: tags dropped, entities decoded (a source's raw " and the highlighter's &quot; read the same).
+  const entities = { lt: '<', gt: '>', amp: '&', quot: '"', '#39': "'" };
+  const getCodeTexts = (html) => [...html.matchAll(/<code>([\s\S]*?)<\/code><\/pre><\/div>/g)]
+    .map((match) => match[1].replace(/<[^>]+>/g, '').replace(/&(lt|gt|amp|quot|#39);/g, (entity, name) => entities[name]));
+  const pages = readdirSync(PLAYGROUND_ROOT).filter((name) => /^examples-.*\.html$/.test(name));
+  let codeBlockCount = 0;
+  for (const page of pages) {
+    const pageHtml = readFileSync(join(PLAYGROUND_ROOT, page), 'utf8');
+    const plainTexts = getCodeTexts(composePage(pageHtml, { config, pagePath: page }));
+    const highlightedHtml = composePage(pageHtml, { config, pagePath: page, highlightCode });
+    assert.deepEqual(getCodeTexts(highlightedHtml), plainTexts, page);
+    codeBlockCount += plainTexts.length;
+  }
+  assert.ok(codeBlockCount > 20, `the pages have code to compare (${codeBlockCount})`);
+});
+
+test('composer: hand-written code blocks are highlighted only when they name a language and hold plain text', () => {
+  const highlightCode = (code, language) => {
+    if (language === 'nope') throw new Error('kmwc: code language "nope" is not highlighted');
+    return `[${language}:${code}]`;
+  };
+  const render = (html) => renderLanguageCodeBlocks(html, { pagePath: '/examples-a.html', highlightCode });
+  // The code is unescaped before highlighting; every wrapper shape works.
+  assert.equal(render('<div class="code-block" data-language="svelte"><pre><code>{#if a}&lt;b&gt;&amp;{/if}</code></pre></div>'),
+    '<div class="code-block" data-language="svelte"><pre><code>[svelte:{#if a}<b>&{/if}]</code></pre></div>');
+  assert.equal(render('<div data-language="js" class="code-block mt-1"><code>a&#39;s</code></div>'), '<div data-language="js" class="code-block mt-1"><code>[js:a\'s]</code></div>');
+  assert.equal(render('<div class="code-block" data-language="css"><pre>a {}</pre></div>'), '<div class="code-block" data-language="css"><pre>[css:a {}]</pre></div>');
+  // Left alone: no language (a live output), its own markup, a comment or script, a demo's block.
+  for (const html of [
+    '<div class="code-block"><pre id="out">a</pre></div>',
+    '<div class="code-block" data-language="js"><span class="comment">// a</span></div>',
+    '<!-- <div class="code-block" data-language="js"><pre>a</pre></div> -->',
+    '<script>const t = `<div class="code-block" data-language="js"><pre>a</pre></div>`;</script>',
+    '<div class="code-block kmwc-demo__code" data-language="html"><pre><code>a</code></pre></div>',
+    '<div class="note" data-language="js"><pre>a</pre></div>',
+  ]) assert.equal(render(html), html, html);
+  assert.throws(() => render('<div class="code-block" data-language="nope"><pre>a</pre></div>'), /^Error: kmwc: \/examples-a\.html: code language "nope"/);
+  assert.equal(renderLanguageCodeBlocks('<div class="code-block" data-language="js"><pre>a</pre></div>'), '<div class="code-block" data-language="js"><pre>a</pre></div>', 'no highlighter, no change');
 });
 
 test('composer: fragments get the layout, full documents pass through', () => {

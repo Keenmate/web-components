@@ -21,6 +21,7 @@ import { join, resolve } from 'node:path';
 import { getKmwcConfig, getDevkitPackageJson, generateBuildDefines, loadPeerModule, DEVKIT_ROOT, NON_PAGE_HTML_FILES } from '../config.js';
 import { renderThemeBootstrapScript } from '../examples/theme-switch.js';
 import { composePage, insertIntoHead, insertBeforeBodyEnd } from './page-composer.js';
+import { loadCodeHighlighter } from './code-highlighter.js';
 import { generateChapterIndex } from './chapter-index.js';
 
 const AUTO_ENTRY_PATH = join(DEVKIT_ROOT, 'src', 'examples', 'auto.js');
@@ -114,15 +115,16 @@ export function createExamplesPlugin(pluginConfig = {}) {
       // `pre`: run before Vite processes the HTML, so the injected module script
       // is bundled exactly like an authored one (dev and build alike).
       order: 'pre',
-      handler(html, context) {
+      async handler(html, context) {
         // Only root-level pages are example pages — test fixtures under test/
         // (Playwright) stay bare. A page can opt out with <html data-kmwc="off">.
         if (context.path.split('/').filter(Boolean).length > 1) return html;
         if (/<html[^>]*\sdata-kmwc=["']?off/i.test(html)) return html;
 
-        // Includes, demos and — for fragment pages — the shared layout
-        // (page-composer.js). Full documents pass through untouched.
-        html = composePage(html, { config, pagePath: context.path });
+        // Includes, demos, highlighted code and — for fragment pages — the shared
+        // layout (page-composer.js). Full documents keep their own head and body.
+        const highlightCode = await loadCodeHighlighter();
+        html = composePage(html, { config, pagePath: context.path, highlightCode });
 
         const isBuild = command === 'build';
         const pageConfig = {

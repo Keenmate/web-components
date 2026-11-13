@@ -102,6 +102,7 @@ export function copyText(text: string): Promise<boolean>;
 export function getSectionUrl(sectionId: string, canonicalOrigin?: string): string;
 
 export function renderVersionBadges(root?: ParentNode): void;
+/** A Copy button on every demo code block and every hand-written `.code-block[data-language]` without a button of its own. */
 export function attachDemoCopyButtons(root?: ParentNode): void;
 /** Label every cell of a stacking table (`.reference-table`, `.table-stack`) with its column header, and add table ARIA roles. */
 export function attachStackedTables(root?: ParentNode): void;
@@ -151,6 +152,7 @@ export const CHAPTER_NAV_PANEL_ID: string;
 export const SECTION_CONTAINER_SELECTOR: string;
 export const SECTION_SELECTOR: string;
 export const STACKED_TABLE_SELECTOR: string;
+export const COPYABLE_CODE_SELECTOR: string;
 export const STACKED_TABLE_ROLES: Record<string, string>;
 /** Heading children left out of a chapter label (badges, the copy-link button). */
 export const HEADING_CHIP_SELECTOR: string;

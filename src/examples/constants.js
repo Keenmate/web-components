@@ -131,6 +131,13 @@ export const DEMO_CLASSES = {
   copyButtonCopied: 'kmwc-demo__copy--copied',
 };
 
+/**
+ * Code blocks that get the kit's Copy button: every demo's, and a hand-written
+ * `.code-block` that names its language (it holds code to read; one without
+ * may be an output a script fills).
+ */
+export const COPYABLE_CODE_SELECTOR = `.${DEMO_CLASSES.code}, .code-block[data-language]`;
+
 export const THEME_SWITCH_CLASSES = {
   root: 'kmwc-theme-switch',
   icon: 'kmwc-theme-switch__icon',

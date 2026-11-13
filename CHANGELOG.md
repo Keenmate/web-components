@@ -4,6 +4,15 @@
 
 ### Added
 
+- **Syntax-highlighted code.** `<kmwc-demo>` code is highlighted at build time (and on each
+  dev request) with [Shiki](https://shiki.style), so pages load no highlighter and the Copy
+  button still copies the exact text. A hand-written `.code-block` opts in with
+  `data-language="html|js|ts|css|json|svelte|sh"` when its code is plain escaped text, and
+  gets the demo's Copy button too (unless it has a button of its own); an unknown language
+  fails the page, and a block without the attribute stays as written, with no button.
+  Colours come from the `--kmwc-code-*` tokens, now with `--kmwc-code-type-color` and
+  `--kmwc-code-tag-color`. Shiki is a devkit dependency: components need no change.
+
 - **On a phone a `.reference-table` stacks into cards.** Below 768 px every row becomes a
   card: the first cell its title, every other cell under its column's header. The kit copies
   the headers onto the cells as `data-label` (a label the page wrote wins) and adds table ARIA
@@ -13,6 +22,10 @@
   renders late (or call `mountExamplesKit()` again).
 
 ### Changed
+
+- **The code comment and keyword colours are lighter** (`#a0a8b4`, `#d38fe6`): the old ones
+  were 3.9:1 and 4.1:1 on the light-mode code surface, under WCAG AA. Nothing coloured code
+  with them until now.
 
 - **A `.reference-table` keeps the names in its first column whole.** Its first-column
   `<code>` is `white-space: nowrap`, so an option name like `selectionMode` no longer breaks

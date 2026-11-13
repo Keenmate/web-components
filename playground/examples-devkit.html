@@ -63,6 +63,26 @@
 </div>
 
 <div class="card">
+    <h2>DK07 · Highlighted code</h2>
+    <p>A <code>&lt;kmwc-demo&gt;</code>'s code is highlighted at build time (Shiki, coloured by the
+        <code>--kmwc-code-*</code> tokens). A hand-written <code>.code-block</code> opts in with
+        <code>data-language</code> — <code>html</code>, <code>js</code>, <code>ts</code>, <code>css</code>,
+        <code>json</code>, <code>svelte</code>, <code>sh</code> — when its code is plain escaped text:</p>
+    <div class="code-block" data-language="svelte" id="dk-highlighted"><pre><code>&lt;script&gt;
+    // Closed again by the modal's onclose.
+    let isOpen = $state(false);
+&lt;/script&gt;
+
+{#if isOpen}
+    &lt;Modal title="Settings" onclose={() =&gt; (isOpen = false)} /&gt;
+{/if}</code></pre></div>
+    <div class="code-block" data-language="sh" id="dk-command"><pre><code>npm install --save-dev @keenmate/web-components-devkit</code></pre></div>
+    <p>Both get a Copy button. Without <code>data-language</code> a block stays as written, with no button —
+        it may be an output a script fills:</p>
+    <div class="code-block" id="dk-plain"><pre><code>change → { isActive: true }</code></pre></div>
+</div>
+
+<div class="card">
     <h2>Summary</h2>
     <p>Uncoded on purpose: a closing summary is not an example, but the spotlight finds it by its title.</p>
 </div>

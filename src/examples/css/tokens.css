@@ -104,11 +104,15 @@
         --kmwc-icon-check-size: var(--base-icon-check-size, 68%);
         --kmwc-code-bg: light-dark(#2d3748, #0d1117);
         --kmwc-code-text-color: #e2e8f0;
-        --kmwc-code-comment-color: #8b949e;
-        --kmwc-code-keyword-color: #c678dd;
+        /* One Dark hues, each ≥ 4.5:1 on both code surfaces (build-time
+           highlighting, src/vite/code-highlighter.js, reads these). */
+        --kmwc-code-comment-color: #a0a8b4;
+        --kmwc-code-keyword-color: #d38fe6;
         --kmwc-code-string-color: #98c379;
         --kmwc-code-function-color: #61afef;
         --kmwc-code-property-color: #d19a66;
+        --kmwc-code-type-color: #e5c07b;
+        --kmwc-code-tag-color: #ec8a92;
         /* The code surface is dark in both themes, so not --kmwc-success-color (dark green on a light page). */
         --kmwc-code-success-color: #34d399;
         --kmwc-console-bg: light-dark(#0f172a, #05070d);

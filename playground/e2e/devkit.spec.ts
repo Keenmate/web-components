@@ -82,12 +82,12 @@ test.describe('examples kit', () => {
     await expect(container).toBeVisible();
     await expect(input).toBeFocused();
     await expect(page.locator('.kmwc-spotlight__home-heading').first()).toHaveText('Basic Usage · this page');
-    await expect(items).toHaveCount(42);
+    await expect(items).toHaveCount(43);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden'); // body scroll locked
 
     // wcp keys: ↑ wraps to the end, PgDn steps 8, Home back to the top.
     await page.keyboard.press('ArrowUp');
-    await expect(activeItem).toHaveAttribute('data-index', '41');
+    await expect(activeItem).toHaveAttribute('data-index', '42');
     await page.keyboard.press('Home');
     await page.keyboard.press('PageDown');
     await expect(activeItem).toHaveAttribute('data-index', '8');
@@ -756,6 +756,57 @@ test.describe('examples kit', () => {
         return (lighter + 0.05) / (darker + 0.05);
       }, theme);
       expect(ratio, theme).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  test('code highlighting: demo code and opted-in blocks are coloured by the kit tokens, readable in both themes', async ({ page, context, baseURL }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseURL });
+    await page.goto('/examples-devkit.html');
+    const demoCode = page.locator('.kmwc-demo').filter({ has: page.locator('#dk-demo') }).locator('.kmwc-demo__code code');
+    await expect(demoCode.nth(1).locator('span[style*="--kmwc-code-keyword-color"]').first()).toHaveText('const');
+    await expect(page.locator('#dk-highlighted span[style*="--kmwc-code-tag-color"]').first()).toHaveText('script');
+    await expect(page.locator('#dk-highlighted')).toContainText('{#if isOpen}');
+    await expect(page.locator('#dk-plain span')).toHaveCount(0); // no data-language: left as written
+
+    // A block that names its language gets the Copy button and copies the code as written; a plain one gets none.
+    await expect(page.locator('#dk-command .kmwc-demo__copy')).toHaveCount(1);
+    await expect(page.locator('#dk-plain button')).toHaveCount(0);
+    await page.locator('#dk-highlighted .kmwc-demo__copy').click();
+    // The Windows clipboard hands lines back as \r\n.
+    expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe(
+      [
+        '<script>',
+        "    // Closed again by the modal's onclose.",
+        '    let isOpen = $state(false);',
+        '</script>',
+        '',
+        '{#if isOpen}',
+        '    <Modal title="Settings" onclose={() => (isOpen = false)} />',
+        '{/if}',
+      ].join('\n'));
+
+    for (const theme of ['light', 'dark']) {
+      const failing = await page.evaluate((name) => {
+        document.documentElement.setAttribute('data-theme', name);
+        const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
+        const getLuminance = (color: string) => {
+          context.clearRect(0, 0, 1, 1);
+          context.fillStyle = color;
+          context.fillRect(0, 0, 1, 1);
+          const [r, g, b] = Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3)).map((channel) => {
+            const value = channel / 255;
+            return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        return [...document.querySelectorAll('.code-block span[style]')].flatMap((span) => {
+          const block = span.closest('.code-block')!;
+          const [lighter, darker] = [getLuminance(getComputedStyle(span).color), getLuminance(getComputedStyle(block).backgroundColor)].sort((a, b) => b - a);
+          const ratio = (lighter + 0.05) / (darker + 0.05);
+          return ratio < 4.5 ? [`${span.textContent} ${span.getAttribute('style')}: ${ratio.toFixed(2)}`] : [];
+        });
+      }, theme);
+      expect(failing, theme).toEqual([]);
     }
   });
 

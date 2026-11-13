@@ -48,6 +48,13 @@ const HEAD_ELEMENT_PATTERN = /<style(?=[\s>])(?:"[^"]*"|'[^']*'|[^>"'])*>[\s\S]*
 const HEAD_ELEMENT_TAGS = ['style', 'link'];
 const ATTRIBUTE_PATTERN = /([a-zA-Z][\w-]*)(?:\s*=\s*"([^"]*)")?/g;
 
+// A hand-written `<div class="code-block" data-language="…">` whose code (in <pre>, <code>,
+// both or neither) is plain escaped text: group 1 the div's attributes, 2 the opening
+// tags, 3 the code. A block with markup of its own (hand-made <span>s) doesn't match.
+const LANGUAGE_CODE_BLOCK_PATTERN = /<div\b([^>]*)>(\s*(?:<pre\b[^>]*>)?\s*(?:<code\b[^>]*>)?)([^<]*)(?=(?:<\/code>)?\s*(?:<\/pre>)?\s*<\/div>)/g;
+const HTML_ENTITIES = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'", nbsp: '\u00a0' };
+const HTML_ENTITY_PATTERN = /&(?:#(\d+)|#x([\da-f]+)|([a-z]+));/gi;
+
 const HTML_COMMENT_PATTERN = /<!--[\s\S]*?-->/g;
 // Comments plus whole <script> elements: a <style> / <link> inside a script is a string
 // (shadow-DOM styles, an SVG's own <style>), never a page element to move into <head>.
@@ -148,8 +155,9 @@ function defaultReadFile(absolutePath, displayPath) {
   return readFileSync(absolutePath, 'utf8');
 }
 
-function renderCodeBlock(codeText, language) {
-  return `<div class="code-block kmwc-demo__code" data-language="${language}"><pre><code>${mapToEscapedHtml(codeText)}</code></pre></div>`;
+function renderCodeBlock(codeText, language, highlightCode) {
+  const codeHtml = highlightCode ? highlightCode(codeText, language) : mapToEscapedHtml(codeText);
+  return `<div class="code-block kmwc-demo__code" data-language="${language}"><pre><code>${codeHtml}</code></pre></div>`;
 }
 
 /**
@@ -162,10 +170,12 @@ function renderCodeBlock(codeText, language) {
  * live markup and shown code (splitting at comments, as includes do, left such a demo's
  * tags unpaired and the page silently showed the raw <kmwc-demo>). A `<kmwc-demo` left
  * after that (no closing tag, a nested demo) is an error, never passed through.
+ * `highlightCode(code, language)` (code-highlighter.js) colours the code; without it
+ * the code is plain escaped text.
  */
-export function renderDemos(html, { pagePath = 'page' } = {}) {
+export function renderDemos(html, { pagePath = 'page', highlightCode } = {}) {
   const renderedHtml = html.replace(COMMENT_OR_DEMO_PATTERN, (match, attributeText, innerHtml) =>
-    attributeText === undefined ? match : renderDemo(match, attributeText, innerHtml)
+    attributeText === undefined ? match : renderDemo(match, attributeText, innerHtml, highlightCode)
   );
   mapOutsideComments(renderedHtml, (text) => {
     const unexpanded = text.match(/<kmwc-demo\b[^>]*>?/);
@@ -175,7 +185,7 @@ export function renderDemos(html, { pagePath = 'page' } = {}) {
   return renderedHtml;
 }
 
-function renderDemo(demoTag, attributeText, innerHtml) {
+function renderDemo(demoTag, attributeText, innerHtml, highlightCode) {
   const attributes = getAttributes(attributeText);
   const shownScripts = [];
   const markupHtml = innerHtml.replace(SHOWN_SCRIPT_PATTERN, (scriptTag, scriptAttributeText, scriptBody) => {
@@ -183,8 +193,8 @@ function renderDemo(demoTag, attributeText, innerHtml) {
     return '';
   });
   const codeBlocks = [];
-  if (!('markupHidden' in attributes) && markupHtml.trim()) codeBlocks.push(renderCodeBlock(mapToDedentedText(markupHtml), 'html'));
-  for (const script of shownScripts) codeBlocks.push(renderCodeBlock(mapToDedentedText(script.body), 'js'));
+  if (!('markupHidden' in attributes) && markupHtml.trim()) codeBlocks.push(renderCodeBlock(mapToDedentedText(markupHtml), 'html', highlightCode));
+  for (const script of shownScripts) codeBlocks.push(renderCodeBlock(mapToDedentedText(script.body), 'js', highlightCode));
 
   const previewClass = attributes.previewClass ?? 'demo-area';
   const scriptsHtml = shownScripts.map((script) => `<script${script.attributeText}>${script.body}</script>`).join('\n');
@@ -193,6 +203,34 @@ function renderDemo(demoTag, attributeText, innerHtml) {
     `<div class="kmwc-demo__preview ${previewClass}">${markupHtml}</div>\n` +
     ('codeHidden' in attributes ? '' : codeBlocks.join('\n')) +
     `\n</div>\n${scriptsHtml}`
+  );
+}
+
+const mapToUnescapedText = (html) => html.replace(HTML_ENTITY_PATTERN, (entity, decimal, hexadecimal, name) =>
+  decimal ? String.fromCodePoint(Number(decimal))
+    : hexadecimal ? String.fromCodePoint(parseInt(hexadecimal, 16))
+      : HTML_ENTITIES[name.toLowerCase()] ?? entity);
+
+/**
+ * Highlight the page's own code blocks that name their language:
+ * `<div class="code-block" data-language="svelte"><pre><code>…</code></pre></div>`.
+ * Opt-in, because a `.code-block` may be a live output a script fills. Comments and
+ * scripts are skipped; an unknown language is an error.
+ */
+export function renderLanguageCodeBlocks(html, { pagePath = 'page', highlightCode } = {}) {
+  if (!highlightCode) return html;
+  return mapOutsideComments(html, (text) =>
+    text.replace(LANGUAGE_CODE_BLOCK_PATTERN, (block, attributeText, openingTags, codeHtml) => {
+      const { class: className = '', dataLanguage } = getAttributes(attributeText);
+      const classes = className.split(/\s+/);
+      if (!dataLanguage || !classes.includes('code-block') || classes.includes('kmwc-demo__code')) return block;
+      try {
+        return `<div${attributeText}>${openingTags}${highlightCode(mapToUnescapedText(codeHtml), dataLanguage)}`;
+      } catch (error) {
+        throw new Error(`kmwc: ${pagePath}: ${error.message.replace(/^kmwc: /, '')}`);
+      }
+    }),
+    COMMENT_OR_SCRIPT_PATTERN
   );
 }
 
@@ -259,8 +297,9 @@ export function renderLayout(fragmentHtml, { config, pagePath }) {
 }
 
 /** The whole pipeline: includes → demos → layout (fragments only). */
-export function composePage(html, { config, pagePath, readFile }) {
+export function composePage(html, { config, pagePath, readFile, highlightCode }) {
   let composedHtml = resolveIncludes(html, { root: config.root, readFile });
-  composedHtml = renderDemos(composedHtml, { pagePath });
+  composedHtml = renderDemos(composedHtml, { pagePath, highlightCode });
+  composedHtml = renderLanguageCodeBlocks(composedHtml, { pagePath, highlightCode });
   return checkIsFragment(composedHtml) ? renderLayout(composedHtml, { config, pagePath }) : composedHtml;
 }
