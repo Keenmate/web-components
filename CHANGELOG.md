@@ -9,6 +9,10 @@
   highlight spans, a button, an unescaped `<` like `Promise<false>` — stayed plain without a
   word. `[pages]` now lists those blocks with their lines.
 
+- **Doctor's hand-copied-snippet check reads the legacy `<pre class="code-block">`** too; it saw
+  only a `<pre>` inside a `<details>` or a `div.code-block`, so excerpts of a live script in that
+  form passed unnoticed (found in web-dropzone's sweep).
+
 ### Fixed
 
 - **The kit never loaded on a page with `İ` in it.** The kit script went in before the

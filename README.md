@@ -472,7 +472,7 @@ generated files:
   gets a `/* kmwc-fixed-colors: why */` comment right before it. An element whose
   `style="…"` sets them on purpose carries the same attribute — markup a render
   callback draws inside a shadow root can't be reached by page CSS at all.
-- **Hand-copied demo snippets** — a `<pre>` in a `<details>` or `.code-block`
+- **Hand-copied demo snippets** — a `<pre>` in a `<details>` or `.code-block` (or a `pre.code-block`)
   that copies the page's live content is a warning (one per page, with the
   lines): it carries a live element's `id`, reaches one with
   `getElementById('x')` / `querySelector('#x')`, repeats a live tag with ≥ 2 of

@@ -354,8 +354,9 @@ export function getHardcodedColors(pageText, { isStylesheet = false } = {}) {
  * a config shape): the attribute on the `<details>`, the `.code-block` div or the `<pre>`.
  */
 export const SNIPPET_ATTRIBUTE = 'data-kmwc-snippet';
-// A hand-written code block: a <details> (the "Show code" disclosure) or a <div class="code-block">.
-const CODE_CONTAINER_PATTERN = /<details\b[^>]*>[\s\S]*?<\/details>|<div\b[^>]*\bclass="[^"]*\bcode-block\b[^"]*"[^>]*>(?:(?!<\/div>)[\s\S])*?<pre\b[\s\S]*?<\/pre>/gi;
+// A hand-written code block: a <details> (the "Show code" disclosure), a <div class="code-block">
+// or the legacy <pre class="code-block">.
+const CODE_CONTAINER_PATTERN = /<details\b[^>]*>[\s\S]*?<\/details>|<div\b[^>]*\bclass="[^"]*\bcode-block\b[^"]*"[^>]*>(?:(?!<\/div>)[\s\S])*?<pre\b[\s\S]*?<\/pre>|<pre\b[^>]*\bclass="[^"]*\bcode-block\b[^"]*"[^>]*>[\s\S]*?<\/pre>/gi;
 const PRE_PATTERN = /<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi;
 // Not live markup: comments, scripts, styles and templates are blanked before live tags are read.
 const NON_LIVE_PATTERN = /<!--[\s\S]*?-->|<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<template\b[^>]*>[\s\S]*?<\/template>/gi;
@@ -406,7 +407,7 @@ const mapToBlanked = (match) => match.replace(/[^\n]/g, ' ');
 /**
  * Hand-written code blocks on an example page that copy one of the page's live demos —
  * the drift `<kmwc-demo>` makes impossible. A block is a `<pre>` inside a `<details>` or a
- * `<div class="code-block">` (outside comments; a `data-kmwc-snippet` block is skipped).
+ * `<div class="code-block">` or `<pre class="code-block">` (outside comments; a `data-kmwc-snippet` block is skipped).
  * Its text is entity-decoded and compared with the page's live content (everything outside
  * comments and those blocks). It is a copy when ANY of:
  *   - a tag in it carries an `id` that a live element has, or the code reaches a live id

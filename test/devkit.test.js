@@ -983,6 +983,10 @@ test('doctor: a hand-written code block that copies a live demo — id, tag, sha
   ].join('\n');
   assert.deepEqual(linesOf(optOutPage), []);
 
+  // The legacy <pre class="code-block"> form (no wrapping div) is a code block too.
+  assert.deepEqual(linesOf(`<web-x id="picker"></web-x>\n<pre class="code-block"><code>document.getElementById('picker').open();</code></pre>`), [2]);
+  assert.deepEqual(linesOf(`<web-x id="picker"></web-x>\n<pre class="code-block" ${SNIPPET_ATTRIBUTE}>document.getElementById('picker')</pre>`), []);
+
   // A <kmwc-demo> page: the composer draws the code block at build time — the source has none.
   const demoPage = "<kmwc-demo>\n  <web-x id=\"picker\" mode=\"single\"></web-x>\n  <script type=\"module\" data-kmwc-show>document.getElementById('picker').open();</script>\n</kmwc-demo>";
   assert.deepEqual(linesOf(demoPage), []);
