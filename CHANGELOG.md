@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-rc15] - 2026-11-13
+
+### Fixed
+
+- **The kit never loaded on a page with `İ` in it.** The kit script went in before the
+  page's last `</body>`, found in `html.toLowerCase()` — but `'İ'` lower-cases to two
+  characters, so every `İ` earlier in the page moved the cut one character left and the build
+  wrote `</<script …>body>`: no kit CSS or JS, and a parse5 warning. Found on
+  web-components-core's search page (since rc07). The tag is now found in the original text.
+- **The spotlight's match highlight slid off the match** after an `İ` in a chapter title,
+  for the same reason (`İzmir, S<mark>myrna</mark>`). Mirrors web-commandpalette's
+  `highlight()`, fixed there too.
+- **Rows a page script writes into a stacking table after load had no labels** on a phone (a
+  live readout filled with `innerHTML`). The kit now watches each stacking table and labels
+  rows as they arrive; calling `attachStackedTables()` again is no longer needed.
+
 ## [1.0.0-rc14] - 2026-11-13 [PUBLISHED]
 
 ### Added

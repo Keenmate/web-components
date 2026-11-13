@@ -72,13 +72,13 @@ export function searchChapters(chapters, query) {
 export function renderHighlightedText(text, needle) {
   const query = needle.trim();
   if (!query) return mapToEscapedHtml(text);
-  const lowerText = text.toLowerCase();
-  const lowerQuery = query.toLowerCase();
+  // Matched in the original text: toLowerCase() may change its length ('İ' → 'i̇'), shifting every index.
+  const queryPattern = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'giu');
   let html = '';
   let index = 0;
-  for (let matchIndex = lowerText.indexOf(lowerQuery); matchIndex !== -1; matchIndex = lowerText.indexOf(lowerQuery, index)) {
-    html += mapToEscapedHtml(text.slice(index, matchIndex)) + '<mark>' + mapToEscapedHtml(text.slice(matchIndex, matchIndex + lowerQuery.length)) + '</mark>';
-    index = matchIndex + lowerQuery.length;
+  for (const match of text.matchAll(queryPattern)) {
+    html += mapToEscapedHtml(text.slice(index, match.index)) + '<mark>' + mapToEscapedHtml(match[0]) + '</mark>';
+    index = match.index + match[0].length;
   }
   return html + mapToEscapedHtml(text.slice(index));
 }

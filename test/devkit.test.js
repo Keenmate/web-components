@@ -60,7 +60,7 @@ import { searchChapters, checkMatchesAny, renderHighlightedText } from '../src/e
 import { getMovedIndex } from '../src/examples/spotlight.js';
 import { findSectionByHash, getChapterCode, mapToCodeKey } from '../src/examples/sections.js';
 import { getExamplePages } from '../src/vite/index.js';
-import { composePage, resolveIncludes, renderDemos, renderLanguageCodeBlocks, mapToDedentedText, checkIsFragment } from '../src/vite/page-composer.js';
+import { composePage, resolveIncludes, renderDemos, renderLanguageCodeBlocks, mapToDedentedText, checkIsFragment, insertBeforeBodyEnd } from '../src/vite/page-composer.js';
 import { loadCodeHighlighter } from '../src/vite/code-highlighter.js';
 
 const PLAYGROUND_ROOT = join(DEVKIT_ROOT, 'playground');
@@ -410,6 +410,14 @@ test('plugin: "<head>" / "</body>" as page text never receive the injected snipp
   }
 });
 
+test('insertBeforeBodyEnd: text whose lower case is longer never shifts the insertion point', () => {
+  // web-components-core's search page: each 'İ' lower-cases to two characters, so an index
+  // taken from html.toLowerCase() cut the original "</body>" apart and the kit never loaded.
+  const pageHtml = '<html><body><p>İstanbul, İzmir</p></body></html>';
+  assert.equal(insertBeforeBodyEnd(pageHtml, '<script></script>'), '<html><body><p>İstanbul, İzmir</p><script></script></body></html>');
+  assert.equal(insertBeforeBodyEnd('<p>İ</p></BODY>', 'x'), '<p>İ</p>x</BODY>');
+});
+
 const createPartialReader =(partials) => (absolutePath, displayPath) => {
   if (!(displayPath in partials)) throw new Error(`no partial ${displayPath}`);
   return partials[displayPath];
@@ -656,6 +664,9 @@ test('chapter search: code or title contains the query (wcp matchesAny); exact c
   assert.equal(renderHighlightedText('Per-instance <data>-Theme', 'theme'), 'Per-instance &lt;data&gt;-<mark>Theme</mark>');
   assert.equal(renderHighlightedText('aaaa', 'aa'), '<mark>aa</mark><mark>aa</mark>');
   assert.equal(renderHighlightedText('a & b', ' '), 'a &amp; b');
+  // 'İ' lower-cases to two characters — the mark must not slide off the match.
+  assert.equal(renderHighlightedText('İzmir, Smyrna', 'smyrna'), 'İzmir, <mark>Smyrna</mark>');
+  assert.equal(renderHighlightedText('a.b (c)', '(c)'), 'a.b <mark>(c)</mark>');
 });
 
 test('spotlight: wcp keyboard map — arrows wrap, page keys step 8 and clamp, Home/End', () => {

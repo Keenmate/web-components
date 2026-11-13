@@ -6,21 +6,34 @@
  *
  * `display: block` drops the table semantics in some browsers (Safari), so the
  * table, its rows and cells get explicit ARIA roles too.
+ *
+ * Each table is watched: rows a page script adds or replaces later (a live
+ * readout, `innerHTML` / `replaceChildren`) are labelled as they arrive.
  */
 import { STACKED_TABLE_ROLES, STACKED_TABLE_SELECTOR } from './constants.js';
 
+const observedTables = new WeakSet();
+
 export function attachStackedTables(root = document) {
   for (const table of root.querySelectorAll(STACKED_TABLE_SELECTOR)) {
-    const labels = getColumnLabels(table);
-    for (const row of table.rows) {
-      for (const [columnIndex, cell] of getCellsByColumn(row)) {
-        if (cell.tagName === 'TD' && !cell.hasAttribute('data-label') && labels[columnIndex]) {
-          cell.setAttribute('data-label', labels[columnIndex]);
-        }
+    labelStackedTable(table);
+    if (observedTables.has(table)) continue;
+    observedTables.add(table);
+    // childList only: the attributes set here never re-trigger it.
+    new MutationObserver(() => labelStackedTable(table)).observe(table, { childList: true, subtree: true });
+  }
+}
+
+function labelStackedTable(table) {
+  const labels = getColumnLabels(table);
+  for (const row of table.rows) {
+    for (const [columnIndex, cell] of getCellsByColumn(row)) {
+      if (cell.tagName === 'TD' && !cell.hasAttribute('data-label') && labels[columnIndex]) {
+        cell.setAttribute('data-label', labels[columnIndex]);
       }
     }
-    ensureTableRoles(table);
   }
+  ensureTableRoles(table);
 }
 
 /** Column index → header text, from the last <thead> row (the one naming the columns). */

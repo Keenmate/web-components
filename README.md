@@ -333,7 +333,7 @@ request), so pages load no highlighter. Its colours are the kit's
   (tighter cells; the controls in it shrink via `--kmwc-control-height`) — plus
   `tr.is-highlight` and a `.num` cell (right-aligned, tabular figures). On a phone
   a `.reference-table` stacks into cards (each cell under its column's header — the
-  kit sets the `data-label`s), `.table-stack` stacks any other table, `.table-scroll`
+  kit sets the `data-label`s, also on rows a script writes later), `.table-stack` stacks any other table, `.table-scroll`
   keeps a reference table a grid; any other wide table scrolls inside its card. See the playground's `examples-tables.html`.
 - **Widgets:** `.log-panel` (light, following the theme; `--dark` for a console
   stream; the legacy `.event-log` / `.event-entry` markup renders the same). Lines keep their indentation; a

@@ -79,7 +79,7 @@ export function mapOutsideComments(html, mapper, skippedPattern = HTML_COMMENT_P
 
 // The real tag only — `<head[^>]*>` also matches `<header>`.
 const HEAD_TAG_PATTERN = /<head(?=[\s>])[^>]*>/i;
-const BODY_END_TAG = '</body>';
+const BODY_END_TAG_PATTERN = /<\/body>/gi;
 
 /**
  * Insert `headHtml` right after the page's <head> tag (prepend when there is none).
@@ -102,7 +102,8 @@ export function insertIntoHead(html, headHtml) {
  * earlier one is text — e.g. a comment inside an inline script.
  */
 export function insertBeforeBodyEnd(html, bodyHtml) {
-  const bodyEndIndex = html.toLowerCase().lastIndexOf(BODY_END_TAG);
+  // Matched in the original: html.toLowerCase() may be longer ('İ' → 'i̇'), shifting every index.
+  const bodyEndIndex = [...html.matchAll(BODY_END_TAG_PATTERN)].at(-1)?.index ?? -1;
   return bodyEndIndex < 0 ? html + bodyHtml : html.slice(0, bodyEndIndex) + bodyHtml + html.slice(bodyEndIndex);
 }
 

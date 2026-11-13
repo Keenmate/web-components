@@ -248,6 +248,12 @@ test.describe('examples kit', () => {
     // .table-stack opts another table in; a label the page wrote wins.
     await expect(page.locator('#tb-stack tbody tr').first()).toHaveCSS('display', 'block');
     await expect(page.locator('#tb-stack tbody tr').nth(1).locator('td').nth(2)).toHaveAttribute('data-label', 'Fires');
+    // Rows a page script writes after load (a live readout) are labelled too.
+    await page.locator('#tb-stack tbody').evaluate((body) => {
+      body.innerHTML = '<tr><td><code>open</code></td><td><code>{}</code></td><td>Late row.</td></tr>';
+    });
+    await expect(page.locator('#tb-stack tbody td').nth(1)).toHaveAttribute('data-label', 'Detail');
+    await expect(page.locator('#tb-stack tbody tr').first()).toHaveAttribute('role', 'row');
     // .table-scroll stays a grid that scrolls inside its card.
     await expect(page.locator('#tb-scroll tbody tr').first()).toHaveCSS('display', 'table-row');
     await expect(page.locator('#tb-scroll')).toHaveCSS('overflow-x', 'auto');

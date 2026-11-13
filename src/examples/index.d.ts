@@ -104,7 +104,7 @@ export function getSectionUrl(sectionId: string, canonicalOrigin?: string): stri
 export function renderVersionBadges(root?: ParentNode): void;
 /** A Copy button on every demo code block and every hand-written `.code-block[data-language]` without a button of its own. */
 export function attachDemoCopyButtons(root?: ParentNode): void;
-/** Label every cell of a stacking table (`.reference-table`, `.table-stack`) with its column header, and add table ARIA roles. */
+/** Label every cell of a stacking table (`.reference-table`, `.table-stack`) with its column header, and add table ARIA roles. Each table is watched, so rows written later are labelled too. */
 export function attachStackedTables(root?: ParentNode): void;
 export function getVersionLabel(pageConfig?: KmwcPageConfig): string;
 
