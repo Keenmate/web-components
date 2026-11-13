@@ -26,7 +26,8 @@
 <div class="card">
     <h2>TB02 · Reference table</h2>
     <p><code>.reference-table</code> — the API / option table most example pages use: full width, every
-        cell boxed. <code>tr.is-highlight</code> tints a row with the accent.</p>
+        cell boxed; the names in its first column never break mid-word. <code>tr.is-highlight</code> tints a row with the accent.
+        On a phone every row becomes a card — the name its title, each other cell under its column's header.</p>
     <kmwc-demo>
         <table class="reference-table" id="tb-reference">
             <thead>
@@ -36,6 +37,8 @@
                 <tr><td><code>label</code></td><td>string</td><td><code>''</code></td><td>Text next to the toggle.</td></tr>
                 <tr class="is-highlight"><td><code>active</code></td><td>boolean</td><td><code>false</code></td><td>Whether the toggle is on — the one to read first.</td></tr>
                 <tr><td><code>disabled</code></td><td>boolean</td><td><code>false</code></td><td>Blocks interaction and fades the control.</td></tr>
+                <tr><td><code>before-month-change-callback</code></td><td>function</td><td><code>null</code></td><td>Called before the visible month changes; return <code>false</code> to cancel. A long name stays whole and widens its column instead.</td></tr>
+                <tr><td><code>show-labels</code>, <code>show-icons</code></td><td>boolean</td><td><code>true</code></td><td>Two names in one cell still break between them, never inside one.</td></tr>
             </tbody>
         </table>
     </kmwc-demo>
@@ -104,15 +107,45 @@
 
 <div class="card">
     <h2>TB06 · One highlighted cell</h2>
-    <p><code>td.is-highlight</code> (or <code>th</code>) tints a single cell with the row-highlight colour.</p>
+    <p><code>td.is-highlight</code> (or <code>th</code>) tints a single cell with the row-highlight colour.
+        With <code>.table-stack</code>, on a phone each term is a card and a highlighted cell a tinted line.</p>
     <kmwc-demo>
-        <table id="tb-cell">
+        <table class="table-stack" id="tb-cell">
             <thead>
                 <tr><th>Term</th><th>apple</th><th>Apfel</th><th>pineapple</th></tr>
             </thead>
             <tbody>
                 <tr><td><code>apple</code></td><td class="is-highlight">match</td><td>—</td><td class="is-highlight">match</td></tr>
                 <tr><td><code>pfel</code></td><td>—</td><td class="is-highlight">match</td><td>—</td></tr>
+            </tbody>
+        </table>
+    </kmwc-demo>
+</div>
+
+<div class="card">
+    <h2>TB07 · Stacking on a phone, or not</h2>
+    <p>Below 768 px a <code>.reference-table</code> stacks its rows into cards; the kit labels each cell with its
+        column's header (<code>data-label</code>, unless the cell has one). A grid read down its columns keeps the
+        sideways scroll with <code>.table-scroll</code>; any other table stacks with <code>.table-stack</code>.
+        Narrow the window to see both.</p>
+    <kmwc-demo>
+        <table class="reference-table table-scroll" id="tb-scroll">
+            <thead>
+                <tr><th>Size</th><th class="num">Box width</th><th class="num">Font</th><th class="num">Control height</th><th class="num">Gap</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>sm</code></td><td class="num">240 px</td><td class="num">12 px</td><td class="num">28 px</td><td class="num">4 px</td></tr>
+                <tr><td><code>md</code></td><td class="num">320 px</td><td class="num">14 px</td><td class="num">36 px</td><td class="num">8 px</td></tr>
+                <tr><td><code>lg</code></td><td class="num">400 px</td><td class="num">16 px</td><td class="num">44 px</td><td class="num">12 px</td></tr>
+            </tbody>
+        </table>
+        <table class="table-full table-stack" id="tb-stack">
+            <thead>
+                <tr><th>Event</th><th>Detail</th><th>When</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>month-change</code></td><td><code>{ year, month }</code></td><td>After the visible month changed.</td></tr>
+                <tr><td><code>select</code></td><td><code>{ date }</code></td><td data-label="Fires">When a day is picked.</td></tr>
             </tbody>
         </table>
     </kmwc-demo>

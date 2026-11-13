@@ -109,6 +109,8 @@
         --kmwc-code-string-color: #98c379;
         --kmwc-code-function-color: #61afef;
         --kmwc-code-property-color: #d19a66;
+        /* The code surface is dark in both themes, so not --kmwc-success-color (dark green on a light page). */
+        --kmwc-code-success-color: #34d399;
         --kmwc-console-bg: light-dark(#0f172a, #05070d);
         --kmwc-console-text-color: #e2e8f0;
         --kmwc-console-muted-color: #94a3b8;

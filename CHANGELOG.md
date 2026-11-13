@@ -1,5 +1,41 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **On a phone a `.reference-table` stacks into cards.** Below 768 px every row becomes a
+  card: the first cell its title, every other cell under its column's header. The kit copies
+  the headers onto the cells as `data-label` (a label the page wrote wins) and adds table ARIA
+  roles, which `display: block` would otherwise cost in Safari, so pages need no markup
+  change. A grid read down its columns keeps the sideways scroll with `.table-scroll`; any
+  other table stacks with `.table-stack`. `attachStackedTables()` re-labels tables a page
+  renders late (or call `mountExamplesKit()` again).
+
+### Changed
+
+- **A `.reference-table` keeps the names in its first column whole.** Its first-column
+  `<code>` is `white-space: nowrap`, so an option name like `selectionMode` no longer breaks
+  mid-word (inline `code` elsewhere still breaks anywhere so it can't widen the page). A very
+  long name widens the column. Pages that carried their own nowrap rule for this can drop it.
+
+### Fixed
+
+- **"Copied!" on a code block reads in light mode.** It took the page's success colour, dark
+  green on a light page, on the code surface that stays dark in both themes (1.4:1). It now
+  takes the new `--kmwc-code-success-color`, a code-surface tone like the other
+  `--kmwc-code-*` colours (above 4.5:1 in both themes).
+- **A code block's copy button stays put when the code is scrolled sideways.** The block
+  itself was the scroll container, so its absolutely positioned button (the `<kmwc-demo>`
+  Copy button, a page's `.copy-button`) scrolled away with the code on a phone. Now the
+  `<pre>` (or a bare `<code>`) inside it scrolls and the button stays at the frame's corner.
+- **A phone's scrollbar no longer lies on a scrolling table's last row** (or a code block's
+  last line): the scrolling box keeps 0.5rem free at its bottom for the overlay bar. Code
+  blocks keep their height.
+- **`<code>` in a table no longer splits mid-word to squeeze a column** (`fals|e` in a
+  Default column next to a long name). In tables it takes `overflow-wrap: break-word`, which
+  sizes the columns by whole words and still breaks a word that can't fit at all.
+
 ## [1.0.0-rc13] - 2026-11-12 [PUBLISHED]
 
 ### Added

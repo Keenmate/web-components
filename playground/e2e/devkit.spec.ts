@@ -82,12 +82,12 @@ test.describe('examples kit', () => {
     await expect(container).toBeVisible();
     await expect(input).toBeFocused();
     await expect(page.locator('.kmwc-spotlight__home-heading').first()).toHaveText('Basic Usage · this page');
-    await expect(items).toHaveCount(41);
+    await expect(items).toHaveCount(42);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden'); // body scroll locked
 
     // wcp keys: ↑ wraps to the end, PgDn steps 8, Home back to the top.
     await page.keyboard.press('ArrowUp');
-    await expect(activeItem).toHaveAttribute('data-index', '40');
+    await expect(activeItem).toHaveAttribute('data-index', '41');
     await page.keyboard.press('Home');
     await page.keyboard.press('PageDown');
     await expect(activeItem).toHaveAttribute('data-index', '8');
@@ -216,12 +216,65 @@ test.describe('examples kit', () => {
     });
     expect(Math.abs(widths[0] - widths[1])).toBeLessThan(1);
     await expect(page.locator('#tb-reference td').first()).toHaveCSS('border-left-style', 'solid');
+    // Its first column keeps names whole (code elsewhere breaks anywhere).
+    await expect(page.locator('#tb-reference td:first-child code').first()).toHaveCSS('white-space', 'nowrap');
+    await expect(page.locator('#tb-reference td:nth-child(3) code').first()).not.toHaveCSS('white-space', 'nowrap');
+    // No code in a table splits mid-word to squeeze a column (`fals|e`): each is one line box.
+    const splitCodes = await page.locator('#tb-reference code').evaluateAll((codes) =>
+      codes.filter((code) => code.getClientRects().length > 1).map((code) => code.textContent));
+    expect(splitCodes).toEqual([]);
     // .table-compact lowers the control height for the controls in it.
     for (const selector of ['input[type="text"]', 'select', 'button']) {
       await expect(page.locator(`#tb-compact ${selector}`).first()).toHaveCSS('height', '28px');
     }
     // kmwc-native: no kit fill.
     await expect(page.locator('table.kmwc-native th').first()).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  });
+
+  test('tables: on a phone a reference table stacks into labelled cards, .table-scroll keeps its grid', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto('/examples-tables.html');
+    // Stacked: no header row, every row a card, each cell labelled with its column's header.
+    await expect(page.locator('#tb-reference thead')).toHaveCSS('display', 'none');
+    await expect(page.locator('#tb-reference tbody tr').first()).toHaveCSS('display', 'block');
+    const typeCell = page.locator('#tb-reference tbody tr').first().locator('td').nth(1);
+    await expect(typeCell).toHaveAttribute('data-label', 'Type');
+    expect(await typeCell.evaluate((cell) => getComputedStyle(cell, '::before').content)).toBe('"Type"');
+    // The title cell shows no label; display: block mustn't cost the table its semantics.
+    expect(await page.locator('#tb-reference tbody td:first-child').first().evaluate((cell) => getComputedStyle(cell, '::before').content)).toBe('none');
+    await expect(page.locator('#tb-reference')).toHaveAttribute('role', 'table');
+    await expect(typeCell).toHaveAttribute('role', 'cell');
+    await expect(page.locator('#tb-reference th').first()).toHaveAttribute('role', 'columnheader');
+    // .table-stack opts another table in; a label the page wrote wins.
+    await expect(page.locator('#tb-stack tbody tr').first()).toHaveCSS('display', 'block');
+    await expect(page.locator('#tb-stack tbody tr').nth(1).locator('td').nth(2)).toHaveAttribute('data-label', 'Fires');
+    // .table-scroll stays a grid that scrolls inside its card.
+    await expect(page.locator('#tb-scroll tbody tr').first()).toHaveCSS('display', 'table-row');
+    await expect(page.locator('#tb-scroll')).toHaveCSS('overflow-x', 'auto');
+    await expect(page.locator('#tb-scroll td').first()).not.toHaveAttribute('data-label');
+    // A phone's overlay scrollbar is drawn inside the box: room for it under the last row.
+    const scrollbarRoom = await page.locator('#tb-scroll').evaluate((table) =>
+      table.getBoundingClientRect().bottom - table.querySelector('tbody tr:last-child')!.getBoundingClientRect().bottom);
+    expect(scrollbarRoom).toBeGreaterThanOrEqual(8);
+    // Nothing widens the page.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  });
+
+  test('demo code: on a phone the code scrolls sideways under its copy button, which stays put', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto('/examples-tables.html');
+    const codeBlock = page.locator('.card', { has: page.locator('#tb-striped') }).locator('.kmwc-demo__code');
+    const getButtonOffset = () => codeBlock.evaluate((block) =>
+      block.getBoundingClientRect().right - block.querySelector('.kmwc-demo__copy')!.getBoundingClientRect().right);
+    const offsetBefore = await getButtonOffset();
+    // Swipe whichever box scrolls (the block itself was the bug).
+    const scrolled = await codeBlock.evaluate((block) => {
+      const scroller = [block, block.querySelector('pre')!].find((element) => element.scrollWidth > element.clientWidth)!;
+      scroller.scrollLeft = 200;
+      return scroller.scrollLeft;
+    });
+    expect(scrolled).toBeGreaterThan(0); // the code is wider than the phone
+    expect(await getButtonOffset()).toBe(offsetBefore);
   });
 
   test('widgets: log panels, event log, pills, status dots, CSS-variable readout', async ({ page }) => {
@@ -679,6 +732,31 @@ test.describe('examples kit', () => {
 
     await demo.locator('.kmwc-demo__copy').first().click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('<web-playground id="dk-demo" label="Off"></web-playground>');
+
+    // "Copied!" passes WCAG AA on the code surface, which is dark in both themes
+    // (the page's success colour is dark green in light mode).
+    for (const theme of ['light', 'dark']) {
+      const ratio = await demo.locator('.kmwc-demo__code').first().evaluate((block, name) => {
+        document.documentElement.setAttribute('data-theme', name);
+        const button = block.querySelector('.kmwc-demo__copy')!;
+        button.classList.add('kmwc-demo__copy--copied');
+        const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true })!;
+        const getLuminance = (color: string) => {
+          context.clearRect(0, 0, 1, 1);
+          context.fillStyle = color;
+          context.fillRect(0, 0, 1, 1);
+          const [r, g, b] = Array.from(context.getImageData(0, 0, 1, 1).data.slice(0, 3)).map((channel) => {
+            const value = channel / 255;
+            return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        const [lighter, darker] = [getLuminance(getComputedStyle(button).color), getLuminance(getComputedStyle(block).backgroundColor)]
+          .sort((a, b) => b - a);
+        return (lighter + 0.05) / (darker + 0.05);
+      }, theme);
+      expect(ratio, theme).toBeGreaterThanOrEqual(4.5);
+    }
   });
 
   test('test fixtures stay bare (no kit injected)', async ({ page }, testInfo) => {

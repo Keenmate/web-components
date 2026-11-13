@@ -141,6 +141,22 @@ export const SECTION_CONTAINER_SELECTOR = '.container';
 export const SECTION_SELECTOR = '.card, .example-section';
 export const HEADING_CHIP_SELECTOR = `.badge, .${COPY_LINK_CLASSES.root}`;
 
+/**
+ * Tables that stack into cards on a phone (table-stack.js, css/tables.css):
+ * every API table, unless `.table-scroll` keeps it a scrolling grid; any other
+ * table opts in with `.table-stack`. Page vocabulary, kept here because the
+ * kit's JS reads it.
+ */
+export const STACKED_TABLE_SELECTOR = '.reference-table:not(.table-scroll), .table-stack';
+export const STACKED_TABLE_ROLES = {
+  table: 'table',
+  rowGroup: 'rowgroup',
+  row: 'row',
+  columnHeader: 'columnheader',
+  rowHeader: 'rowheader',
+  cell: 'cell',
+};
+
 export const VERSION_BADGE_SELECTOR = '[data-kmwc-version], #version-badge';
 
 export const DEFAULT_INDEX_HREF = 'index.html';

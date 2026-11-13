@@ -15,6 +15,7 @@ export { searchChapters, checkMatchesAny, renderHighlightedText, mapToEscapedHtm
 export { attachCopyLinks, copyText, getSectionUrl } from './copy-link.js';
 export { renderVersionBadges, getVersionLabel } from './version-badge.js';
 export { attachDemoCopyButtons } from './demo-code.js';
+export { attachStackedTables } from './table-stack.js';
 export { mountPageFooter, renderFooterLineHtml } from './page-footer.js';
 export { appendLogLine } from './log-line.js';
 export { mountThemeSwitch, applyTheme, getSavedTheme } from './theme-switch.js';

@@ -320,11 +320,14 @@ the demo in `<kmwc-demo>` instead).
   short field without an inline style. The
   playground's `examples-forms.html` shows them all.
 - **Tables:** any `<table>` gets a header fill, row lines and a hover tint;
-  `.reference-table` is the full-width, fully bordered API table. Modifiers
+  `.reference-table` is the full-width, fully bordered API table; the `<code>` names
+  in its first column don't wrap. Modifiers
   combine — `.table-full`, `.table-bordered`, `.table-striped`, `.table-compact`
   (tighter cells; the controls in it shrink via `--kmwc-control-height`) — plus
   `tr.is-highlight` and a `.num` cell (right-aligned, tabular figures). On a phone
-  a wide table scrolls inside its card. See the playground's `examples-tables.html`.
+  a `.reference-table` stacks into cards (each cell under its column's header — the
+  kit sets the `data-label`s), `.table-stack` stacks any other table, `.table-scroll`
+  keeps a reference table a grid; any other wide table scrolls inside its card. See the playground's `examples-tables.html`.
 - **Widgets:** `.log-panel` (light, following the theme; `--dark` for a console
   stream; the legacy `.event-log` / `.event-entry` markup renders the same). Lines keep their indentation; a
   `.log-line` takes one tone — `--ok`, `--info`, `--warn`, `--err`, `--muted`,

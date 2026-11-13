@@ -47,6 +47,6 @@
     }
 
     .kmwc-demo__copy--copied {
-        color: var(--kmwc-success-color);
+        color: var(--kmwc-code-success-color);
     }
 }

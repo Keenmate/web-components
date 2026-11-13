@@ -61,13 +61,15 @@
        CODE
        ==========================================================================
        The dark surface lives on `.code-block` itself, so it works whether a
-       page wraps code in <pre> or drops a bare <code> straight inside. */
+       page wraps code in <pre> or drops a bare <code> straight inside. That
+       <pre> / <code> scrolls, not the block: a copy button is positioned on the
+       block and would otherwise scroll away with the code. */
     .code-block {
         margin: 1.5rem 0;
         position: relative;
         background: var(--kmwc-code-bg);
         color: var(--kmwc-code-text-color);
-        padding: 1.5rem;
+        padding: 1.5rem 1.5rem 1rem;
         border-radius: var(--kmwc-radius-md);
         overflow-x: auto;
         font-family: var(--kmwc-mono-font-family);
@@ -78,8 +80,8 @@
     .code-block pre {
         margin: 0;
         background: transparent;
-        padding: 0;
-        overflow-x: visible;
+        padding: 0 0 0.5rem;
+        overflow-x: auto;
         border: none;
         color: inherit;
     }
@@ -87,6 +89,7 @@
     .code-block > code {
         white-space: pre;
         display: block;
+        overflow-x: auto;
     }
 
     .code-block .keyword { color: var(--kmwc-code-keyword-color); }
@@ -134,6 +137,12 @@
         color: inherit;
         font-size: inherit;
         overflow-wrap: inherit;
+    }
+
+    /* The scroller's bottom padding (with the block's, 1.5rem as before) keeps
+       a phone's overlay scrollbar off the last line. After the reset above. */
+    .code-block > code {
+        padding-bottom: 0.5rem;
     }
 
     /* A key in a keyboard map — the spotlight's key-hint look. */
