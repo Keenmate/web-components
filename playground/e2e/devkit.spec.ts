@@ -155,6 +155,28 @@ test.describe('examples kit', () => {
     expect(storageKeys).toContain('web-playground:examples:controls:basic');
   });
 
+  test('controls persistence skips a saved select value no option offers', async ({ page }) => {
+    // The page has no select of its own: add one to .controls before the page's script runs.
+    await page.addInitScript(() => {
+      new MutationObserver((_, observer) => {
+        const controls = document.querySelector('.controls');
+        if (!controls) return;
+        observer.disconnect();
+        controls.insertAdjacentHTML('beforeend', '<select id="bu-mode"><option value="single">single</option><option value="multiple" selected>multiple</option></select>');
+      }).observe(document, { childList: true, subtree: true });
+    });
+    await page.goto('/examples-basic.html');
+    // 'multi' = a value saved before the option was renamed.
+    await page.evaluate(() => localStorage.setItem('web-playground:examples:controls:basic', JSON.stringify({ 'val:bu-mode': 'multi', 'val:bu-label': 'Still restored' })));
+    await page.reload();
+    await expect(page.locator('#bu-mode')).toHaveValue('multiple');
+    await expect(page.locator('#bu-label')).toHaveValue('Still restored');
+    // A value that still exists is restored.
+    await page.evaluate(() => localStorage.setItem('web-playground:examples:controls:basic', JSON.stringify({ 'val:bu-mode': 'single' })));
+    await page.reload();
+    await expect(page.locator('#bu-mode')).toHaveValue('single');
+  });
+
   test('index page renders from the registry, with cross-page nav', async ({ page }) => {
     await page.goto('/index.html');
     await expect(page.locator('.kmwc-index__header h1')).toHaveText('Web Playground');

@@ -15,6 +15,12 @@
 
 ### Fixed
 
+- **Controls persistence left a select empty after an option was renamed.** A saved value no
+  option offers any more (e.g. `multi` after it became `multiple`) was assigned anyway, so the
+  select showed nothing and the page's own `change` handler received `''`. Such a value is now
+  skipped and the page's default stays (found in web-treeview / svelte-treeview's interaction
+  page).
+
 - **The kit never loaded on a page with `İ` in it.** The kit script went in before the
   page's last `</body>`, found in `html.toLowerCase()` — but `'İ'` lower-cases to two
   characters, so every `İ` earlier in the page moved the cut one character left and the build

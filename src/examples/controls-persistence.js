@@ -69,6 +69,9 @@ export function attachControlsPersistence(pageId, root = document) {
   for (const control of controls) {
     const stateId = getControlStateId(control);
     if (!(stateId in savedState)) continue;
+    // A saved value no option offers any more (renamed / removed since it was saved) would
+    // leave the select empty and hand '' to the page — keep the page's default instead.
+    if (control.tagName === 'SELECT' && ![...control.options].some((option) => option.value === savedState[stateId])) continue;
     if (control.type === 'radio') control.checked = control.value === savedState[stateId];
     else if (control.type === 'checkbox') control.checked = !!savedState[stateId];
     else control.value = savedState[stateId];
